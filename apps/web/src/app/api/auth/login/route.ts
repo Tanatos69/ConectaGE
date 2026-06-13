@@ -1,16 +1,33 @@
 import { NextResponse } from "next/server";
 
-const DEMO_ACCOUNTS = [
+// Built-in demo accounts (always available)
+const BASE_ACCOUNTS = [
   { email: "usuario@demo.com", password: "demo1234", role: "user" },
   { email: "admin@conectage.com", password: "admin2024", role: "admin" },
 ];
+
+// Extra accounts via env var: "email:password:role,email2:password2:role2"
+function extraAccounts() {
+  const raw = process.env.DEMO_ACCOUNTS ?? "";
+  return raw
+    .split(",")
+    .map((entry) => {
+      const [email, password, role] = entry.trim().split(":");
+      return email && password && role ? { email, password, role } : null;
+    })
+    .filter(Boolean) as { email: string; password: string; role: string }[];
+}
+
+function getAllAccounts() {
+  return [...BASE_ACCOUNTS, ...extraAccounts()];
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const email = body?.email?.toLowerCase().trim();
   const password = body?.password;
 
-  const account = DEMO_ACCOUNTS.find(
+  const account = getAllAccounts().find(
     (a) => a.email === email && a.password === password,
   );
 
