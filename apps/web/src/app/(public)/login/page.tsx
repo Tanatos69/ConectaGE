@@ -1,30 +1,88 @@
-import type { Metadata } from "next";
+"use client";
+
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 
-export const metadata: Metadata = {
-  title: "Iniciar sesión",
-  description: "Accede a tu cuenta de ConectaGE.",
-};
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/mi-cuenta";
 
-function SocialButton({ provider, icon }: { provider: string; icon: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
-    >
-      {icon}
-      Continuar con {provider}
-    </button>
-  );
-}
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function LoginPage() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        setError("Credenciales incorrectas. Intenta de nuevo.");
+        return;
+      }
+
+      const { role } = await res.json();
+      router.push(role === "admin" ? "/admin" : next);
+      router.refresh();
+    } catch {
+      setError("Error de conexión. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function fillDemo(type: "user" | "admin") {
+    if (type === "user") {
+      setEmail("usuario@demo.com");
+      setPassword("demo1234");
+    } else {
+      setEmail("admin@conectage.com");
+      setPassword("admin2024");
+    }
+    setError("");
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
           <Logo />
+        </div>
+
+        {/* Demo credentials hint */}
+        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-xs text-blue-800">
+          <p className="mb-2 font-semibold">Cuentas de demo:</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => fillDemo("user")}
+              className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-left transition-colors hover:bg-blue-100"
+            >
+              <span className="block font-medium">Usuario</span>
+              <span className="text-blue-600">usuario@demo.com</span>
+              <span className="block text-muted-foreground">demo1234</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fillDemo("admin")}
+              className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-left transition-colors hover:bg-blue-100"
+            >
+              <span className="block font-medium">Admin</span>
+              <span className="text-blue-600">admin@conectage.com</span>
+              <span className="block text-muted-foreground">admin2024</span>
+            </button>
+          </div>
         </div>
 
         <div className="rounded-2xl border bg-card p-7 shadow-sm">
@@ -33,7 +91,7 @@ export default function LoginPage() {
             Accede a tu cuenta para gestionar tus anuncios.
           </p>
 
-          <form className="mt-6 space-y-4" action="/api/auth/login" method="POST">
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
                 Correo electrónico
@@ -45,6 +103,8 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 placeholder="tu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
@@ -68,15 +128,24 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
 
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={loading}
+              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             >
-              Iniciar sesión
+              {loading ? "Iniciando sesión…" : "Iniciar sesión"}
             </button>
           </form>
 
@@ -117,5 +186,25 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function SocialButton({ provider, icon }: { provider: string; icon: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
+    >
+      {icon}
+      Continuar con {provider}
+    </button>
   );
 }

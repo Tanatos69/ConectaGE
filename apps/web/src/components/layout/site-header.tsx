@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Menu, X, ChevronDown, User, Heart } from "lucide-react";
+import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -10,6 +11,15 @@ import { languages } from "@/lib/languages";
 import { categories } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
+
+function useSession() {
+  const [role, setRole] = useState<string | null>(null);
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )conectage-role=([^;]+)/);
+    setRole(match ? match[1] : null);
+  }, []);
+  return role;
+}
 
 function SearchBar({ className }: { className?: string }) {
   const { t } = useTranslation();
@@ -97,8 +107,16 @@ function LanguageSwitcher() {
 
 export function SiteHeader() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const role = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/");
+    router.refresh();
+  }
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 4);
@@ -145,16 +163,38 @@ export function SiteHeader() {
               <Heart className="size-5" />
             </Link>
 
-            <Link
-              href="/login"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "default" }),
-                "hidden sm:inline-flex",
-              )}
-            >
-              <User className="size-4" />
-              {t("header.login")}
-            </Link>
+            {role ? (
+              <>
+                <Link
+                  href={role === "admin" ? "/admin" : "/mi-cuenta"}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "default" }),
+                    "hidden sm:inline-flex",
+                  )}
+                >
+                  <User className="size-4" />
+                  {role === "admin" ? "Admin" : "Mi cuenta"}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  aria-label="Cerrar sesión"
+                  className="hidden size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary sm:inline-flex"
+                >
+                  <LogOut className="size-4" />
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "default" }),
+                  "hidden sm:inline-flex",
+                )}
+              >
+                <User className="size-4" />
+                {t("header.login")}
+              </Link>
+            )}
 
             <Link
               href="/publicar"
