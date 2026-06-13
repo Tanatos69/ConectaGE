@@ -21,30 +21,32 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { adminStats } from "@/lib/demo-admin";
+import { useTranslation } from "@/lib/i18n/context";
 
 interface AdminNavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   badge?: number;
   exact?: boolean;
 }
 
 const items: AdminNavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/moderacion", label: "Moderación", icon: ShieldCheck, badge: adminStats.pendingModeration },
-  { href: "/admin/anuncios", label: "Anuncios", icon: FileText },
-  { href: "/admin/usuarios", label: "Usuarios", icon: Users },
-  { href: "/admin/categorias", label: "Categorías", icon: Tag },
-  { href: "/admin/resenas", label: "Reseñas", icon: Star, badge: adminStats.pendingReviews },
-  { href: "/admin/reportes", label: "Reportes", icon: Flag, badge: adminStats.totalReports },
-  { href: "/admin/destacados", label: "Destacados", icon: Sparkles, badge: adminStats.pendingFeatured },
-  { href: "/admin/analiticas", label: "Analíticas", icon: BarChart3 },
-  { href: "/admin/ajustes", label: "Ajustes", icon: Settings },
+  { href: "/admin", labelKey: "admin.dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/moderacion", labelKey: "admin.moderation", icon: ShieldCheck, badge: adminStats.pendingModeration },
+  { href: "/admin/anuncios", labelKey: "admin.listings", icon: FileText },
+  { href: "/admin/usuarios", labelKey: "admin.users", icon: Users },
+  { href: "/admin/categorias", labelKey: "admin.categories", icon: Tag },
+  { href: "/admin/resenas", labelKey: "admin.reviews", icon: Star, badge: adminStats.pendingReviews },
+  { href: "/admin/reportes", labelKey: "admin.reports", icon: Flag, badge: adminStats.totalReports },
+  { href: "/admin/destacados", labelKey: "admin.featured", icon: Sparkles, badge: adminStats.pendingFeatured },
+  { href: "/admin/analiticas", labelKey: "admin.analytics", icon: BarChart3 },
+  { href: "/admin/ajustes", labelKey: "admin.settings", icon: Settings },
 ];
 
 function NavLink({ item, onClick }: { item: AdminNavItem; onClick?: () => void }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
   const Icon = item.icon;
 
@@ -60,7 +62,7 @@ function NavLink({ item, onClick }: { item: AdminNavItem; onClick?: () => void }
       )}
     >
       <Icon className="size-4 shrink-0" />
-      <span className="flex-1">{item.label}</span>
+      <span className="flex-1">{t(item.labelKey)}</span>
       {item.badge != null && item.badge > 0 && (
         <span className="flex size-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
           {item.badge > 99 ? "99+" : item.badge}
@@ -80,8 +82,24 @@ export function AdminNav() {
   );
 }
 
+export function AdminSidebarFooter() {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-6 border-t pt-4">
+      <Link
+        href="/"
+        className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+      >
+        <ExternalLink className="size-4" />
+        {t("admin.viewSite")}
+      </Link>
+    </div>
+  );
+}
+
 export function AdminMobileHeader() {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const pathname = usePathname();
   const current = items.find((i) =>
     i.exact ? pathname === i.href : pathname.startsWith(i.href),
@@ -95,13 +113,13 @@ export function AdminMobileHeader() {
             Admin
           </span>
           <span className="text-sm font-medium text-foreground">
-            {current?.label ?? "Dashboard"}
+            {current ? t(current.labelKey) : t("admin.dashboard")}
           </span>
         </div>
         <button
           onClick={() => setOpen(true)}
           className="flex size-9 items-center justify-center rounded-xl border border-input bg-background text-muted-foreground"
-          aria-label="Abrir menú admin"
+          aria-label={t("admin.openMenu")}
         >
           <Menu className="size-4" />
         </button>
@@ -140,7 +158,7 @@ export function AdminMobileHeader() {
                 onClick={() => setOpen(false)}
               >
                 <ExternalLink className="size-4" />
-                Ver sitio público
+                {t("admin.viewSite")}
                 <ChevronRight className="ml-auto size-3.5" />
               </Link>
             </div>

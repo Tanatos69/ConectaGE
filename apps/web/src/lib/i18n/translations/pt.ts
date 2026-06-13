@@ -142,4 +142,20 @@ export const pt: Translations = {
   whatsappCta: {
     contact: "Contatar pelo WhatsApp",
   },
+  admin: {
+    dashboard: "Painel",
+    moderation: "Moderação",
+    listings: "Anúncios",
+    users: "Usuários",
+    categories: "Categorias",
+    reviews: "Avaliações",
+    reports: "Denúncias",
+    featured: "Destaques",
+    analytics: "Análises",
+    settings: "Configurações",
+    viewSite: "Ver site público",
+    openMenu: "Abrir menu admin",
+    restricted: "Área restrita.",
+    restrictedRole: "Em produção, requer sessão com função",
+  },
 };

@@ -142,4 +142,20 @@ export const ar: Translations = {
   whatsappCta: {
     contact: "التواصل عبر واتساب",
   },
+  admin: {
+    dashboard: "لوحة التحكم",
+    moderation: "الإشراف",
+    listings: "الإعلانات",
+    users: "المستخدمون",
+    categories: "الفئات",
+    reviews: "التقييمات",
+    reports: "البلاغات",
+    featured: "المميزة",
+    analytics: "التحليلات",
+    settings: "الإعدادات",
+    viewSite: "عرض الموقع العام",
+    openMenu: "فتح قائمة الإدارة",
+    restricted: "منطقة محظورة.",
+    restrictedRole: "في الإنتاج، يتطلب جلسة بدور",
+  },
 };

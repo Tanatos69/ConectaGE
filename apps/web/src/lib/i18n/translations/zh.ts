@@ -142,4 +142,20 @@ export const zh: Translations = {
   whatsappCta: {
     contact: "通过WhatsApp联系",
   },
+  admin: {
+    dashboard: "仪表板",
+    moderation: "审核",
+    listings: "广告",
+    users: "用户",
+    categories: "类别",
+    reviews: "评价",
+    reports: "举报",
+    featured: "精选",
+    analytics: "数据分析",
+    settings: "设置",
+    viewSite: "查看公共网站",
+    openMenu: "打开管理菜单",
+    restricted: "受限区域。",
+    restrictedRole: "生产环境需要具有角色的会话",
+  },
 };

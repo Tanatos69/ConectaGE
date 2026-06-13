@@ -125,4 +125,20 @@ export interface Translations {
   whatsappCta: {
     contact: string;
   };
+  admin: {
+    dashboard: string;
+    moderation: string;
+    listings: string;
+    users: string;
+    categories: string;
+    reviews: string;
+    reports: string;
+    featured: string;
+    analytics: string;
+    settings: string;
+    viewSite: string;
+    openMenu: string;
+    restricted: string;
+    restrictedRole: string;
+  };
 }
