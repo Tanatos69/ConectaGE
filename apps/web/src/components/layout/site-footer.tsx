@@ -1,51 +1,42 @@
+"use client";
+
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { categories } from "@/lib/categories";
-
-const navColumns = [
-  {
-    title: "Marketplace",
-    links: [
-      { label: "Explorar anuncios", href: "/buscar" },
-      { label: "Todas las categorías", href: "/categorias" },
-      { label: "Publicar anuncio", href: "/publicar" },
-      { label: "Planes destacados", href: "/planes" },
-    ],
-  },
-  {
-    title: "Empresa",
-    links: [
-      { label: "Sobre nosotros", href: "/sobre-nosotros" },
-      { label: "Contacto", href: "/contacto" },
-      { label: "Ayuda / FAQ", href: "/ayuda" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Términos y condiciones", href: "/terminos" },
-      { label: "Política de privacidad", href: "/privacidad" },
-      { label: "Política de cookies", href: "/cookies" },
-    ],
-  },
-];
-
-function SocialIcon({ children, label, href }: { children: React.ReactNode; label: string; href: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      className="flex size-9 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-    >
-      {children}
-    </a>
-  );
-}
+import { useTranslation } from "@/lib/i18n/context";
 
 export function SiteFooter() {
+  const { t } = useTranslation();
+
+  const navColumns = [
+    {
+      title: t("footer.marketplace"),
+      links: [
+        { label: t("footer.exploreListings"), href: "/buscar" },
+        { label: t("footer.allCategories"), href: "/categorias" },
+        { label: t("footer.publishListing"), href: "/publicar" },
+        { label: t("footer.featuredPlans"), href: "/planes" },
+      ],
+    },
+    {
+      title: t("footer.company"),
+      links: [
+        { label: t("footer.about"), href: "/sobre-nosotros" },
+        { label: t("footer.contact"), href: "/contacto" },
+        { label: t("footer.help"), href: "/ayuda" },
+      ],
+    },
+    {
+      title: t("footer.legal"),
+      links: [
+        { label: t("footer.terms"), href: "/terminos" },
+        { label: t("footer.privacy"), href: "/privacidad" },
+        { label: t("footer.cookies"), href: "/cookies" },
+      ],
+    },
+  ];
+
   return (
     <footer className="mt-16 border-t bg-secondary/40">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -54,13 +45,12 @@ export function SiteFooter() {
           <div className="col-span-2 md:col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              El mercado de anuncios clasificados de Guinea Ecuatorial. Compra,
-              vende y conecta directamente por WhatsApp.
+              {t("footer.tagline")}
             </p>
             <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground">
               <li className="flex items-center gap-2.5">
                 <MapPin className="size-4 shrink-0 text-primary" />
-                Malabo · Bata, Guinea Ecuatorial
+                {t("footer.location")}
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-primary" />
@@ -93,8 +83,8 @@ export function SiteFooter() {
           ))}
 
           {/* Popular categories */}
-          <nav aria-label="Categorías populares">
-            <h3 className="text-sm font-semibold text-foreground">Populares</h3>
+          <nav aria-label={t("footer.popular")}>
+            <h3 className="text-sm font-semibold text-foreground">{t("footer.popular")}</h3>
             <ul className="mt-4 space-y-3">
               {categories.slice(0, 5).map((cat) => (
                 <li key={cat.slug}>
@@ -102,7 +92,7 @@ export function SiteFooter() {
                     href={`/categoria/${cat.slug}`}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary"
                   >
-                    {cat.name}
+                    {t(`categories.${cat.slug}`)}
                   </Link>
                 </li>
               ))}
@@ -113,7 +103,7 @@ export function SiteFooter() {
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} ConectaGE. Todos los derechos reservados.
+            © {new Date().getFullYear()} {t("footer.copyright")}
           </p>
           <a
             href="https://wa.me/15070831125"
@@ -121,7 +111,7 @@ export function SiteFooter() {
             rel="noopener noreferrer"
             className="text-xs text-muted-foreground transition-colors hover:text-primary"
           >
-            Diseñado por <span className="font-medium">franx</span>
+            {t("footer.designedBy")} <span className="font-medium">franx</span>
           </a>
           <div className="flex items-center gap-2.5">
             <SocialIcon label="Facebook" href="https://facebook.com">
@@ -138,5 +128,19 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function SocialIcon({ children, label, href }: { children: React.ReactNode; label: string; href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="flex size-9 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+    >
+      {children}
+    </a>
   );
 }

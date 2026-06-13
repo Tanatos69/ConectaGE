@@ -1,48 +1,49 @@
+"use client";
+
 import Link from "next/link";
 import { UserPlus, FileText, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const steps = [
-  {
-    icon: UserPlus,
-    title: "1. Regístrate gratis",
-    description:
-      "Crea tu cuenta en segundos con tu teléfono, Google o Facebook. Sin costes ni comisiones.",
-    accent: "bg-blue-50 text-blue-600",
-  },
-  {
-    icon: FileText,
-    title: "2. Publica tu anuncio",
-    description:
-      "Añade fotos, precio y descripción. Tu anuncio se revisa y se publica para todo el país.",
-    accent: "bg-violet-50 text-violet-600",
-  },
-  {
-    icon: WhatsAppIcon,
-    title: "3. Contacta por WhatsApp",
-    description:
-      "Los compradores te escriben directamente por WhatsApp. Tú cierras el trato, sin intermediarios.",
-    accent: "bg-emerald-50 text-emerald-600",
-  },
-];
+import { useTranslation } from "@/lib/i18n/context";
 
 export function HowItWorks() {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: UserPlus,
+      title: t("howItWorks.step1Title"),
+      description: t("howItWorks.step1Desc"),
+      accent: "bg-blue-50 text-blue-600",
+    },
+    {
+      icon: FileText,
+      title: t("howItWorks.step2Title"),
+      description: t("howItWorks.step2Desc"),
+      accent: "bg-violet-50 text-violet-600",
+    },
+    {
+      icon: WhatsAppIcon,
+      title: t("howItWorks.step3Title"),
+      description: t("howItWorks.step3Desc"),
+      accent: "bg-emerald-50 text-emerald-600",
+    },
+  ];
+
   return (
     <section className="border-t bg-secondary/40">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-            Vender nunca fue tan fácil
+            {t("howItWorks.title")}
           </h2>
           <p className="mt-3 text-base text-muted-foreground">
-            Tres pasos para llegar a miles de compradores en Guinea Ecuatorial.
+            {t("howItWorks.subtitle")}
           </p>
         </div>
 
         <div className="relative mt-12 grid gap-6 md:grid-cols-3">
-          {/* Connecting line (desktop) */}
           <div
             className="absolute left-1/2 top-9 hidden h-0.5 w-2/3 -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-transparent md:block"
             aria-hidden="true"
@@ -65,14 +66,14 @@ export function HowItWorks() {
 
         <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/publicar" className={cn(buttonVariants({ size: "lg" }))}>
-            Empezar a vender
+            {t("howItWorks.startCta")}
             <ArrowRight className="size-4" />
           </Link>
           <Link
             href="/ayuda"
             className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
           >
-            ¿Cómo funciona?
+            {t("howItWorks.howCta")}
           </Link>
         </div>
       </div>

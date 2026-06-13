@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
@@ -6,12 +8,7 @@ import { FavoriteButton } from "@/components/listing/favorite-button";
 import { formatPrice } from "@/lib/format";
 import type { Listing } from "@/lib/listings";
 import { cn } from "@/lib/utils";
-
-const conditionLabel: Record<string, string> = {
-  new: "Nuevo",
-  used: "Usado",
-  refurbished: "Reacondicionado",
-};
+import { useTranslation } from "@/lib/i18n/context";
 
 export function ListingCard({
   listing,
@@ -22,7 +19,14 @@ export function ListingCard({
   priority?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const negotiable = listing.priceType === "negotiable";
+
+  const conditionLabel: Record<string, string> = {
+    new: t("card.new"),
+    used: t("card.used"),
+    refurbished: t("card.refurbished"),
+  };
 
   return (
     <Link
@@ -52,11 +56,11 @@ export function ListingCard({
             {listing.featured && (
               <Badge variant="featured" className="shadow-sm">
                 <Star className="size-3 fill-current" />
-                Destacado
+                {t("card.featured")}
               </Badge>
             )}
             {listing.condition === "new" && (
-              <Badge variant="new" className="shadow-sm">Nuevo</Badge>
+              <Badge variant="new" className="shadow-sm">{t("card.new")}</Badge>
             )}
           </div>
           <FavoriteButton />
@@ -88,7 +92,7 @@ export function ListingCard({
               {formatPrice(listing)}
             </span>
             {negotiable && (
-              <span className="text-xs font-medium text-muted-foreground">Negociable</span>
+              <span className="text-xs font-medium text-muted-foreground">{t("card.negotiable")}</span>
             )}
           </div>
 

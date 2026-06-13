@@ -6,11 +6,13 @@ import { Search, Plus, Menu, X, ChevronDown, User, Heart } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { languages, defaultLanguage } from "@/lib/languages";
+import { languages } from "@/lib/languages";
 import { categories } from "@/lib/categories";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/context";
 
 function SearchBar({ className }: { className?: string }) {
+  const { t } = useTranslation();
   return (
     <form
       action="/buscar"
@@ -24,23 +26,23 @@ function SearchBar({ className }: { className?: string }) {
       <input
         type="search"
         name="q"
-        placeholder="¿Qué estás buscando?"
-        aria-label="Buscar anuncios"
+        placeholder={t("header.searchPlaceholder")}
+        aria-label={t("header.searchLabel")}
         className="h-full flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
       />
       <button
         type="submit"
         className="m-1 hidden h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
       >
-        Buscar
+        {t("header.searchButton")}
       </button>
     </form>
   );
 }
 
 function LanguageSwitcher() {
+  const { language, setLanguage, t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [current, setCurrent] = useState(defaultLanguage);
 
   return (
     <div className="relative">
@@ -51,8 +53,8 @@ function LanguageSwitcher() {
         aria-expanded={open}
         className="flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
       >
-        <span className="text-base leading-none">{current.flag}</span>
-        <span className="hidden lg:inline">{current.code.toUpperCase()}</span>
+        <span className="text-base leading-none">{language.flag}</span>
+        <span className="hidden lg:inline">{language.code.toUpperCase()}</span>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
@@ -60,7 +62,7 @@ function LanguageSwitcher() {
         <>
           <button
             type="button"
-            aria-label="Cerrar menú de idiomas"
+            aria-label={t("header.closeLangMenu")}
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setOpen(false)}
           />
@@ -72,14 +74,14 @@ function LanguageSwitcher() {
               <button
                 key={lang.code}
                 role="menuitemradio"
-                aria-checked={lang.code === current.code}
+                aria-checked={lang.code === language.code}
                 onClick={() => {
-                  setCurrent(lang);
+                  setLanguage(lang);
                   setOpen(false);
                 }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-secondary",
-                  lang.code === current.code && "bg-accent font-semibold text-accent-foreground",
+                  lang.code === language.code && "bg-accent font-semibold text-accent-foreground",
                 )}
               >
                 <span className="text-base leading-none">{lang.flag}</span>
@@ -94,6 +96,7 @@ function LanguageSwitcher() {
 }
 
 export function SiteHeader() {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -117,7 +120,7 @@ export function SiteHeader() {
         <div className="flex h-16 items-center gap-3">
           <button
             type="button"
-            aria-label="Abrir menú"
+            aria-label={t("header.openMenu")}
             onClick={() => setMenuOpen(true)}
             className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary md:hidden"
           >
@@ -136,7 +139,7 @@ export function SiteHeader() {
 
             <Link
               href="/mi-cuenta/favoritos"
-              aria-label="Favoritos"
+              aria-label={t("header.favorites")}
               className="hidden size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary sm:inline-flex"
             >
               <Heart className="size-5" />
@@ -150,7 +153,7 @@ export function SiteHeader() {
               )}
             >
               <User className="size-4" />
-              Entrar
+              {t("header.login")}
             </Link>
 
             <Link
@@ -158,8 +161,8 @@ export function SiteHeader() {
               className={buttonVariants({ variant: "default", size: "default" })}
             >
               <Plus className="size-4" />
-              <span className="hidden sm:inline">Publicar anuncio</span>
-              <span className="sm:hidden">Publicar</span>
+              <span className="hidden sm:inline">{t("header.publish")}</span>
+              <span className="sm:hidden">{t("header.publishShort")}</span>
             </Link>
           </div>
         </div>
@@ -171,7 +174,7 @@ export function SiteHeader() {
 
         {/* Desktop category quick-nav */}
         <nav
-          aria-label="Categorías"
+          aria-label={t("header.searchLabel")}
           className="no-scrollbar -mb-px hidden items-center gap-1 overflow-x-auto md:flex"
         >
           {categories.slice(0, 10).map((cat) => (
@@ -181,14 +184,14 @@ export function SiteHeader() {
               className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] text-muted-foreground transition-colors hover:border-primary hover:text-primary"
             >
               <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0" aria-hidden="true" />
-              {cat.name}
+              {t(`categories.${cat.slug}`)}
             </Link>
           ))}
           <Link
             href="/categorias"
             className="flex shrink-0 items-center px-3 py-2.5 text-sm font-semibold text-primary"
           >
-            Ver todas →
+            {t("header.seeAll")}
           </Link>
         </nav>
       </div>
@@ -198,7 +201,7 @@ export function SiteHeader() {
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            aria-label="Cerrar menú"
+            aria-label={t("header.closeMenu")}
             className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
@@ -207,7 +210,7 @@ export function SiteHeader() {
               <Logo />
               <button
                 type="button"
-                aria-label="Cerrar menú"
+                aria-label={t("header.closeMenu")}
                 onClick={() => setMenuOpen(false)}
                 className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary"
               >
@@ -223,19 +226,19 @@ export function SiteHeader() {
                   className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
                 >
                   <User className="size-4" />
-                  Entrar
+                  {t("header.login")}
                 </Link>
                 <Link
                   href="/registro"
                   onClick={() => setMenuOpen(false)}
                   className={cn(buttonVariants({ variant: "default" }), "flex-1")}
                 >
-                  Registrarse
+                  {t("header.register")}
                 </Link>
               </div>
 
               <p className="mt-6 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Categorías
+                {t("categoryGrid.title")}
               </p>
               <nav className="mt-2 grid gap-0.5">
                 {categories.map((cat) => (
@@ -246,7 +249,7 @@ export function SiteHeader() {
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                   >
                     <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    {cat.name}
+                    {t(`categories.${cat.slug}`)}
                   </Link>
                 ))}
               </nav>

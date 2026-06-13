@@ -1,26 +1,31 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { categories, toneStyles } from "@/lib/categories";
 import { formatNumber } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n/context";
 
 export function CategoryGrid() {
+  const { t } = useTranslation();
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-            Explora por categoría
+            {t("categoryGrid.title")}
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
-            Encuentra justo lo que necesitas entre miles de anuncios.
+            {t("categoryGrid.subtitle")}
           </p>
         </div>
         <Link
           href="/categorias"
           className="hidden shrink-0 items-center gap-1.5 text-sm font-semibold text-primary hover:underline sm:inline-flex"
         >
-          Ver todas
+          {t("categoryGrid.seeAll")}
           <ArrowRight className="size-4" />
         </Link>
       </div>
@@ -42,10 +47,10 @@ export function CategoryGrid() {
               </span>
               <span className="flex flex-col gap-0.5">
                 <span className="text-sm font-semibold leading-tight text-foreground">
-                  {cat.name}
+                  {t(`categories.${cat.slug}`)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {formatNumber(cat.count)} anuncios
+                  {formatNumber(cat.count)} {t("categoryGrid.listingsSuffix")}
                 </span>
               </span>
             </Link>
@@ -57,7 +62,7 @@ export function CategoryGrid() {
         href="/categorias"
         className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-primary hover:underline sm:hidden"
       >
-        Ver todas las categorías
+        {t("categoryGrid.seeAllMobile")}
         <ArrowRight className="size-4" />
       </Link>
     </section>

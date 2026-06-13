@@ -1,0 +1,128 @@
+export interface Translations {
+  header: {
+    searchPlaceholder: string;
+    searchLabel: string;
+    searchButton: string;
+    openMenu: string;
+    closeMenu: string;
+    closeLangMenu: string;
+    favorites: string;
+    login: string;
+    register: string;
+    publish: string;
+    publishShort: string;
+    seeAll: string;
+  };
+  footer: {
+    tagline: string;
+    marketplace: string;
+    exploreListings: string;
+    allCategories: string;
+    publishListing: string;
+    featuredPlans: string;
+    company: string;
+    about: string;
+    contact: string;
+    help: string;
+    legal: string;
+    terms: string;
+    privacy: string;
+    cookies: string;
+    popular: string;
+    location: string;
+    copyright: string;
+    designedBy: string;
+  };
+  hero: {
+    badge: string;
+    titleStart: string;
+    titleHighlight: string;
+    titleEnd: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    searchLabel: string;
+    cityLabel: string;
+    searchButton: string;
+    popular: string;
+    publishCta: string;
+    exploreCta: string;
+    verified: string;
+    quickPublish: string;
+    noFees: string;
+    cityAll: string;
+  };
+  categoryGrid: {
+    title: string;
+    subtitle: string;
+    seeAll: string;
+    listingsSuffix: string;
+    seeAllMobile: string;
+  };
+  featuredListings: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    highlightCta: string;
+  };
+  recentListings: {
+    title: string;
+    subtitle: string;
+    seeAll: string;
+    seeMore: string;
+  };
+  howItWorks: {
+    title: string;
+    subtitle: string;
+    startCta: string;
+    howCta: string;
+    step1Title: string;
+    step1Desc: string;
+    step2Title: string;
+    step2Desc: string;
+    step3Title: string;
+    step3Desc: string;
+  };
+  stats: {
+    activeListings: string;
+    users: string;
+    cities: string;
+    available: string;
+  };
+  categories: Record<string, string>;
+  card: {
+    new: string;
+    used: string;
+    refurbished: string;
+    featured: string;
+    negotiable: string;
+  };
+  filters: {
+    sort: string;
+    newest: string;
+    priceLow: string;
+    priceHigh: string;
+    mostViewed: string;
+    price: string;
+    minPrice: string;
+    maxPrice: string;
+    condition: string;
+    conditionNew: string;
+    conditionUsed: string;
+    conditionRefurbished: string;
+    city: string;
+    allCities: string;
+    title: string;
+    clear: string;
+    closeFilters: string;
+    close: string;
+    seeResults: string;
+  };
+  whatsappFloat: {
+    help: string;
+    contactLabel: string;
+    message: string;
+  };
+  whatsappCta: {
+    contact: string;
+  };
+}

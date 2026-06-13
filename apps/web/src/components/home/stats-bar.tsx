@@ -1,11 +1,17 @@
-const stats = [
-  { value: "8.900+", label: "Anuncios activos" },
-  { value: "5.200+", label: "Usuarios registrados" },
-  { value: "9", label: "Ciudades cubiertas" },
-  { value: "24/7", label: "Disponible siempre" },
-];
+"use client";
+
+import { useTranslation } from "@/lib/i18n/context";
 
 export function StatsBar() {
+  const { t } = useTranslation();
+
+  const stats = [
+    { value: "8.900+", label: t("stats.activeListings") },
+    { value: "5.200+", label: t("stats.users") },
+    { value: "9", label: t("stats.cities") },
+    { value: "24/7", label: t("stats.available") },
+  ];
+
   return (
     <section className="bg-gradient-to-br from-blue-800 via-primary to-blue-600 text-primary-foreground">
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">

@@ -1,12 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Search, MapPin, ShieldCheck, Zap, Tag } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { buttonVariants } from "@/components/ui/button";
 import { categories } from "@/lib/categories";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/context";
 
-const cities = [
-  "Toda Guinea Ecuatorial",
+const fixedCities = [
   "Malabo",
   "Bata",
   "Ebebiyín",
@@ -18,6 +20,8 @@ const cities = [
 ];
 
 export function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative overflow-hidden border-b">
       {/* Background */}
@@ -40,13 +44,13 @@ export function Hero() {
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-whatsapp opacity-60" />
               <span className="relative inline-flex size-2 rounded-full bg-whatsapp" />
             </span>
-            Contacto directo por WhatsApp · Sin intermediarios
+            {t("hero.badge")}
           </span>
 
           <h1 className="mt-6 text-balance text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Compra y vende en{" "}
+            {t("hero.titleStart")}{" "}
             <span className="relative inline-block whitespace-nowrap text-primary">
-              Guinea Ecuatorial
+              {t("hero.titleHighlight")}
               <svg
                 viewBox="0 0 320 10"
                 fill="none"
@@ -65,12 +69,11 @@ export function Hero() {
                 />
               </svg>
             </span>
+            {t("hero.titleEnd") && <> {t("hero.titleEnd")}</>}
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Miles de anuncios de vehículos, inmuebles, electrónica y empleo en
-            Malabo, Bata y todo el país. Publicar es{" "}
-            <span className="font-semibold text-foreground">100% gratis</span>.
+            {t("hero.subtitle")}
           </p>
 
           {/* Search card */}
@@ -84,8 +87,8 @@ export function Hero() {
               <input
                 type="search"
                 name="q"
-                placeholder="Ej: Toyota, apartamento, iPhone…"
-                aria-label="Buscar anuncios"
+                placeholder={t("hero.searchPlaceholder")}
+                aria-label={t("hero.searchLabel")}
                 className="h-10 w-full bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
@@ -94,11 +97,12 @@ export function Hero() {
               <MapPin className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <select
                 name="ciudad"
-                aria-label="Ciudad"
+                aria-label={t("hero.cityLabel")}
                 className="h-10 w-full cursor-pointer bg-transparent px-2 text-sm outline-none sm:w-44"
-                defaultValue="Toda Guinea Ecuatorial"
+                defaultValue=""
               >
-                {cities.map((city) => (
+                <option value="">{t("hero.cityAll")}</option>
+                {fixedCities.map((city) => (
                   <option key={city} value={city}>
                     {city}
                   </option>
@@ -111,13 +115,13 @@ export function Hero() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
             >
               <Search className="size-4" />
-              Buscar
+              {t("hero.searchButton")}
             </button>
           </form>
 
           {/* Quick category chips */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-sm text-muted-foreground">Popular:</span>
+            <span className="text-sm text-muted-foreground">{t("hero.popular")}</span>
             {categories.slice(0, 5).map((cat) => (
               <Link
                 key={cat.slug}
@@ -125,7 +129,7 @@ export function Hero() {
                 className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary hover:text-primary"
               >
                 <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0" aria-hidden="true" />
-                {cat.name}
+                {t(`categories.${cat.slug}`)}
               </Link>
             ))}
           </div>
@@ -136,13 +140,13 @@ export function Hero() {
               href="/publicar"
               className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
             >
-              Publicar anuncio gratis
+              {t("hero.publishCta")}
             </Link>
             <Link
               href="/categorias"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
             >
-              Explorar categorías
+              {t("hero.exploreCta")}
             </Link>
           </div>
 
@@ -150,15 +154,15 @@ export function Hero() {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-primary" />
-              Anuncios verificados
+              {t("hero.verified")}
             </span>
             <span className="flex items-center gap-2">
               <Zap className="size-4 text-primary" />
-              Publica en 2 minutos
+              {t("hero.quickPublish")}
             </span>
             <span className="flex items-center gap-2">
               <Tag className="size-4 text-primary" />
-              Sin comisiones
+              {t("hero.noFees")}
             </span>
           </div>
         </div>
