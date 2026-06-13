@@ -1,0 +1,23 @@
+# Netlify deployment config — presentation phase
+# Repo is a pnpm monorepo; the Next.js app lives in apps/web.
+# When the client approves, the same repo redeploys to a Hostinger VPS
+# with zero code changes (only env vars move).
+
+[build]
+  base = "/"
+  command = "pnpm --filter web build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PNPM_VERSION = "9"
+  # Ensure pnpm installs workspace deps from the repo root
+  NPM_FLAGS = "--version"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[dev]
+  command = "pnpm --filter web dev"
+  targetPort = 3000
+  framework = "next"

@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+
+# pnpm 11 build-script approvals (true = run native build, false = skip).
+# unrs-resolver ships a JS fallback, so skipping its build is safe and keeps
+# `pnpm install` exiting 0.
+allowBuilds:
+  sharp: true
+  '@tailwindcss/oxide': true
+  esbuild: true
+  unrs-resolver: false
