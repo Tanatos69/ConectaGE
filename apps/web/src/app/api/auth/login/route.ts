@@ -35,7 +35,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }
 
-  const res = NextResponse.json({ role: account.role });
+  const username = email.split("@")[0];
+  const res = NextResponse.json({ role: account.role, username });
 
   // httpOnly — read by middleware to protect routes
   res.cookies.set("conectage-session", account.role, {
@@ -46,6 +47,13 @@ export async function POST(req: Request) {
   });
   // readable by JS — used by the header to show Sign out vs Sign in
   res.cookies.set("conectage-role", account.role, {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24,
+  });
+  // readable by JS — used by the header to show the user's name
+  res.cookies.set("conectage-user", username, {
     httpOnly: false,
     sameSite: "lax",
     path: "/",

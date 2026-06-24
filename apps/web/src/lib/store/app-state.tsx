@@ -121,12 +121,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [credits, setCredits] = useState<CreditsState>(DEFAULT_CREDITS);
 
-  // Hydrate every slice once on mount.
+  // Hydrate every slice once on mount. Spread DEFAULT_CREDITS so setCredits
+  // always receives a new object reference, preventing React from bailing out
+  // of the state update (which would skip the persistence effect on first visit).
   useEffect(() => {
     setFavorites(readJSON<string[]>(KEYS.favorites, []));
     setFollows(readJSON<string[]>(KEYS.follows, []));
     setSavedSearches(readJSON<SavedSearch[]>(KEYS.savedSearches, []));
-    setCredits(readJSON<CreditsState>(KEYS.credits, DEFAULT_CREDITS));
+    const stored = localStorage.getItem(KEYS.credits);
+    setCredits(stored ? (JSON.parse(stored) as CreditsState) : { ...DEFAULT_CREDITS });
     setHydrated(true);
   }, []);
 

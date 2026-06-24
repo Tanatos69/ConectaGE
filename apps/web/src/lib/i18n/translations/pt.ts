@@ -109,6 +109,11 @@ export const pt: Translations = {
     turismo: "Turismo",
     "finanzas-empresas": "Finanças e Empresas",
     otros: "Outros",
+    muebles: "Móveis e Casa",
+    salud: "Saúde e Beleza",
+    deporte: "Esporte e Lazer",
+    finanzas: "Finanças e Empresas",
+    varios: "Outros",
   },
   card: {
     new: "Novo",

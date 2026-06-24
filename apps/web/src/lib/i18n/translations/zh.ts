@@ -109,6 +109,11 @@ export const zh: Translations = {
     turismo: "旅游",
     "finanzas-empresas": "金融与商业",
     otros: "其他",
+    muebles: "家具与家居",
+    salud: "健康与美容",
+    deporte: "运动与休闲",
+    finanzas: "金融与商业",
+    varios: "其他",
   },
   card: {
     new: "全新",

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store } from "lucide-react";
+import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store, LayoutGrid } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,11 +13,14 @@ import { useTranslation } from "@/lib/i18n/context";
 
 function useSession() {
   const [role, setRole] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )conectage-role=([^;]+)/);
-    setRole(match ? match[1] : null);
+    const roleMatch = document.cookie.match(/(?:^|; )conectage-role=([^;]+)/);
+    const userMatch = document.cookie.match(/(?:^|; )conectage-user=([^;]+)/);
+    setRole(roleMatch ? roleMatch[1] : null);
+    setUsername(userMatch ? decodeURIComponent(userMatch[1]) : null);
   }, []);
-  return role;
+  return { role, username };
 }
 
 function SearchBar({ className }: { className?: string }) {
@@ -40,12 +42,14 @@ function SearchBar({ className }: { className?: string }) {
         aria-label={t("header.searchLabel")}
         className="h-full flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
       />
-      <button
-        type="submit"
-        className="m-1 hidden h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
+      <Link
+        href="/publicar"
+        onClick={(e) => e.stopPropagation()}
+        className="m-1 hidden h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
       >
-        {t("header.searchButton")}
-      </button>
+        <Plus className="size-3.5" />
+        <span className="hidden sm:inline">{t("header.publishShort")}</span>
+      </Link>
     </form>
   );
 }
@@ -107,15 +111,15 @@ function LanguageSwitcher() {
 
 export function SiteHeader() {
   const { t } = useTranslation();
-  const router = useRouter();
-  const role = useSession();
+  const { role, username } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [explorarOpen, setExplorarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const explorarRef = useRef<HTMLDivElement>(null);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
+    window.location.href = "/";
   }
 
   useEffect(() => {
@@ -123,6 +127,28 @@ export function SiteHeader() {
     window.addEventListener("scroll", h, { passive: true });
     return () => window.removeEventListener("scroll", h);
   }, []);
+
+  useEffect(() => {
+    if (!explorarOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (explorarRef.current && !explorarRef.current.contains(e.target as Node)) {
+        setExplorarOpen(false);
+      }
+    }
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setExplorarOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [explorarOpen]);
+
+  const displayName = username
+    ? username.length > 14 ? username.slice(0, 14) + "…" : username
+    : role === "admin" ? "Admin" : null;
 
   return (
     <header
@@ -147,7 +173,7 @@ export function SiteHeader() {
 
           <Logo />
 
-          {/* Desktop search */}
+          {/* Desktop search + Publicar compound bar */}
           <div className="mx-2 hidden flex-1 md:flex">
             <SearchBar />
           </div>
@@ -173,7 +199,7 @@ export function SiteHeader() {
                   )}
                 >
                   <User className="size-4" />
-                  {role === "admin" ? "Admin" : "Mi cuenta"}
+                  {displayName ?? "Mi cuenta"}
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -196,13 +222,13 @@ export function SiteHeader() {
               </Link>
             )}
 
+            {/* Mobile Publicar button */}
             <Link
               href="/publicar"
-              className={buttonVariants({ variant: "default", size: "default" })}
+              className={cn(buttonVariants({ variant: "default", size: "icon" }), "sm:hidden")}
+              aria-label={t("header.publish")}
             >
-              <Plus className="size-4" />
-              <span className="hidden sm:inline">{t("header.publish")}</span>
-              <span className="sm:hidden">{t("header.publishShort")}</span>
+              <Plus className="size-5" />
             </Link>
           </div>
         </div>
@@ -212,35 +238,70 @@ export function SiteHeader() {
           <SearchBar />
         </div>
 
-        {/* Desktop category quick-nav */}
-        <nav
-          aria-label={t("header.searchLabel")}
-          className="no-scrollbar -mb-px hidden items-center gap-1 overflow-x-auto md:flex"
-        >
-          <Link
-            href="/tiendas"
-            className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+        {/* Desktop sub-nav: Explorar + Tiendas */}
+        <div className="relative hidden md:block" ref={explorarRef}>
+          <nav
+            aria-label="Navegación principal"
+            className="no-scrollbar -mb-px flex items-center gap-1"
           >
-            <Store className="size-3.5 shrink-0" aria-hidden="true" />
-            {t("header.stores")}
-          </Link>
-          {categories.slice(0, 10).map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/categoria/${cat.slug}`}
-              className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            {/* Explorar dropdown trigger */}
+            <button
+              type="button"
+              onClick={() => setExplorarOpen((v) => !v)}
+              aria-expanded={explorarOpen}
+              aria-haspopup="true"
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-semibold transition-colors",
+                explorarOpen
+                  ? "border-primary text-primary"
+                  : "border-transparent text-foreground hover:border-primary hover:text-primary",
+              )}
             >
-              <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0" aria-hidden="true" />
-              {t(`categories.${cat.slug}`)}
+              <LayoutGrid className="size-3.5 shrink-0" aria-hidden="true" />
+              Explorar
+              <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", explorarOpen && "rotate-180")} />
+            </button>
+
+            <Link
+              href="/tiendas"
+              className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <Store className="size-3.5 shrink-0" aria-hidden="true" />
+              {t("header.stores")}
             </Link>
-          ))}
-          <Link
-            href="/categorias"
-            className="flex shrink-0 items-center px-3 py-2.5 text-sm font-semibold text-primary"
-          >
-            {t("header.seeAll")}
-          </Link>
-        </nav>
+          </nav>
+
+          {/* Explorar category mega-panel */}
+          {explorarOpen && (
+            <div className="absolute left-0 top-full z-50 mt-1 w-[600px] overflow-hidden rounded-xl border bg-popover p-4 shadow-xl">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("categoryGrid.title")}
+              </p>
+              <div className="grid grid-cols-4 gap-1">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    href={`/categoria/${cat.slug}`}
+                    onClick={() => setExplorarOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span className="line-clamp-1">{t(`categories.${cat.slug}`)}</span>
+                  </Link>
+                ))}
+              </div>
+              <div className="mt-3 border-t pt-3">
+                <Link
+                  href="/categorias"
+                  onClick={() => setExplorarOpen(false)}
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  {t("header.seeAll")}
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile slide-over menu */}
@@ -266,23 +327,43 @@ export function SiteHeader() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="flex gap-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
-                >
-                  <User className="size-4" />
-                  {t("header.login")}
-                </Link>
-                <Link
-                  href="/registro"
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(buttonVariants({ variant: "default" }), "flex-1")}
-                >
-                  {t("header.register")}
-                </Link>
-              </div>
+              {role ? (
+                <div className="flex gap-2">
+                  <Link
+                    href={role === "admin" ? "/admin" : "/mi-cuenta"}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
+                  >
+                    <User className="size-4" />
+                    {displayName ?? "Mi cuenta"}
+                  </Link>
+                  <button
+                    onClick={() => { setMenuOpen(false); handleLogout(); }}
+                    className={cn(buttonVariants({ variant: "ghost" }), "shrink-0")}
+                    aria-label="Cerrar sesión"
+                  >
+                    <LogOut className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
+                  >
+                    <User className="size-4" />
+                    {t("header.login")}
+                  </Link>
+                  <Link
+                    href="/registro"
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(buttonVariants({ variant: "default" }), "flex-1")}
+                  >
+                    {t("header.register")}
+                  </Link>
+                </div>
+              )}
 
               <Link
                 href="/tiendas"

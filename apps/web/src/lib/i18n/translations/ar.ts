@@ -109,6 +109,11 @@ export const ar: Translations = {
     turismo: "السياحة",
     "finanzas-empresas": "المال والأعمال",
     otros: "متنوع",
+    muebles: "الأثاث والمنزل",
+    salud: "الصحة والجمال",
+    deporte: "الرياضة والترفيه",
+    finanzas: "المال والأعمال",
+    varios: "متنوع",
   },
   card: {
     new: "جديد",
