@@ -19,6 +19,8 @@ export interface Listing {
   featured?: boolean;
   rating?: number;
   reviews?: number;
+  /** "offer" (default) = something for sale; "wanted" = a "Busco" request. */
+  listingType?: "offer" | "wanted";
 }
 
 /**
@@ -228,6 +230,7 @@ export const recentListings: Listing[] = [
     categoryName: "Empleo",
     condition: null,
     image: img("conductor"),
+    listingType: "wanted",
   },
   {
     slug: "mesa-comedor-madera-b9c0d1",
@@ -285,4 +288,47 @@ export const recentListings: Listing[] = [
     condition: null,
     image: img("clases"),
   },
+  {
+    slug: "busco-apartamento-alquiler-malabo-w1",
+    title: "Busco apartamento 2 hab. en alquiler · Malabo",
+    price: null,
+    priceType: "on_request",
+    currency: "XAF",
+    city: "Malabo",
+    region: "Bioko Norte",
+    postedLabel: "Hace 3 horas",
+    categorySlug: "inmobiliaria",
+    categoryName: "Inmobiliaria",
+    condition: null,
+    image: img("apartamento-malabo"),
+    listingType: "wanted",
+  },
+  {
+    slug: "busco-iphone-buen-estado-w2",
+    title: "Busco iPhone 13 o superior en buen estado",
+    price: null,
+    priceType: "on_request",
+    currency: "XAF",
+    city: "Bata",
+    region: "Litoral",
+    postedLabel: "Hace 6 horas",
+    categorySlug: "electronica",
+    categoryName: "Electrónica",
+    condition: null,
+    image: img("iphone-15"),
+    listingType: "wanted",
+  },
 ];
+
+/** Every demo listing (featured + recent), the single source for lookups. */
+export const allListings: Listing[] = [...featuredListings, ...recentListings];
+
+export function getListingBySlug(slug: string): Listing | undefined {
+  return allListings.find((l) => l.slug === slug);
+}
+
+export function getListingsBySlugs(slugs: string[]): Listing[] {
+  return slugs
+    .map((slug) => getListingBySlug(slug))
+    .filter((l): l is Listing => Boolean(l));
+}

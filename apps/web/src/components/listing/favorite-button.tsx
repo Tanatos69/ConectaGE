@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppState } from "@/lib/store/app-state";
 
 /**
- * Heart toggle on listing cards. In production this checks auth and persists
- * to the `favorites` table; for the demo it toggles local state and stops the
- * click from following the card link.
+ * Heart toggle on listing cards and detail pages. Persists the listing slug to
+ * the shared app state (localStorage in the demo, a `favorites` table in
+ * production). Stops the click from following the surrounding card link.
  */
-export function FavoriteButton({ className }: { className?: string }) {
-  const [saved, setSaved] = useState(false);
+export function FavoriteButton({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
+  const { isFavorite, toggleFavorite } = useAppState();
+  const saved = isFavorite(slug);
 
   return (
     <button
@@ -20,7 +27,7 @@ export function FavoriteButton({ className }: { className?: string }) {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        setSaved((v) => !v);
+        toggleFavorite(slug);
       }}
       className={cn(
         "flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur transition-all hover:scale-110 hover:bg-background",

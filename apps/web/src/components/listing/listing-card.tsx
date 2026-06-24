@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format";
 import type { Listing } from "@/lib/listings";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
+import { useAppState } from "@/lib/store/app-state";
 
 export function ListingCard({
   listing,
@@ -20,7 +21,9 @@ export function ListingCard({
   className?: string;
 }) {
   const { t } = useTranslation();
+  const { isPromoted } = useAppState();
   const negotiable = listing.priceType === "negotiable";
+  const featured = listing.featured || isPromoted(listing.slug);
 
   const conditionLabel: Record<string, string> = {
     new: t("card.new"),
@@ -33,7 +36,7 @@ export function ListingCard({
       href={`/anuncios/${listing.slug}`}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-1 focus-visible:-translate-y-1",
-        listing.featured
+        featured
           ? "border-amber-300/70 shadow-[var(--shadow-featured)] hover:shadow-[var(--shadow-featured)] ring-1 ring-amber-200/50"
           : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]",
         className,
@@ -53,7 +56,10 @@ export function ListingCard({
         {/* Top badges */}
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
           <div className="flex flex-col gap-1.5">
-            {listing.featured && (
+            {listing.listingType === "wanted" && (
+              <Badge variant="wanted" className="shadow-sm">{t("card.wanted")}</Badge>
+            )}
+            {featured && (
               <Badge variant="featured" className="shadow-sm">
                 <Star className="size-3 fill-current" />
                 {t("card.featured")}
@@ -63,7 +69,7 @@ export function ListingCard({
               <Badge variant="new" className="shadow-sm">{t("card.new")}</Badge>
             )}
           </div>
-          <FavoriteButton />
+          <FavoriteButton slug={listing.slug} />
         </div>
       </div>
 

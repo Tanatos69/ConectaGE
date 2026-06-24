@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut } from "lucide-react";
+import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -217,6 +217,13 @@ export function SiteHeader() {
           aria-label={t("header.searchLabel")}
           className="no-scrollbar -mb-px hidden items-center gap-1 overflow-x-auto md:flex"
         >
+          <Link
+            href="/tiendas"
+            className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <Store className="size-3.5 shrink-0" aria-hidden="true" />
+            {t("header.stores")}
+          </Link>
           {categories.slice(0, 10).map((cat) => (
             <Link
               key={cat.slug}
@@ -276,6 +283,15 @@ export function SiteHeader() {
                   {t("header.register")}
                 </Link>
               </div>
+
+              <Link
+                href="/tiendas"
+                onClick={() => setMenuOpen(false)}
+                className="mt-4 flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                <Store className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                {t("header.stores")}
+              </Link>
 
               <p className="mt-6 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("categoryGrid.title")}

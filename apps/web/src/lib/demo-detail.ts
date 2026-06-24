@@ -11,6 +11,10 @@ export interface SellerProfile {
   whatsapp: string;
   city: string;
   bio: string;
+  /** Professional (business) account vs. a private individual. */
+  professional?: boolean;
+  /** Linked vendor store, when the seller runs a "tienda". */
+  storeSlug?: string;
 }
 
 export interface Review {
@@ -46,6 +50,8 @@ export const demoSellers: SellerProfile[] = [
     whatsapp: "+240222123456",
     city: "Malabo",
     bio: "Vendedor de vehículos y electrónica en Malabo. Rápido y de confianza.",
+    professional: true,
+    storeSlug: "autos-mba",
   },
   {
     username: "ana_bata",
@@ -58,6 +64,8 @@ export const demoSellers: SellerProfile[] = [
     whatsapp: "+240222987654",
     city: "Bata",
     bio: "Propietaria de varios inmuebles en Bata y alrededores. Trato directo y sin intermediarios.",
+    professional: true,
+    storeSlug: "inmuebles-esono",
   },
   {
     username: "tech_malabo",
@@ -70,10 +78,12 @@ export const demoSellers: SellerProfile[] = [
     whatsapp: "+240222456789",
     city: "Malabo",
     bio: "Especialista en electrónica y gadgets importados. Garantía en todos mis productos.",
+    professional: true,
+    storeSlug: "tech-malabo",
   },
 ];
 
-const demoReviews: Review[] = [
+export const demoReviews: Review[] = [
   {
     id: "r1",
     reviewerName: "Marcos Esono",

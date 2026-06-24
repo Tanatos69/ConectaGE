@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eye, Flag, Heart, MapPin, Clock, LayoutList, Star } from "lucide-react";
+import { Eye, Flag, Heart, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
 import { recentListings, featuredListings } from "@/lib/listings";
 import { getListingDetail } from "@/lib/demo-detail";
+import { paymentMethods } from "@/lib/payments-logistics";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { ListingCard } from "@/components/listing/listing-card";
@@ -200,6 +201,35 @@ export default async function ListingDetailPage({ params }: Props) {
 
           {/* Seller card */}
           {detail?.seller && <SellerCard seller={detail.seller} />}
+
+          {/* Payments & delivery */}
+          <div className="rounded-2xl border bg-card p-4 shadow-sm">
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Pagos y entrega
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {paymentMethods
+                .filter((m) => m.available)
+                .map((m) => (
+                  <span
+                    key={m.id}
+                    className="rounded-lg border bg-background px-2.5 py-1 text-xs font-medium text-foreground"
+                  >
+                    {m.name}
+                  </span>
+                ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2 border-t pt-3 text-sm text-muted-foreground">
+              <Truck className="size-4 shrink-0 text-primary" />
+              Entrega disponible en Malabo, Bata y todo el país
+            </div>
+            <Link
+              href="/pagos-y-envios"
+              className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+            >
+              Más sobre pagos y envíos →
+            </Link>
+          </div>
 
           {/* Safety tips */}
           <div className="rounded-2xl border bg-secondary/60 p-4">

@@ -25,6 +25,7 @@ interface PhotoPreview {
 }
 
 interface FormData {
+  listingType: "offer" | "wanted";
   category: string;
   categoryName: string;
   subcategory: string;
@@ -46,6 +47,7 @@ interface FormData {
 }
 
 const defaultForm: FormData = {
+  listingType: "offer",
   category: "",
   categoryName: "",
   subcategory: "",
@@ -334,6 +336,36 @@ export default function PublicarPage() {
         {/* ── Step 2: Basic info ────────────────────────────────────────── */}
         {step === 2 && (
           <div className="space-y-4">
+            <SectionCard title="¿Qué quieres publicar?">
+              <div className="flex gap-2">
+                {(["offer", "wanted"] as const).map((lt) => {
+                  const labels = {
+                    offer: "Ofrezco algo en venta",
+                    wanted: "Busco algo (demanda)",
+                  };
+                  return (
+                    <button
+                      key={lt}
+                      type="button"
+                      onClick={() => set({ listingType: lt })}
+                      className={cn(
+                        "flex-1 rounded-xl border py-2.5 text-sm font-medium transition-colors",
+                        form.listingType === lt
+                          ? "border-primary bg-primary text-white"
+                          : "border-input bg-background text-muted-foreground hover:bg-secondary",
+                      )}
+                    >
+                      {labels[lt]}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Los anuncios &ldquo;Busco&rdquo; aparecen con una etiqueta especial para que los
+                vendedores te encuentren.
+              </p>
+            </SectionCard>
+
             <SectionCard title="Información básica">
               <div className="space-y-4">
                 <div>

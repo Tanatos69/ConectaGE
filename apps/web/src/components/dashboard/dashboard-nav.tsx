@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, Heart, Bell, User } from "lucide-react";
+import { LayoutDashboard, FileText, Heart, Bell, User, Coins, BellRing } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -11,12 +11,16 @@ interface NavItem {
   icon: React.ElementType;
   exact?: boolean;
   badge?: number;
+  /** Hidden from the mobile bottom bar to keep it uncluttered. */
+  mobile?: boolean;
 }
 
 const items: NavItem[] = [
   { href: "/mi-cuenta", label: "Resumen", icon: LayoutDashboard, exact: true },
   { href: "/mi-cuenta/anuncios", label: "Mis anuncios", icon: FileText },
+  { href: "/mi-cuenta/creditos", label: "Créditos", icon: Coins, mobile: false },
   { href: "/mi-cuenta/favoritos", label: "Favoritos", icon: Heart },
+  { href: "/mi-cuenta/busquedas", label: "Alertas", icon: BellRing, mobile: false },
   { href: "/mi-cuenta/notificaciones", label: "Notificaciones", icon: Bell, badge: 3 },
   { href: "/mi-cuenta/perfil", label: "Mi perfil", icon: User },
 ];
@@ -56,7 +60,9 @@ export function DashboardNav({ variant }: { variant: "sidebar" | "mobile" }) {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-background/95 backdrop-blur-sm lg:hidden">
-      {items.map(({ href, label, icon: Icon, exact, badge }) => {
+      {items
+        .filter((i) => i.mobile !== false)
+        .map(({ href, label, icon: Icon, exact, badge }) => {
         const active = exact ? pathname === href : pathname.startsWith(href);
         return (
           <Link

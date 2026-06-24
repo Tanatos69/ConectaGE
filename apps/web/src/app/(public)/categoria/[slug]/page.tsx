@@ -4,13 +4,16 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
-import { recentListings, featuredListings } from "@/lib/listings";
+import { allListings, recentListings } from "@/lib/listings";
+import { filterListings } from "@/lib/search";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
 import { PageBreadcrumb } from "@/components/listing/page-breadcrumb";
+import { cn } from "@/lib/utils";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tipo?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,15 +26,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { tipo } = await searchParams;
   const cat = categories.find((c) => c.slug === slug);
   if (!cat) notFound();
 
+  const listingType = tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined;
   const subs = subcategories[cat.slug] ?? [];
-  const all = [...featuredListings, ...recentListings];
-  const filtered = all.filter((l) => l.categorySlug === slug);
-  const listings = filtered.length > 0 ? filtered : recentListings.slice(0, 8);
+  const filtered = filterListings(allListings, { category: slug, listingType });
+  // Demo fallback so empty categories still show something, but only when the
+  // user hasn't applied a type filter.
+  const listings =
+    filtered.length > 0 ? filtered : listingType ? [] : recentListings.slice(0, 8);
+
+  const typeChips: { key: "offer" | "wanted" | undefined; label: string }[] = [
+    { key: undefined, label: "Todos" },
+    { key: "offer", label: "Ofertas" },
+    { key: "wanted", label: "Busco" },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -68,6 +81,27 @@ export default async function CategoryPage({ params }: Props) {
           ))}
         </div>
       )}
+
+      <div className="mb-6 flex items-center gap-1.5">
+        {typeChips.map((c) => {
+          const active = listingType === c.key;
+          const href = c.key ? `/categoria/${cat.slug}?tipo=${c.key}` : `/categoria/${cat.slug}`;
+          return (
+            <Link
+              key={c.label}
+              href={href}
+              className={cn(
+                "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary text-white"
+                  : "border-input bg-background text-muted-foreground hover:bg-secondary",
+              )}
+            >
+              {c.label}
+            </Link>
+          );
+        })}
+      </div>
 
       <div className="flex gap-6">
         <FilterSidebar />

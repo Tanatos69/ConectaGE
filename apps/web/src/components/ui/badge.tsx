@@ -17,6 +17,10 @@ const badgeVariants = cva(
         success:
           "border-transparent bg-whatsapp/12 text-whatsapp-hover",
         new: "border-transparent bg-accent text-accent-foreground",
+        // Professional seller / store
+        pro: "border border-blue-200 bg-blue-50 text-blue-700",
+        // "Busco" (wanted) listings
+        wanted: "border border-indigo-200 bg-indigo-50 text-indigo-700",
       },
     },
     defaultVariants: {

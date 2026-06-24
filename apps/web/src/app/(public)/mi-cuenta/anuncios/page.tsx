@@ -6,6 +6,8 @@ import Image from "next/image";
 import { Eye, Pencil, RefreshCw, Trash2, Star, ExternalLink, Plus } from "lucide-react";
 import { demoMyListings, type ListingStatus } from "@/lib/demo-user";
 import { formatPrice } from "@/lib/format";
+import { useAppState } from "@/lib/store/app-state";
+import { PromoteDialog } from "@/components/promote/promote-dialog";
 
 const tabs: { key: ListingStatus | "all"; label: string }[] = [
   { key: "all", label: "Todos" },
@@ -31,6 +33,8 @@ const statusLabel: Record<ListingStatus, string> = {
 
 export default function MisAnunciosPage() {
   const [active, setActive] = useState<ListingStatus | "all">("all");
+  const [promote, setPromote] = useState<{ slug: string; title: string } | null>(null);
+  const { isPromoted } = useAppState();
 
   const listings =
     active === "all" ? demoMyListings : demoMyListings.filter((l) => l.status === active);
@@ -156,15 +160,21 @@ export default function MisAnunciosPage() {
                     Renovar
                   </button>
                 )}
-                {listing.status === "published" && (
-                  <Link
-                    href="/planes"
-                    className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100"
-                  >
-                    <Star className="size-3.5" />
-                    Destacar
-                  </Link>
-                )}
+                {listing.status === "published" &&
+                  (isPromoted(listing.slug) ? (
+                    <span className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                      <Star className="size-3.5 fill-amber-400 text-amber-500" />
+                      Destacado
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setPromote({ slug: listing.slug, title: listing.title })}
+                      className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100"
+                    >
+                      <Star className="size-3.5" />
+                      Destacar
+                    </button>
+                  ))}
                 <button className="flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
                   <Trash2 className="size-3.5" />
                   Eliminar
@@ -173,6 +183,14 @@ export default function MisAnunciosPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {promote && (
+        <PromoteDialog
+          slug={promote.slug}
+          title={promote.title}
+          onClose={() => setPromote(null)}
+        />
       )}
     </div>
   );

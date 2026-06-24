@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { recentListings, featuredListings } from "@/lib/listings";
+import { allListings } from "@/lib/listings";
 import { categories } from "@/lib/categories";
+import { filterListings } from "@/lib/search";
+import type { SearchCriteria } from "@/lib/store/app-state";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
+import { SearchToolbar } from "@/components/search/search-toolbar";
 
 interface Props {
-  searchParams: Promise<{ q?: string; ciudad?: string; cat?: string }>;
+  searchParams: Promise<{ q?: string; ciudad?: string; cat?: string; tipo?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
@@ -22,18 +25,16 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function BuscarPage({ searchParams }: Props) {
-  const { q: rawQ } = await searchParams;
-  const q = (rawQ ?? "").toLowerCase().trim();
+  const { q: rawQ, ciudad, cat, tipo } = await searchParams;
 
-  const all = [...featuredListings, ...recentListings];
-  const results = q
-    ? all.filter(
-        (l) =>
-          l.title.toLowerCase().includes(q) ||
-          l.categoryName.toLowerCase().includes(q) ||
-          l.city.toLowerCase().includes(q),
-      )
-    : all;
+  const criteria: SearchCriteria = {
+    q: rawQ?.trim() || undefined,
+    city: ciudad || undefined,
+    category: cat || undefined,
+    listingType: tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined,
+  };
+
+  const results = filterListings(allListings, criteria);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -60,6 +61,8 @@ export default async function BuscarPage({ searchParams }: Props) {
         <FilterSidebar />
 
         <div className="min-w-0 flex-1">
+          <SearchToolbar criteria={criteria} />
+
           {results.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
               {results.map((listing, i) => (
@@ -72,20 +75,20 @@ export default async function BuscarPage({ searchParams }: Props) {
                 <Search className="size-7 text-muted-foreground" />
               </div>
               <h2 className="text-lg font-semibold text-foreground">
-                No encontramos anuncios para &ldquo;{rawQ}&rdquo;
+                No encontramos anuncios{rawQ ? ` para “${rawQ}”` : ""}
               </h2>
               <p className="mt-2 max-w-sm text-sm text-muted-foreground">
                 Intenta con otras palabras o explora nuestras categorías.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {categories.slice(0, 6).map((cat) => (
+                {categories.slice(0, 6).map((category) => (
                   <Link
-                    key={cat.slug}
-                    href={`/categoria/${cat.slug}`}
+                    key={category.slug}
+                    href={`/categoria/${category.slug}`}
                     className="flex items-center gap-1.5 rounded-full border border-input bg-background px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
                   >
-                    <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0" aria-hidden="true" />
-                    {cat.name}
+                    <FontAwesomeIcon icon={category.icon} className="size-4 shrink-0" aria-hidden="true" />
+                    {category.name}
                   </Link>
                 ))}
               </div>

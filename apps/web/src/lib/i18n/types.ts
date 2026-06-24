@@ -12,6 +12,7 @@ export interface Translations {
     publish: string;
     publishShort: string;
     seeAll: string;
+    stores: string;
   };
   footer: {
     tagline: string;
@@ -32,6 +33,9 @@ export interface Translations {
     location: string;
     copyright: string;
     designedBy: string;
+    stores: string;
+    payments: string;
+    paymentsAccepted: string;
   };
   hero: {
     badge: string;
@@ -95,6 +99,7 @@ export interface Translations {
     refurbished: string;
     featured: string;
     negotiable: string;
+    wanted: string;
   };
   filters: {
     sort: string;
@@ -140,5 +145,38 @@ export interface Translations {
     openMenu: string;
     restricted: string;
     restrictedRole: string;
+  };
+  stores: {
+    follow: string;
+    following: string;
+    pro: string;
+    private: string;
+    verified: string;
+    followers: string;
+    listings: string;
+    visit: string;
+    directoryTitle: string;
+    directorySubtitle: string;
+    allCategories: string;
+    allCities: string;
+    cityFilter: string;
+    empty: string;
+    memberSince: string;
+    contact: string;
+    rating: string;
+    about: string;
+    productsOf: string;
+    noProducts: string;
+  };
+  payments: {
+    title: string;
+    subtitle: string;
+    methods: string;
+    soon: string;
+    logistics: string;
+    learnMore: string;
+    svcHome: string;
+    svcPickup: string;
+    svcTracking: string;
   };
 }

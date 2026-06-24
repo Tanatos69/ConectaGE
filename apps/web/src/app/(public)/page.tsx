@@ -4,6 +4,7 @@ import { FeaturedListings } from "@/components/home/featured-listings";
 import { StatsBar } from "@/components/home/stats-bar";
 import { RecentListings } from "@/components/home/recent-listings";
 import { HowItWorks } from "@/components/home/how-it-works";
+import { PaymentsStrip } from "@/components/home/payments-strip";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
       <FeaturedListings />
       <StatsBar />
       <RecentListings />
+      <PaymentsStrip />
       <HowItWorks />
     </>
   );

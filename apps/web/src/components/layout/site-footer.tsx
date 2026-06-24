@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { categories } from "@/lib/categories";
+import { paymentMethods } from "@/lib/payments-logistics";
 import { useTranslation } from "@/lib/i18n/context";
 
 export function SiteFooter() {
@@ -14,6 +15,7 @@ export function SiteFooter() {
       title: t("footer.marketplace"),
       links: [
         { label: t("footer.exploreListings"), href: "/buscar" },
+        { label: t("footer.stores"), href: "/tiendas" },
         { label: t("footer.allCategories"), href: "/categorias" },
         { label: t("footer.publishListing"), href: "/publicar" },
         { label: t("footer.featuredPlans"), href: "/planes" },
@@ -23,6 +25,7 @@ export function SiteFooter() {
       title: t("footer.company"),
       links: [
         { label: t("footer.about"), href: "/sobre-nosotros" },
+        { label: t("footer.payments"), href: "/pagos-y-envios" },
         { label: t("footer.contact"), href: "/contacto" },
         { label: t("footer.help"), href: "/ayuda" },
       ],
@@ -100,8 +103,27 @@ export function SiteFooter() {
           </nav>
         </div>
 
+        {/* Payment methods */}
+        <div className="mt-10 border-t pt-6">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("footer.paymentsAccepted")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {paymentMethods
+              .filter((m) => m.available)
+              .map((m) => (
+                <span
+                  key={m.id}
+                  className="rounded-lg border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground"
+                >
+                  {m.name}
+                </span>
+              ))}
+          </div>
+        </div>
+
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t pt-6 sm:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} {t("footer.copyright")}
           </p>
