@@ -178,6 +178,65 @@ export function SiteHeader() {
             <SearchBar />
           </div>
 
+          {/* Explorar + Tiendas — desktop only, inline with other nav buttons */}
+          <div className="relative hidden items-center gap-1 md:flex" ref={explorarRef}>
+            <button
+              type="button"
+              onClick={() => setExplorarOpen((v) => !v)}
+              aria-expanded={explorarOpen}
+              aria-haspopup="true"
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                explorarOpen
+                  ? "bg-secondary text-primary"
+                  : "text-foreground hover:bg-secondary hover:text-primary",
+              )}
+            >
+              <LayoutGrid className="size-4 shrink-0" aria-hidden="true" />
+              Explorar
+              <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", explorarOpen && "rotate-180")} />
+            </button>
+
+            <Link
+              href="/tiendas"
+              className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-secondary hover:text-primary"
+            >
+              <Store className="size-4 shrink-0" aria-hidden="true" />
+              {t("header.stores")}
+            </Link>
+
+            {/* Explorar category mega-panel */}
+            {explorarOpen && (
+              <div className="absolute left-0 top-full z-50 mt-2 w-[600px] overflow-hidden rounded-xl border bg-popover p-4 shadow-xl">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("categoryGrid.title")}
+                </p>
+                <div className="grid grid-cols-4 gap-1">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/categoria/${cat.slug}`}
+                      onClick={() => setExplorarOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                    >
+                      <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <span className="line-clamp-1">{t(`categories.${cat.slug}`)}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-3 border-t pt-3">
+                  <Link
+                    href="/categorias"
+                    onClick={() => setExplorarOpen(false)}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    {t("header.seeAll")}
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <LanguageSwitcher />
 
@@ -238,70 +297,6 @@ export function SiteHeader() {
           <SearchBar />
         </div>
 
-        {/* Desktop sub-nav: Explorar + Tiendas */}
-        <div className="relative hidden md:block" ref={explorarRef}>
-          <nav
-            aria-label="Navegación principal"
-            className="no-scrollbar -mb-px flex items-center gap-1"
-          >
-            {/* Explorar dropdown trigger */}
-            <button
-              type="button"
-              onClick={() => setExplorarOpen((v) => !v)}
-              aria-expanded={explorarOpen}
-              aria-haspopup="true"
-              className={cn(
-                "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-semibold transition-colors",
-                explorarOpen
-                  ? "border-primary text-primary"
-                  : "border-transparent text-foreground hover:border-primary hover:text-primary",
-              )}
-            >
-              <LayoutGrid className="size-3.5 shrink-0" aria-hidden="true" />
-              Explorar
-              <ChevronDown className={cn("size-3.5 text-muted-foreground transition-transform", explorarOpen && "rotate-180")} />
-            </button>
-
-            <Link
-              href="/tiendas"
-              className="flex shrink-0 items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <Store className="size-3.5 shrink-0" aria-hidden="true" />
-              {t("header.stores")}
-            </Link>
-          </nav>
-
-          {/* Explorar category mega-panel */}
-          {explorarOpen && (
-            <div className="absolute left-0 top-full z-50 mt-1 w-[600px] overflow-hidden rounded-xl border bg-popover p-4 shadow-xl">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("categoryGrid.title")}
-              </p>
-              <div className="grid grid-cols-4 gap-1">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/categoria/${cat.slug}`}
-                    onClick={() => setExplorarOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
-                  >
-                    <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    <span className="line-clamp-1">{t(`categories.${cat.slug}`)}</span>
-                  </Link>
-                ))}
-              </div>
-              <div className="mt-3 border-t pt-3">
-                <Link
-                  href="/categorias"
-                  onClick={() => setExplorarOpen(false)}
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  {t("header.seeAll")}
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Mobile slide-over menu */}
