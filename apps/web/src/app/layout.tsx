@@ -56,7 +56,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} ${plusJakarta.variable} h-full antialiased`}>
-      <body className="h-full bg-background">
+      <body className="h-full">
         <Providers>{children}</Providers>
       </body>
     </html>
