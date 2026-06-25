@@ -320,8 +320,8 @@ export function SiteHeader() {
             className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col bg-background shadow-2xl">
-            <div className="flex h-16 items-center justify-between border-b px-4">
+          <div className="fixed inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-hidden bg-background shadow-2xl">
+            <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
               <Logo />
               <button
                 type="button"
@@ -333,7 +333,7 @@ export function SiteHeader() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
               {role ? (
                 <div className="flex gap-2">
                   <Link
