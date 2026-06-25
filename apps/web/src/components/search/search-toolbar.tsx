@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useAppState, type SearchCriteria } from "@/lib/store/app-state";
@@ -18,7 +18,7 @@ const chips: { key: "offer" | "wanted" | undefined; label: string }[] = [
  * links that set the `tipo` URL param (functional, server-side filtering); the
  * save button stores the active criteria for alerts.
  */
-export function SearchToolbar({ criteria }: { criteria: SearchCriteria }) {
+export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria; leading?: ReactNode }) {
   const { addSavedSearch } = useAppState();
   const [saved, setSaved] = useState(false);
 
@@ -36,6 +36,7 @@ export function SearchToolbar({ criteria }: { criteria: SearchCriteria }) {
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-2">
+      {leading}
       <div className="flex items-center gap-1.5">
         {chips.map((c) => {
           const active = (criteria.listingType ?? undefined) === c.key;

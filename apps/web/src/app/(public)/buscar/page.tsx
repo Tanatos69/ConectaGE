@@ -57,14 +57,25 @@ export default async function BuscarPage({ searchParams }: Props) {
         )}
       </div>
 
-      <div className="flex gap-6">
-        <FilterSidebar />
+      <div className="lg:flex lg:gap-6">
+        {/* Desktop sidebar — hidden on mobile */}
+        <div className="hidden lg:block">
+          <FilterSidebar />
+        </div>
 
         <div className="min-w-0 flex-1">
-          <SearchToolbar criteria={criteria} />
+          {/* Mobile filter trigger sits inline with chips via the leading slot */}
+          <SearchToolbar
+            criteria={criteria}
+            leading={
+              <div className="lg:hidden">
+                <FilterSidebar />
+              </div>
+            }
+          />
 
           {results.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {results.map((listing, i) => (
                 <ListingCard key={listing.slug} listing={listing} priority={i < 4} />
               ))}

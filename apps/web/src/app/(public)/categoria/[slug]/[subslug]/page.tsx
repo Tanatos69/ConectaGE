@@ -53,7 +53,11 @@ export default async function SubcategoryPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {/* Mobile filter trigger — inline with subcategory chips */}
+        <div className="lg:hidden">
+          <FilterSidebar />
+        </div>
         <Link
           href={`/categoria/${cat.slug}`}
           className="flex items-center rounded-full border border-input bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
@@ -75,15 +79,18 @@ export default async function SubcategoryPage({ params }: Props) {
         ))}
       </div>
 
-      <div className="flex gap-6">
-        <FilterSidebar />
+      <div className="lg:flex lg:gap-6">
+        {/* Desktop sidebar — hidden on mobile */}
+        <div className="hidden lg:block">
+          <FilterSidebar />
+        </div>
 
         <div className="min-w-0 flex-1">
           <p className="mb-4 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{listings.length}</span> anuncios
             encontrados
           </p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {listings.map((listing, i) => (
               <ListingCard key={listing.slug} listing={listing} priority={i < 4} />
             ))}

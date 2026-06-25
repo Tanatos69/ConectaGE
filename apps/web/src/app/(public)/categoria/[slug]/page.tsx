@@ -82,29 +82,38 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      <div className="mb-6 flex items-center gap-1.5">
-        {typeChips.map((c) => {
-          const active = listingType === c.key;
-          const href = c.key ? `/categoria/${cat.slug}?tipo=${c.key}` : `/categoria/${cat.slug}`;
-          return (
-            <Link
-              key={c.label}
-              href={href}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                active
-                  ? "border-primary bg-primary text-white"
-                  : "border-input bg-background text-muted-foreground hover:bg-secondary",
-              )}
-            >
-              {c.label}
-            </Link>
-          );
-        })}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {/* Mobile filter trigger — inline with type chips */}
+        <div className="lg:hidden">
+          <FilterSidebar />
+        </div>
+        <div className="flex items-center gap-1.5">
+          {typeChips.map((c) => {
+            const active = listingType === c.key;
+            const href = c.key ? `/categoria/${cat.slug}?tipo=${c.key}` : `/categoria/${cat.slug}`;
+            return (
+              <Link
+                key={c.label}
+                href={href}
+                className={cn(
+                  "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                  active
+                    ? "border-primary bg-primary text-white"
+                    : "border-input bg-background text-muted-foreground hover:bg-secondary",
+                )}
+              >
+                {c.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex gap-6">
-        <FilterSidebar />
+      <div className="lg:flex lg:gap-6">
+        {/* Desktop sidebar — hidden on mobile */}
+        <div className="hidden lg:block">
+          <FilterSidebar />
+        </div>
 
         <div className="min-w-0 flex-1">
           <p className="mb-4 text-sm text-muted-foreground">
@@ -113,7 +122,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </p>
 
           {listings.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {listings.map((listing, i) => (
                 <ListingCard key={listing.slug} listing={listing} priority={i < 4} />
               ))}
