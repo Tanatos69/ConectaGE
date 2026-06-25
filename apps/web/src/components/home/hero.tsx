@@ -14,18 +14,27 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden border-b">
-      {/* Background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-accent via-background to-background" />
-      <div
-        className="absolute inset-0 -z-10 opacity-[0.4]"
-        style={{
-          backgroundImage:
-            "radial-gradient(hsl(221 83% 53% / 0.12) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-          maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%)",
-        }}
-        aria-hidden="true"
-      />
+      {/* Animated blob background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute inset-0" style={{ filter: "blur(90px)" }}>
+          {/* Blue — the sea */}
+          <div
+            className="absolute -left-32 -top-32 h-[560px] w-[560px] rounded-full bg-primary opacity-25"
+            style={{ animation: "var(--animate-blob-1)" }}
+          />
+          {/* Green — the land */}
+          <div
+            className="absolute -right-24 -top-16 h-[480px] w-[480px] rounded-full bg-patriot-green opacity-20"
+            style={{ animation: "var(--animate-blob-2)" }}
+          />
+          {/* Red — independence */}
+          <div
+            className="absolute bottom-0 left-1/2 h-[400px] w-[400px] -translate-x-1/2 translate-y-1/2 rounded-full bg-patriot-red opacity-[0.18]"
+            style={{ animation: "var(--animate-blob-3)" }}
+          />
+        </div>
+      </div>
 
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">

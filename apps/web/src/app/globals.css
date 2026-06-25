@@ -172,6 +172,9 @@
 
   --animate-fade-in-up: fade-in-up 0.5s ease-out both;
   --animate-marquee: marquee 40s linear infinite;
+  --animate-blob-1: blob-1 14s ease-in-out infinite;
+  --animate-blob-2: blob-2 18s ease-in-out infinite;
+  --animate-blob-3: blob-3 22s ease-in-out infinite;
 }
 
 @keyframes fade-in-up {
@@ -186,6 +189,22 @@
 
 @keyframes draw-underline {
   to { stroke-dashoffset: 0; }
+}
+
+@keyframes blob-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(40px, -30px) scale(1.08); }
+  66%       { transform: translate(-25px, 20px) scale(0.94); }
+}
+@keyframes blob-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-35px, 25px) scale(1.05); }
+  66%       { transform: translate(30px, -20px) scale(0.96); }
+}
+@keyframes blob-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(20px, 30px) scale(1.06); }
+  70%       { transform: translate(-30px, -15px) scale(0.95); }
 }
 
 @layer base {
