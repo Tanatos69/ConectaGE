@@ -32,7 +32,7 @@ export default function PagosYEnviosPage() {
           Métodos de pago
         </h2>
         <p className="mb-5 text-sm text-muted-foreground">
-          Aceptamos los principales medios de pago móviles y bancarios del país.
+          Próximamente integraremos los principales medios de pago móviles y bancarios del país.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {paymentMethods.map((m) => (
