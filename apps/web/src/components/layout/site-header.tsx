@@ -160,6 +160,7 @@ export function SiteHeader() {
     : role === "admin" ? "Admin" : null;
 
   return (
+    <>
     <header
       className={cn(
         "sticky top-0 z-40 w-full backdrop-blur-md transition-all duration-200",
@@ -311,96 +312,99 @@ export function SiteHeader() {
 
       </div>
 
-      {/* Mobile slide-over menu */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <button
-            type="button"
-            aria-label={t("header.closeMenu")}
-            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-hidden bg-background shadow-2xl">
-            <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
-              <Logo />
-              <button
-                type="button"
-                aria-label={t("header.closeMenu")}
-                onClick={() => setMenuOpen(false)}
-                className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary"
-              >
-                <X className="size-6" />
-              </button>
-            </div>
+    </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4">
-              {role ? (
-                <div className="flex gap-2">
-                  <Link
-                    href={role === "admin" ? "/admin" : "/mi-cuenta"}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
-                  >
-                    <User className="size-4" />
-                    {displayName ?? "Mi cuenta"}
-                  </Link>
-                  <button
-                    onClick={() => { setMenuOpen(false); handleLogout(); }}
-                    className={cn(buttonVariants({ variant: "ghost" }), "shrink-0")}
-                    aria-label="Cerrar sesión"
-                  >
-                    <LogOut className="size-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Link
-                    href="/login"
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
-                  >
-                    <User className="size-4" />
-                    {t("header.login")}
-                  </Link>
-                  <Link
-                    href="/registro"
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(buttonVariants({ variant: "default" }), "flex-1")}
-                  >
-                    {t("header.register")}
-                  </Link>
-                </div>
-              )}
+    {/* Mobile slide-over — rendered OUTSIDE <header> so backdrop-blur-md on
+        the header doesn't become a containing block that clips the fixed overlay */}
+    {menuOpen && (
+      <div className="fixed inset-0 z-50 md:hidden">
+        <button
+          type="button"
+          aria-label={t("header.closeMenu")}
+          className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
+          onClick={() => setMenuOpen(false)}
+        />
+        <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-hidden bg-background shadow-2xl">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+            <Logo />
+            <button
+              type="button"
+              aria-label={t("header.closeMenu")}
+              onClick={() => setMenuOpen(false)}
+              className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary"
+            >
+              <X className="size-6" />
+            </button>
+          </div>
 
-              <Link
-                href="/tiendas"
-                onClick={() => setMenuOpen(false)}
-                className="mt-4 flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
-              >
-                <Store className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                {t("header.stores")}
-              </Link>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {role ? (
+              <div className="flex gap-2">
+                <Link
+                  href={role === "admin" ? "/admin" : "/mi-cuenta"}
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
+                >
+                  <User className="size-4" />
+                  {displayName ?? "Mi cuenta"}
+                </Link>
+                <button
+                  onClick={() => { setMenuOpen(false); handleLogout(); }}
+                  className={cn(buttonVariants({ variant: "ghost" }), "shrink-0")}
+                  aria-label="Cerrar sesión"
+                >
+                  <LogOut className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(buttonVariants({ variant: "outline" }), "flex-1")}
+                >
+                  <User className="size-4" />
+                  {t("header.login")}
+                </Link>
+                <Link
+                  href="/registro"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(buttonVariants({ variant: "default" }), "flex-1")}
+                >
+                  {t("header.register")}
+                </Link>
+              </div>
+            )}
 
-              <p className="mt-6 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("categoryGrid.title")}
-              </p>
-              <nav className="mt-2 grid gap-0.5">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/categoria/${cat.slug}`}
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
-                  >
-                    <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    {t(`categories.${cat.slug}`)}
-                  </Link>
-                ))}
-              </nav>
-            </div>
+            <Link
+              href="/tiendas"
+              onClick={() => setMenuOpen(false)}
+              className="mt-4 flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+            >
+              <Store className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              {t("header.stores")}
+            </Link>
+
+            <p className="mt-6 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("categoryGrid.title")}
+            </p>
+            <nav className="mt-2 grid gap-0.5">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/categoria/${cat.slug}`}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  {t(`categories.${cat.slug}`)}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
-      )}
-    </header>
+      </div>
+    )}
+    </>
   );
 }
