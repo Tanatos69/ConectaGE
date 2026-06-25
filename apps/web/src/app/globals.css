@@ -2,9 +2,11 @@
 
 /* ============================================================
    ConectaGE — Design System (Tailwind v4, CSS-first config)
-   Primary  : vibrant tech blue (#2563EB / blue-600) — trust
+   Palette  : Equatorial Guinea flag — soft, muted, elegant
+     Primary   : EG blue  hsl(214 48% 38%)  — muted slate
+     Accent    : EG green hsl(142 32% 42%)  — sage
+     Featured  : EG red   hsl(4 42% 52%)    — terracotta
    WhatsApp : #25D366 — EXCLUSIVELY for WhatsApp contact CTAs
-   Neutrals : cool slate grays
    Type     : Inter
    ============================================================ */
 
@@ -12,30 +14,31 @@
 
 :root {
   /* Base surfaces */
-  --background: hsl(40 30% 98.5%);
-  --foreground: hsl(222 47% 11%);
+  --background: hsl(40 20% 98%);
+  --foreground: hsl(220 40% 10%);
 
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 11%);
+  --card-foreground: hsl(220 40% 10%);
 
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
+  --popover-foreground: hsl(220 40% 10%);
 
-  /* Brand — tech blue */
-  --primary: hsl(224 76% 48%);
+  /* Brand — EG flag blue (muted slate) */
+  --primary: hsl(214 48% 38%);
   --primary-foreground: hsl(0 0% 100%);
 
-  /* Secondary / subtle surfaces */
-  --secondary: hsl(210 40% 96%);
-  --secondary-foreground: hsl(222 47% 11%);
+  /* Secondary / subtle surfaces — blue-tinted */
+  --secondary: hsl(214 20% 94%);
+  --secondary-foreground: hsl(220 40% 10%);
 
-  --muted: hsl(210 40% 96%);
+  --muted: hsl(214 20% 94%);
   --muted-foreground: hsl(215 16% 47%);
 
-  --accent: hsl(214 95% 96%);
-  --accent-foreground: hsl(221 83% 40%);
+  /* Accent — EG flag green (sage tint for hover states) */
+  --accent: hsl(142 25% 92%);
+  --accent-foreground: hsl(142 38% 28%);
 
-  --destructive: hsl(0 72% 51%);
+  --destructive: hsl(0 65% 48%);
   --destructive-foreground: hsl(0 0% 100%);
 
   /* WhatsApp — reserved for contact CTAs only */
@@ -43,54 +46,63 @@
   --whatsapp-foreground: hsl(0 0% 100%);
   --whatsapp-hover: hsl(142 71% 42%);
 
-  /* Featured / promoted accent (warm amber) */
-  --featured: hsl(38 92% 50%);
-  --featured-foreground: hsl(28 80% 14%);
+  /* Featured / promoted — EG flag red (terracotta) */
+  --featured: hsl(4 42% 52%);
+  --featured-foreground: hsl(0 0% 100%);
+
+  /* Patriotic palette utilities */
+  --patriot-green: hsl(142 32% 42%);
+  --patriot-red: hsl(4 42% 52%);
+  --patriot-blue: hsl(214 48% 38%);
 
   /* Lines & inputs */
-  --border: hsl(214 32% 91%);
-  --input: hsl(214 32% 91%);
-  --ring: hsl(221 83% 53%);
+  --border: hsl(214 25% 88%);
+  --input: hsl(214 25% 88%);
+  --ring: hsl(214 48% 38%);
 
   /* Corner radius — generous, modern (cards use 2xl) */
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: hsl(222 47% 7%);
-  --foreground: hsl(210 40% 98%);
+  --background: hsl(220 35% 7%);
+  --foreground: hsl(210 30% 96%);
 
-  --card: hsl(222 44% 10%);
-  --card-foreground: hsl(210 40% 98%);
+  --card: hsl(220 32% 10%);
+  --card-foreground: hsl(210 30% 96%);
 
-  --popover: hsl(222 44% 10%);
-  --popover-foreground: hsl(210 40% 98%);
+  --popover: hsl(220 32% 10%);
+  --popover-foreground: hsl(210 30% 96%);
 
-  --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(222 47% 11%);
+  --primary: hsl(214 55% 58%);
+  --primary-foreground: hsl(220 35% 7%);
 
-  --secondary: hsl(217 33% 17%);
-  --secondary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(214 25% 17%);
+  --secondary-foreground: hsl(210 30% 96%);
 
-  --muted: hsl(217 33% 17%);
-  --muted-foreground: hsl(215 20% 65%);
+  --muted: hsl(214 25% 17%);
+  --muted-foreground: hsl(215 20% 60%);
 
-  --accent: hsl(217 33% 20%);
-  --accent-foreground: hsl(210 40% 98%);
+  --accent: hsl(142 20% 16%);
+  --accent-foreground: hsl(142 32% 70%);
 
-  --destructive: hsl(0 63% 50%);
+  --destructive: hsl(0 60% 50%);
   --destructive-foreground: hsl(0 0% 100%);
 
   --whatsapp: hsl(142 70% 49%);
   --whatsapp-foreground: hsl(0 0% 100%);
   --whatsapp-hover: hsl(142 71% 42%);
 
-  --featured: hsl(38 92% 50%);
-  --featured-foreground: hsl(28 80% 14%);
+  --featured: hsl(4 45% 58%);
+  --featured-foreground: hsl(0 0% 100%);
 
-  --border: hsl(217 33% 20%);
-  --input: hsl(217 33% 22%);
-  --ring: hsl(217 91% 60%);
+  --patriot-green: hsl(142 28% 55%);
+  --patriot-red: hsl(4 45% 58%);
+  --patriot-blue: hsl(214 55% 58%);
+
+  --border: hsl(214 25% 20%);
+  --input: hsl(214 25% 22%);
+  --ring: hsl(214 55% 58%);
 }
 
 /* ---- Map design tokens to Tailwind theme ---- */
@@ -126,6 +138,10 @@
   --color-featured: var(--featured);
   --color-featured-foreground: var(--featured-foreground);
 
+  --color-patriot-green: var(--patriot-green);
+  --color-patriot-red: var(--patriot-red);
+  --color-patriot-blue: var(--patriot-blue);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -143,7 +159,7 @@
   --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
   --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
   --shadow-float: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-  --shadow-featured: 0 4px 20px rgba(217,143,22,0.18), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-featured: 0 4px 20px rgba(176,72,60,0.16), 0 1px 4px rgba(0,0,0,0.06);
 
   --animate-fade-in-up: fade-in-up 0.5s ease-out both;
   --animate-marquee: marquee 40s linear infinite;
@@ -187,6 +203,14 @@
 
   body {
     background-color: var(--color-background);
+    /* Decorative dot grid — true background, never overlays content */
+    background-image: radial-gradient(
+      circle,
+      hsl(214 30% 40% / 0.10) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
+    background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -198,20 +222,6 @@
     letter-spacing: -0.02em;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    background-image: radial-gradient(
-      circle,
-      hsl(30 20% 50% / 0.18) 1px,
-      transparent 1px
-    );
-    background-size: 24px 24px;
-  }
-
   /* Accessible focus ring everywhere */
   :focus-visible {
     outline: 2px solid var(--color-ring);
@@ -219,7 +229,7 @@
   }
 
   ::selection {
-    background-color: hsl(221 83% 53% / 0.18);
+    background-color: hsl(214 48% 38% / 0.16);
   }
 }
 

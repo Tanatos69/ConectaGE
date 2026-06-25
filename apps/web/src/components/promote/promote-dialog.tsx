@@ -21,8 +21,11 @@ export function PromoteDialog({
   title: string;
   onClose: () => void;
 }) {
-  const { credits, spendCredits, isPromoted } = useAppState();
+  const { credits, spendCredits, isPromoted, hydrated } = useAppState();
   const [done, setDone] = useState<string | null>(null);
+
+  if (!hydrated) return null;
+
   const alreadyPromoted = isPromoted(slug);
 
   function handlePromote(name: string, cost: number) {

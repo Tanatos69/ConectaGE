@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star, CheckCircle, MapPin, Calendar, Users, Store as StoreIcon } from "lucide-react";
+import { Star, CheckCircle, MapPin, Calendar, Users, Store as StoreIcon, Clock, ExternalLink, Instagram, Facebook } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { FollowButton } from "@/components/store/follow-button";
@@ -23,6 +23,8 @@ export function StoreView({
   reviews: Review[];
 }) {
   const { t } = useTranslation();
+  const isVerified = store.verificationStatus === "verified";
+  const isPending = store.verificationStatus === "pending";
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
@@ -43,16 +45,21 @@ export function StoreView({
       <div className="relative -mt-12 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="-mt-14 shrink-0 rounded-2xl ring-4 ring-card sm:-mt-16">
-            <UserAvatar name={store.name} size="lg" />
+            <UserAvatar name={store.name} src={store.logo} size="lg" />
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-bold text-foreground sm:text-2xl">{store.name}</h1>
-              {store.verified && (
-                <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
+              {isVerified && (
+                <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
                   <CheckCircle className="size-3.5" />
                   {t("stores.verified")}
+                </span>
+              )}
+              {isPending && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                  Verificación pendiente
                 </span>
               )}
               <Badge variant={store.professional ? "pro" : "muted"}>
@@ -65,13 +72,51 @@ export function StoreView({
             <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-4 shrink-0" />
-                {store.city}, Guinea Ecuatorial
+                {store.address
+                  ? `${store.address}${store.neighborhood ? `, ${store.neighborhood}` : ""}, ${store.city}`
+                  : `${store.city}, Guinea Ecuatorial`}
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-4 shrink-0" />
                 {t("stores.memberSince")} {store.memberSince}
               </span>
+              {store.businessHours && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="size-4 shrink-0" />
+                  {store.businessHours}
+                </span>
+              )}
             </div>
+
+            {/* Social links */}
+            {(store.instagram || store.facebook) && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-3">
+                {store.instagram && (
+                  <a
+                    href={`https://instagram.com/${store.instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Instagram className="size-3.5" />
+                    @{store.instagram}
+                    <ExternalLink className="size-3" />
+                  </a>
+                )}
+                {store.facebook && (
+                  <a
+                    href={`https://facebook.com/${store.facebook}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Facebook className="size-3.5" />
+                    {store.facebook}
+                    <ExternalLink className="size-3" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex shrink-0 flex-col gap-2 sm:w-44">

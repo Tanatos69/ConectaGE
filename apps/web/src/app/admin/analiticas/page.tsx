@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Eye, MessageCircle, Users, FileText, TrendingUp } from "lucide-react";
-import { analyticsData, adminStats } from "@/lib/demo-admin";
+import { Eye, MessageCircle, Users, FileText, TrendingUp, Store } from "lucide-react";
+import Link from "next/link";
+import { analyticsData, adminStats, newUsersPerDay, creditsRevenuePerDay, topStoresByFollowers } from "@/lib/demo-admin";
 
 export const metadata: Metadata = { title: "Analíticas" };
 
@@ -65,6 +66,26 @@ function KpiCard({ label, value, sub, icon: Icon, color }: {
           <Icon className="size-5" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function BarChart30({ data, color = "bg-primary" }: { data: { date: string; value: number }[]; color?: string }) {
+  const max = Math.max(...data.map((d) => d.value));
+  return (
+    <div className="flex items-end gap-0.5 h-32 pt-2">
+      {data.map((d, i) => (
+        <div key={d.date} className="flex flex-1 flex-col items-center gap-0.5">
+          <div
+            className={`w-full rounded-t-sm ${color} opacity-80 hover:opacity-100 transition-opacity`}
+            style={{ height: `${Math.max((d.value / max) * 100, 3)}%` }}
+            title={`${d.date}: ${d.value}`}
+          />
+          {i % 5 === 0 && (
+            <span className="text-[8px] text-muted-foreground whitespace-nowrap">{d.date.slice(0, 6)}</span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -228,6 +249,67 @@ export default function AdminAnaliticasPage() {
                     <td className="px-5 py-3 text-right font-semibold text-foreground">{l.views.toLocaleString()}</td>
                   </tr>
                 ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 30-day trend charts */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="mb-1 flex items-center gap-2">
+            <Users className="size-4 text-primary" />
+            <p className="text-sm font-semibold text-foreground">Nuevos usuarios — 30 días</p>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            {newUsersPerDay.reduce((s, d) => s + d.value, 0)} registros en los últimos 30 días
+          </p>
+          <BarChart30 data={newUsersPerDay} color="bg-primary" />
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="mb-1 flex items-center gap-2">
+            <TrendingUp className="size-4 text-featured" />
+            <p className="text-sm font-semibold text-foreground">Ingresos por créditos — 30 días</p>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            {(creditsRevenuePerDay.reduce((s, d) => s + d.value, 0) / 1000).toFixed(0)}k FCFA en los últimos 30 días
+          </p>
+          <BarChart30 data={creditsRevenuePerDay} color="bg-featured" />
+        </div>
+      </div>
+
+      {/* Store performance */}
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 border-b px-5 py-4">
+          <Store className="size-4 text-muted-foreground" />
+          <p className="text-sm font-semibold text-foreground">Rendimiento de tiendas</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-secondary/40 text-xs font-medium text-muted-foreground">
+                <th className="px-5 py-3 text-left">#</th>
+                <th className="px-5 py-3 text-left">Tienda</th>
+                <th className="px-5 py-3 text-left">Categoría</th>
+                <th className="px-5 py-3 text-right">Seguidores</th>
+                <th className="px-5 py-3 text-right">Anuncios</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {topStoresByFollowers.map((s, i) => (
+                <tr key={s.slug} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-5 py-3 text-muted-foreground">{i + 1}</td>
+                  <td className="px-5 py-3">
+                    <Link href={`/tienda/${s.slug}`} className="font-medium text-foreground hover:text-primary hover:underline">
+                      {s.name}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3 text-muted-foreground">{s.categoryName}</td>
+                  <td className="px-5 py-3 text-right font-semibold text-foreground">{s.followers.toLocaleString("es")}</td>
+                  <td className="px-5 py-3 text-right text-muted-foreground">{s.listingsCount}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

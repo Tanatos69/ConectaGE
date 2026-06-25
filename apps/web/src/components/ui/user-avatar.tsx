@@ -25,18 +25,34 @@ function colorFor(name: string) {
 
 export function UserAvatar({
   name,
+  src,
   size = "md",
   className,
 }: {
   name: string;
+  src?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
+  const sizeClass = { sm: "size-9 text-xs", md: "size-14 text-sm", lg: "size-20 text-xl" }[size];
+
+  if (src) {
+    return (
+      <div
+        className={cn("shrink-0 overflow-hidden rounded-full", sizeClass, className)}
+        aria-hidden="true"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={name} className="size-full object-cover" />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full font-semibold select-none",
-        { sm: "size-9 text-xs", md: "size-14 text-sm", lg: "size-20 text-xl" }[size],
+        sizeClass,
         colorFor(name),
         className,
       )}

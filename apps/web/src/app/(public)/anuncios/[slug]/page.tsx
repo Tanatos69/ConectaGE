@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eye, Flag, Heart, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
+import { Eye, Flag, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
 import { recentListings, featuredListings } from "@/lib/listings";
 import { getListingDetail } from "@/lib/demo-detail";
 import { paymentMethods } from "@/lib/payments-logistics";
@@ -13,6 +13,7 @@ import { SellerCard } from "@/components/listing/seller-card";
 import { ReviewsSection } from "@/components/listing/reviews-section";
 import { WhatsAppCTA } from "@/components/listing/whatsapp-cta";
 import { PageBreadcrumb } from "@/components/listing/page-breadcrumb";
+import { FavoriteButton } from "@/components/listing/favorite-button";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -117,13 +118,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </div>
 
             <div className="mt-4 flex items-center gap-2.5">
-              <button
-                type="button"
-                className="flex items-center gap-1.5 rounded-xl border border-input px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Heart className="size-4" />
-                Guardar
-              </button>
+              <FavoriteButton slug={slug} />
               <button
                 type="button"
                 className="flex items-center gap-1.5 rounded-xl border border-input px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"

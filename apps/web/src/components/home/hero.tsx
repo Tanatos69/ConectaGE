@@ -7,17 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { categories } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
-
-const fixedCities = [
-  "Malabo",
-  "Bata",
-  "Ebebiyín",
-  "Mongomo",
-  "Luba",
-  "Evinayong",
-  "Añisoc",
-  "Mbini",
-];
+import { GE_CITIES } from "@/lib/cities";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -102,7 +92,7 @@ export function Hero() {
                 defaultValue=""
               >
                 <option value="">{t("hero.cityAll")}</option>
-                {fixedCities.map((city) => (
+                {GE_CITIES.map((city) => (
                   <option key={city} value={city}>
                     {city}
                   </option>

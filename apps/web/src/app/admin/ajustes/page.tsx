@@ -99,6 +99,34 @@ const settingDefs: SettingDefinition[] = [
     options: ["es", "fr", "en", "pt", "fa", "bube"],
     group: "Sistema",
   },
+  {
+    key: "keyword_blacklist",
+    label: "Lista negra de palabras clave",
+    description: "Palabras separadas por espacios. Los anuncios que las contengan se marcan automáticamente para revisión.",
+    type: "text",
+    group: "Moderación automática",
+  },
+  {
+    key: "max_reports_before_auto_remove",
+    label: "Reportes para retirada automática",
+    description: "Número de reportes recibidos antes de retirar el anuncio automáticamente y notificar al moderador.",
+    type: "number",
+    group: "Moderación automática",
+  },
+  {
+    key: "min_account_age_days_to_skip_queue",
+    label: "Antigüedad mínima para omitir cola (días)",
+    description: "Cuentas verificadas más antiguas que este número de días pueden publicar sin pasar por la cola.",
+    type: "number",
+    group: "Moderación automática",
+  },
+  {
+    key: "auto_flag_price_above",
+    label: "Precio máximo sin revisión (FCFA)",
+    description: "Los anuncios con precio superior a este valor se marcan automáticamente para revisión manual.",
+    type: "number",
+    group: "Moderación automática",
+  },
 ];
 
 const groups = [...new Set(settingDefs.map((s) => s.group))];
@@ -121,6 +149,11 @@ export default function AdminAjustesPage() {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (values.maintenance_mode === "true") {
+      document.cookie = "conectage_maintenance=true;path=/;max-age=86400";
+    } else {
+      document.cookie = "conectage_maintenance=;path=/;max-age=0";
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   }

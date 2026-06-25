@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Star, SlidersHorizontal, Crown } from "lucide-react";
+import { Star, SlidersHorizontal, Crown, X } from "lucide-react";
 import { ListingCard } from "@/components/listing/listing-card";
 import { featuredListings, allListings } from "@/lib/listings";
 import { categories } from "@/lib/categories";
@@ -66,9 +66,16 @@ export function DestacadosView() {
       </div>
 
       <div className="flex gap-6">
-        {/* Filter sidebar — desktop */}
-        <aside className="hidden w-56 shrink-0 lg:block">
+        {/* Filter sidebar — desktop always visible, mobile visible when filtersOpen */}
+        <aside className={cn("w-56 shrink-0 lg:block", filtersOpen ? "block" : "hidden")}>
           <div className="sticky top-24 space-y-6 rounded-xl border bg-card p-4">
+            <button
+              onClick={() => setFiltersOpen(false)}
+              className="flex w-full items-center justify-between text-sm font-semibold text-foreground lg:hidden"
+            >
+              Filtros
+              <X className="size-4" />
+            </button>
             <div>
               <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Categoría

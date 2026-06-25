@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store, LayoutGrid } from "lucide-react";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { useAppState } from "@/lib/store/app-state";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -34,7 +36,13 @@ function SearchBar({ className }: { className?: string }) {
         className,
       )}
     >
-      <Search className="ml-3.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <button
+        type="submit"
+        aria-label={t("header.searchLabel")}
+        className="ml-2 flex shrink-0 items-center justify-center rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Search className="size-5" aria-hidden="true" />
+      </button>
       <input
         type="search"
         name="q"
@@ -112,6 +120,7 @@ function LanguageSwitcher() {
 export function SiteHeader() {
   const { t } = useTranslation();
   const { role, username } = useSession();
+  const { profilePicture } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
   const [explorarOpen, setExplorarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -257,7 +266,10 @@ export function SiteHeader() {
                     "hidden sm:inline-flex",
                   )}
                 >
-                  <User className="size-4" />
+                  {profilePicture
+                    ? <UserAvatar name={displayName ?? "U"} src={profilePicture} size="sm" />
+                    : <User className="size-4" />
+                  }
                   {displayName ?? "Mi cuenta"}
                 </Link>
                 <button

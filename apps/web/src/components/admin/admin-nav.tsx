@@ -18,6 +18,7 @@ import {
   X,
   ExternalLink,
   ChevronRight,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { adminStats } from "@/lib/demo-admin";
@@ -36,6 +37,7 @@ const items: AdminNavItem[] = [
   { href: "/admin/moderacion", labelKey: "admin.moderation", icon: ShieldCheck, badge: adminStats.pendingModeration },
   { href: "/admin/anuncios", labelKey: "admin.listings", icon: FileText },
   { href: "/admin/usuarios", labelKey: "admin.users", icon: Users },
+  { href: "/admin/tiendas", labelKey: "admin.stores", icon: Store, badge: adminStats.pendingStoreVerifications },
   { href: "/admin/categorias", labelKey: "admin.categories", icon: Tag },
   { href: "/admin/resenas", labelKey: "admin.reviews", icon: Star, badge: adminStats.pendingReviews },
   { href: "/admin/reportes", labelKey: "admin.reports", icon: Flag, badge: adminStats.totalReports },

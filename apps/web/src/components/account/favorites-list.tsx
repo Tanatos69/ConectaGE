@@ -8,7 +8,6 @@ import { ListingCard } from "@/components/listing/listing-card";
 
 export function FavoritesList() {
   const { favorites, hydrated } = useAppState();
-  const listings = getListingsBySlugs(favorites);
 
   if (!hydrated) {
     return (
@@ -22,6 +21,8 @@ export function FavoritesList() {
       </div>
     );
   }
+
+  const listings = getListingsBySlugs(favorites);
 
   return (
     <div className="space-y-5">

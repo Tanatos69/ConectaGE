@@ -4,8 +4,9 @@ import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { GE_CITIES } from "@/lib/cities";
 
-const CITIES = ["Todas", "Malabo", "Bata", "Ebebiyín", "Akonibe", "Mongomo", "Luba", "Moka"];
+const CITIES = ["Todas", ...GE_CITIES];
 const CONDITIONS = [
   { value: "new", label: "Nuevo" },
   { value: "used", label: "Usado" },

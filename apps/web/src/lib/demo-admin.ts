@@ -15,6 +15,7 @@ export const adminStats = {
   totalReports: 5,
   pendingReviews: 3,
   pendingFeatured: 2,
+  pendingStoreVerifications: 1,
 };
 
 // ── Moderation queue ──────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ export interface PendingListing {
     spamFlags: number;
   };
   autoFlags: string[];
+  riskScore: number;
 }
 
 export const pendingListings: PendingListing[] = [
@@ -63,6 +65,7 @@ export const pendingListings: PendingListing[] = [
       spamFlags: 0,
     },
     autoFlags: [],
+    riskScore: 8,
   },
   {
     id: "ml-002",
@@ -85,6 +88,7 @@ export const pendingListings: PendingListing[] = [
       spamFlags: 0,
     },
     autoFlags: ["Título similar a anuncio existente"],
+    riskScore: 35,
   },
   {
     id: "ml-003",
@@ -107,6 +111,7 @@ export const pendingListings: PendingListing[] = [
       spamFlags: 1,
     },
     autoFlags: ["Vendedor con flag de spam (×1)"],
+    riskScore: 52,
   },
   {
     id: "ml-004",
@@ -129,6 +134,7 @@ export const pendingListings: PendingListing[] = [
       spamFlags: 0,
     },
     autoFlags: [],
+    riskScore: 5,
   },
   {
     id: "ml-005",
@@ -151,6 +157,7 @@ export const pendingListings: PendingListing[] = [
       spamFlags: 0,
     },
     autoFlags: ["Cuenta nueva (< 6 meses)", "Precio inusualmente alto para la categoría"],
+    riskScore: 71,
   },
 ];
 
@@ -503,6 +510,75 @@ export const siteSettings = {
   featured_price_30d: "12000",
   default_language: "es",
   contact_email: "info@conectage.com",
+  keyword_blacklist: "estafa fraude dinero rápido inversión garantizada",
+  max_reports_before_auto_remove: "5",
+  min_account_age_days_to_skip_queue: "7",
+  auto_flag_price_above: "10000000",
 };
 
 export type SiteSettingKey = keyof typeof siteSettings;
+
+// ── Admin Stores (Tiendas) ────────────────────────────────────────────────────
+
+export type StoreVerificationStatus = "unverified" | "pending" | "verified";
+
+export interface AdminStore {
+  slug: string;
+  name: string;
+  ownerUsername: string;
+  city: string;
+  categoryName: string;
+  verificationStatus: StoreVerificationStatus;
+  nif?: string;
+  professional: boolean;
+  followers: number;
+  listingsCount: number;
+  memberSince: string;
+  pendingVerificationSince?: string;
+}
+
+export const adminStores: AdminStore[] = [
+  { slug: "tech-malabo", name: "Tech Malabo", ownerUsername: "carlos_el_tech", city: "Malabo", categoryName: "Electrónica", verificationStatus: "verified", nif: "GE-2023-001", professional: true, followers: 1280, listingsCount: 5, memberSince: "Jun 2023" },
+  { slug: "autos-mba", name: "Autos Mba", ownerUsername: "carlos_malabo", city: "Malabo", categoryName: "Vehículos", verificationStatus: "verified", nif: "GE-2024-018", professional: true, followers: 642, listingsCount: 2, memberSince: "Ene 2024" },
+  { slug: "inmuebles-esono", name: "Inmuebles Esono", ownerUsername: "inmobiliaria_ge", city: "Bata", categoryName: "Inmobiliaria", verificationStatus: "verified", nif: "GE-2024-042", professional: true, followers: 918, listingsCount: 2, memberSince: "Mar 2024" },
+  { slug: "martinez-hogar", name: "Martínez Hogar", ownerUsername: "tech_store_bata", city: "Malabo", categoryName: "Muebles y Hogar", verificationStatus: "verified", nif: "GE-2023-087", professional: true, followers: 1455, listingsCount: 3, memberSince: "Sep 2023" },
+  { slug: "boutique-malabo", name: "Boutique Malabo", ownerUsername: "boutique_malabo", city: "Malabo", categoryName: "Moda", verificationStatus: "pending", nif: "GE-2025-034", professional: false, followers: 327, listingsCount: 2, memberSince: "Feb 2025", pendingVerificationSince: "10 jun 2025" },
+  { slug: "servicios-mongomo", name: "Servicios Mongomo", ownerUsername: "empresa_logistica_ge", city: "Mongomo", categoryName: "Servicios", verificationStatus: "unverified", professional: true, followers: 189, listingsCount: 0, memberSince: "Abr 2024" },
+  { slug: "centro-ebebiyin", name: "Centro Comercial Ebebiyín", ownerUsername: "terrenos_centro_sur", city: "Ebebiyín", categoryName: "Varios", verificationStatus: "verified", nif: "GE-2023-112", professional: true, followers: 412, listingsCount: 0, memberSince: "Nov 2023" },
+];
+
+// ── Analytics extended data ───────────────────────────────────────────────────
+
+export const newUsersPerDay = [
+  { date: "27 may", value: 12 }, { date: "28 may", value: 15 }, { date: "29 may", value: 9 },
+  { date: "30 may", value: 18 }, { date: "31 may", value: 21 }, { date: "1 jun", value: 14 },
+  { date: "2 jun", value: 11 }, { date: "3 jun", value: 19 }, { date: "4 jun", value: 23 },
+  { date: "5 jun", value: 17 }, { date: "6 jun", value: 13 }, { date: "7 jun", value: 20 },
+  { date: "8 jun", value: 24 }, { date: "9 jun", value: 16 }, { date: "10 jun", value: 28 },
+  { date: "11 jun", value: 22 }, { date: "12 jun", value: 18 }, { date: "13 jun", value: 31 },
+  { date: "14 jun", value: 25 }, { date: "15 jun", value: 19 }, { date: "16 jun", value: 27 },
+  { date: "17 jun", value: 33 }, { date: "18 jun", value: 21 }, { date: "19 jun", value: 29 },
+  { date: "20 jun", value: 35 }, { date: "21 jun", value: 26 }, { date: "22 jun", value: 38 },
+  { date: "23 jun", value: 31 }, { date: "24 jun", value: 42 }, { date: "25 jun", value: 47 },
+];
+
+export const creditsRevenuePerDay = [
+  { date: "27 may", value: 35000 }, { date: "28 may", value: 42000 }, { date: "29 may", value: 28000 },
+  { date: "30 may", value: 55000 }, { date: "31 may", value: 48000 }, { date: "1 jun", value: 38000 },
+  { date: "2 jun", value: 31000 }, { date: "3 jun", value: 62000 }, { date: "4 jun", value: 71000 },
+  { date: "5 jun", value: 45000 }, { date: "6 jun", value: 39000 }, { date: "7 jun", value: 53000 },
+  { date: "8 jun", value: 68000 }, { date: "9 jun", value: 44000 }, { date: "10 jun", value: 79000 },
+  { date: "11 jun", value: 58000 }, { date: "12 jun", value: 47000 }, { date: "13 jun", value: 82000 },
+  { date: "14 jun", value: 65000 }, { date: "15 jun", value: 51000 }, { date: "16 jun", value: 73000 },
+  { date: "17 jun", value: 89000 }, { date: "18 jun", value: 61000 }, { date: "19 jun", value: 76000 },
+  { date: "20 jun", value: 94000 }, { date: "21 jun", value: 68000 }, { date: "22 jun", value: 103000 },
+  { date: "23 jun", value: 82000 }, { date: "24 jun", value: 115000 }, { date: "25 jun", value: 128000 },
+];
+
+export const topStoresByFollowers = [
+  { slug: "martinez-hogar", name: "Martínez Hogar", followers: 1455, listingsCount: 3, categoryName: "Muebles y Hogar" },
+  { slug: "tech-malabo", name: "Tech Malabo", followers: 1280, listingsCount: 5, categoryName: "Electrónica" },
+  { slug: "inmuebles-esono", name: "Inmuebles Esono", followers: 918, listingsCount: 2, categoryName: "Inmobiliaria" },
+  { slug: "autos-mba", name: "Autos Mba", followers: 642, listingsCount: 2, categoryName: "Vehículos" },
+  { slug: "centro-ebebiyin", name: "Centro Ebebiyín", followers: 412, listingsCount: 0, categoryName: "Varios" },
+];

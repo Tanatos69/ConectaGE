@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useAppState, type SearchCriteria } from "@/lib/store/app-state";
@@ -21,6 +21,10 @@ const chips: { key: "offer" | "wanted" | undefined; label: string }[] = [
 export function SearchToolbar({ criteria }: { criteria: SearchCriteria }) {
   const { addSavedSearch } = useAppState();
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(false);
+  }, [criteria]);
 
   function buildLabel() {
     const parts: string[] = [];

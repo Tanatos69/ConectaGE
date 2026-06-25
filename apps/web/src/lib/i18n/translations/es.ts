@@ -162,6 +162,7 @@ export const es: Translations = {
     reports: "Reportes",
     featured: "Destacados",
     analytics: "Analíticas",
+    stores: "Tiendas",
     settings: "Ajustes",
     viewSite: "Ver sitio público",
     openMenu: "Abrir menú admin",

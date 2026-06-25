@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, Heart, Bell, User, Coins, BellRing } from "lucide-react";
+import { LayoutDashboard, FileText, Heart, Bell, User, Coins, BellRing, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -18,6 +18,7 @@ interface NavItem {
 const items: NavItem[] = [
   { href: "/mi-cuenta", label: "Resumen", icon: LayoutDashboard, exact: true },
   { href: "/mi-cuenta/anuncios", label: "Mis anuncios", icon: FileText },
+  { href: "/mi-cuenta/tienda", label: "Mi tienda", icon: Store, mobile: false },
   { href: "/mi-cuenta/creditos", label: "Créditos", icon: Coins, mobile: false },
   { href: "/mi-cuenta/favoritos", label: "Favoritos", icon: Heart },
   { href: "/mi-cuenta/busquedas", label: "Alertas", icon: BellRing, mobile: false },

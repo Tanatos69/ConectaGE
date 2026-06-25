@@ -20,6 +20,25 @@ const rejectReasons = [
   "Otro motivo",
 ];
 
+function RiskScoreBadge({ score }: { score: number }) {
+  const isHigh = score >= 60;
+  const isMed = score >= 30;
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+        isHigh
+          ? "bg-red-50 text-red-700"
+          : isMed
+          ? "bg-amber-50 text-amber-700"
+          : "bg-green-50 text-green-700"
+      }`}
+      title="Puntuación de riesgo automática (0–100)"
+    >
+      Riesgo {score}
+    </span>
+  );
+}
+
 function ListingCard({
   listing,
   onAction,
@@ -51,6 +70,7 @@ function ListingCard({
             <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
               {listing.category}
             </span>
+            <RiskScoreBadge score={listing.riskScore} />
           </div>
           <p className="text-sm text-muted-foreground line-clamp-2">{listing.description}</p>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">

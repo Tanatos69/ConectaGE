@@ -33,7 +33,7 @@ export function StoreCard({ store }: { store: Store }) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="-mt-9 flex items-end justify-between">
           <div className="rounded-2xl ring-4 ring-card">
-            <UserAvatar name={store.name} size="lg" />
+            <UserAvatar name={store.name} src={store.logo} size="lg" />
           </div>
           {store.professional ? (
             <Badge variant="pro">{t("stores.pro")}</Badge>
@@ -46,9 +46,9 @@ export function StoreCard({ store }: { store: Store }) {
           <h3 className="truncate font-bold text-foreground group-hover:text-primary">
             {store.name}
           </h3>
-          {store.verified && (
+          {store.verificationStatus === "verified" && (
             <CheckCircle
-              className="size-4 shrink-0 text-blue-600"
+              className="size-4 shrink-0 text-primary"
               aria-label={t("stores.verified")}
             />
           )}

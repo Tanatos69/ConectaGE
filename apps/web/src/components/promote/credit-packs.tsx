@@ -21,6 +21,7 @@ export function CreditPacks({ showBalance = false }: { showBalance?: boolean }) 
   const [pack, setPack] = useState<CreditPack | null>(null);
   const [method, setMethod] = useState(paymentMethods[0].id);
   const [done, setDone] = useState(false);
+  const [newBalance, setNewBalance] = useState(0);
 
   function open(p: CreditPack) {
     setPack(p);
@@ -31,6 +32,7 @@ export function CreditPacks({ showBalance = false }: { showBalance?: boolean }) 
   function pay() {
     if (!pack) return;
     const total = pack.credits + pack.bonus;
+    setNewBalance(credits.balance + total);
     buyCredits(total, `Compra de ${total} créditos`);
     setDone(true);
   }
@@ -124,7 +126,7 @@ export function CreditPacks({ showBalance = false }: { showBalance?: boolean }) 
                   +{pack.credits + pack.bonus} créditos añadidos
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Nuevo saldo: {credits.balance} créditos
+                  Nuevo saldo: {newBalance} créditos
                 </p>
                 <button
                   type="button"

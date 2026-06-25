@@ -25,9 +25,8 @@ export function filterListings(listings: Listing[], c: SearchCriteria): Listing[
     if (c.city && c.city !== "Todas" && l.city !== c.city) return false;
     if (c.condition && l.condition !== c.condition) return false;
     if (c.listingType && (l.listingType ?? "offer") !== c.listingType) return false;
-    if (c.minPrice != null && (l.price ?? 0) < c.minPrice) return false;
-    if (c.maxPrice != null && (l.price ?? Number.POSITIVE_INFINITY) > c.maxPrice)
-      return false;
+    if (c.minPrice != null && l.price != null && l.price < c.minPrice) return false;
+    if (c.maxPrice != null && l.price != null && l.price > c.maxPrice) return false;
 
     return true;
   });

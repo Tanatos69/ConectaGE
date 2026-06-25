@@ -73,6 +73,10 @@ interface AppStateValue {
   /** Returns false (and changes nothing) when the balance is insufficient. */
   spendCredits: (amount: number, label: string, slug?: string) => boolean;
   isPromoted: (slug: string) => boolean;
+
+  profilePicture: string | null;
+  setProfilePicture: (src: string) => void;
+  clearProfilePicture: () => void;
 }
 
 const KEYS = {
@@ -80,6 +84,7 @@ const KEYS = {
   follows: "conectage-follows",
   savedSearches: "conectage-saved-searches",
   credits: "conectage-credits",
+  profilePicture: "conectage-profile-picture",
 } as const;
 
 const DEFAULT_CREDITS: CreditsState = {
@@ -120,21 +125,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [follows, setFollows] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [credits, setCredits] = useState<CreditsState>(DEFAULT_CREDITS);
+  const [profilePicture, setProfilePictureState] = useState<string | null>(null);
 
-  // Hydrate every slice once on mount. Spread DEFAULT_CREDITS so setCredits
-  // always receives a new object reference, preventing React from bailing out
-  // of the state update (which would skip the persistence effect on first visit).
+  // Hydrate every slice once on mount.
   useEffect(() => {
     setFavorites(readJSON<string[]>(KEYS.favorites, []));
     setFollows(readJSON<string[]>(KEYS.follows, []));
     setSavedSearches(readJSON<SavedSearch[]>(KEYS.savedSearches, []));
     const stored = localStorage.getItem(KEYS.credits);
     setCredits(stored ? (JSON.parse(stored) as CreditsState) : { ...DEFAULT_CREDITS });
+    setProfilePictureState(localStorage.getItem(KEYS.profilePicture) ?? null);
     setHydrated(true);
   }, []);
 
-  // Persist on change, but never before hydration (avoids clobbering stored
-  // data with the server-default empty state on first paint).
+  // Persist on change, but never before hydration.
   useEffect(() => {
     if (hydrated) localStorage.setItem(KEYS.favorites, JSON.stringify(favorites));
   }, [favorites, hydrated]);
@@ -148,6 +152,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) localStorage.setItem(KEYS.credits, JSON.stringify(credits));
   }, [credits, hydrated]);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (profilePicture) {
+      localStorage.setItem(KEYS.profilePicture, profilePicture);
+    } else {
+      localStorage.removeItem(KEYS.profilePicture);
+    }
+  }, [profilePicture, hydrated]);
 
   const toggleFavorite = useCallback((slug: string) => {
     setFavorites((prev) =>
@@ -162,10 +174,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addSavedSearch = useCallback((label: string, criteria: SearchCriteria) => {
-    setSavedSearches((prev) => [
-      { id: uid(), label, criteria, alerts: true, createdAt: Date.now() },
-      ...prev,
-    ]);
+    setSavedSearches((prev) => {
+      const key = JSON.stringify(criteria);
+      if (prev.some((s) => JSON.stringify(s.criteria) === key)) return prev;
+      return [{ id: uid(), label, criteria, alerts: true, createdAt: Date.now() }, ...prev];
+    });
   }, []);
 
   const removeSavedSearch = useCallback((id: string) => {
@@ -191,26 +204,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const spendCredits = useCallback(
     (amount: number, label: string, slug?: string) => {
-      let ok = false;
-      setCredits((prev) => {
-        if (prev.balance < amount) return prev;
-        ok = true;
-        return {
-          balance: prev.balance - amount,
-          transactions: [
-            { id: uid(), type: "spend", amount: -amount, label, date: Date.now() },
-            ...prev.transactions,
-          ],
-          promoted:
-            slug && !prev.promoted.includes(slug)
-              ? [...prev.promoted, slug]
-              : prev.promoted,
-        };
-      });
-      return ok;
+      if (credits.balance < amount) return false;
+      setCredits((prev) => ({
+        balance: prev.balance - amount,
+        transactions: [
+          { id: uid(), type: "spend", amount: -amount, label, date: Date.now() },
+          ...prev.transactions,
+        ],
+        promoted:
+          slug && !prev.promoted.includes(slug)
+            ? [...prev.promoted, slug]
+            : prev.promoted,
+      }));
+      return true;
     },
-    [],
+    [credits],
   );
+
+  const setProfilePicture = useCallback((src: string) => {
+    setProfilePictureState(src);
+  }, []);
+
+  const clearProfilePicture = useCallback(() => {
+    setProfilePictureState(null);
+  }, []);
 
   const value: AppStateValue = {
     hydrated,
@@ -228,6 +245,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     buyCredits,
     spendCredits,
     isPromoted: (slug) => credits.promoted.includes(slug),
+    profilePicture,
+    setProfilePicture,
+    clearProfilePicture,
   };
 
   return (

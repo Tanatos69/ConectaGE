@@ -15,6 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
 import { cn } from "@/lib/utils";
+import { EQUATORIAL_GUINEA_CITIES_BY_PROVINCE } from "@/lib/cities";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,15 +72,9 @@ const defaultForm: FormData = {
 // ── Location data ────────────────────────────────────────────────────────────
 
 const locationData: Record<string, Record<string, string[]>> = {
-  "Guinea Ecuatorial": {
-    "Bioko Norte": ["Malabo", "Rebola", "Baney"],
-    "Bioko Sur": ["Luba", "Riaba", "Moka"],
-    Litoral: ["Bata", "Mbini", "Cogo", "Acalayong"],
-    "Centro Sur": ["Evinayong", "Niefang", "Sevilla de Niefang"],
-    "Kié-Ntem": ["Ebebiyín", "Mongomo", "Akonibe", "Nsork"],
-    "Wele-Nzas": ["Mongomo", "Aconibe", "Anisoc"],
-    Annobon: ["San Antonio de Palé"],
-  },
+  "Guinea Ecuatorial": Object.fromEntries(
+    EQUATORIAL_GUINEA_CITIES_BY_PROVINCE.map((p) => [p.province, p.cities])
+  ),
   España: { "Comunidad de Madrid": ["Madrid"], Cataluña: ["Barcelona", "Girona"] },
   Francia: { "Île-de-France": ["París", "Versalles"] },
   Camerún: { Littoral: ["Douala"], Centre: ["Yaundé"] },

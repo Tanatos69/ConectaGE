@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle, Save, AlertTriangle } from "lucide-react";
+import { useState, useRef } from "react";
+import { CheckCircle, Save, AlertTriangle, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { demoUser } from "@/lib/demo-user";
 import { cn } from "@/lib/utils";
+import { GE_CITIES } from "@/lib/cities";
+import { useAppState } from "@/lib/store/app-state";
 
-const cities = ["Malabo", "Bata", "Ebebiyín", "Akonibe", "Mongomo", "Luba", "Moka", "Otra"];
+const cities = [...GE_CITIES, "Otra"];
 const countries = ["Guinea Ecuatorial", "España", "Francia", "Camerún", "Nigeria", "Otro"];
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -37,6 +39,8 @@ function Field({
 }
 
 export default function PerfilPage() {
+  const { profilePicture, setProfilePicture, clearProfilePicture } = useAppState();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({
     name: demoUser.name,
@@ -57,6 +61,18 @@ export default function PerfilPage() {
 
   const inputClass =
     "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setProfilePicture(result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -85,16 +101,36 @@ export default function PerfilPage() {
       {/* Avatar */}
       <SectionCard title="Foto de perfil">
         <div className="flex items-center gap-4">
-          <UserAvatar name={form.name} size="lg" />
-          <div>
-            <button
-              type="button"
-              className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
-            >
-              Subir foto
-            </button>
-            <p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP. Máx. 5 MB.</p>
+          <UserAvatar name={form.name} src={profilePicture} size="lg" />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+              >
+                Subir foto
+              </button>
+              {profilePicture && (
+                <button
+                  type="button"
+                  onClick={clearProfilePicture}
+                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5"
+                >
+                  <Trash2 className="size-3.5" />
+                  Eliminar
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">JPG, PNG o WebP. Máx. 5 MB.</p>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={handlePhotoChange}
+          />
         </div>
       </SectionCard>
 
