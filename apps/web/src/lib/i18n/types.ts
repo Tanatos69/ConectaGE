@@ -140,6 +140,7 @@ export interface Translations {
     reports: string;
     featured: string;
     analytics: string;
+    stores: string;
     settings: string;
     viewSite: string;
     openMenu: string;

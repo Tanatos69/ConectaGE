@@ -162,6 +162,7 @@ export const pt: Translations = {
     reports: "Denúncias",
     featured: "Destaques",
     analytics: "Análises",
+    stores: "Lojas",
     settings: "Configurações",
     viewSite: "Ver site público",
     openMenu: "Abrir menu admin",

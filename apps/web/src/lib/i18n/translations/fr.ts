@@ -162,6 +162,7 @@ export const fr: Translations = {
     reports: "Signalements",
     featured: "En vedette",
     analytics: "Analytiques",
+    stores: "Boutiques",
     settings: "Paramètres",
     viewSite: "Voir le site public",
     openMenu: "Ouvrir le menu admin",

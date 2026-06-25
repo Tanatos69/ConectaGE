@@ -162,6 +162,7 @@ export const zh: Translations = {
     reports: "举报",
     featured: "精选",
     analytics: "数据分析",
+    stores: "商店",
     settings: "设置",
     viewSite: "查看公共网站",
     openMenu: "打开管理菜单",

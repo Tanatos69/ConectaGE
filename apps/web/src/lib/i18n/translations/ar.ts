@@ -162,6 +162,7 @@ export const ar: Translations = {
     reports: "البلاغات",
     featured: "المميزة",
     analytics: "التحليلات",
+    stores: "المتاجر",
     settings: "الإعدادات",
     viewSite: "عرض الموقع العام",
     openMenu: "فتح قائمة الإدارة",
