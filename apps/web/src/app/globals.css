@@ -206,8 +206,8 @@
     /* Decorative dot grid — true background, never overlays content */
     background-image: radial-gradient(
       circle,
-      hsl(214 30% 40% / 0.10) 1px,
-      transparent 1px
+      hsl(214 30% 40% / 0.20) 1.5px,
+      transparent 1.5px
     );
     background-size: 24px 24px;
     background-attachment: fixed;
