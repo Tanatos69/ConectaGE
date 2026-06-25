@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star, CheckCircle, MapPin, Calendar, Users, Store as StoreIcon, Clock, ExternalLink, Instagram, Facebook } from "lucide-react";
+import { Star, CheckCircle, MapPin, Calendar, Users, Store as StoreIcon, Clock, ExternalLink, AtSign, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { FollowButton } from "@/components/store/follow-button";
@@ -98,7 +98,7 @@ export function StoreView({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    <Instagram className="size-3.5" />
+                    <AtSign className="size-3.5" />
                     @{store.instagram}
                     <ExternalLink className="size-3" />
                   </a>
@@ -110,7 +110,7 @@ export function StoreView({
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    <Facebook className="size-3.5" />
+                    <Share2 className="size-3.5" />
                     {store.facebook}
                     <ExternalLink className="size-3" />
                   </a>

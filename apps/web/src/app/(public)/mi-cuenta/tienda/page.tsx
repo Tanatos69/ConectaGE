@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { CheckCircle, Save, Store, AlertTriangle, Trash2, Clock, MapPin, Instagram, Facebook, ShieldCheck } from "lucide-react";
+import { CheckCircle, Save, Store, AlertTriangle, Trash2, Clock, MapPin, AtSign, Share2, ShieldCheck } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { demoStores } from "@/lib/stores";
 import type { VerificationStatus } from "@/lib/stores";
@@ -237,7 +237,7 @@ export default function MiTiendaPage() {
         <div className="space-y-4">
           <Field label="Instagram" hint="Solo el nombre de usuario, sin @">
             <div className="relative">
-              <Instagram className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <AtSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={form.instagram}
@@ -249,7 +249,7 @@ export default function MiTiendaPage() {
           </Field>
           <Field label="Facebook" hint="Nombre de la página de Facebook">
             <div className="relative">
-              <Facebook className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Share2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={form.facebook}
