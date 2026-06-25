@@ -109,7 +109,14 @@ export function AdminMobileHeader() {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b bg-background px-4 py-3 lg:hidden">
+      <div className="flex items-center gap-3 border-b bg-background px-4 py-3 lg:hidden">
+        <button
+          onClick={() => setOpen(true)}
+          className="flex size-9 items-center justify-center rounded-xl border border-input bg-background text-muted-foreground"
+          aria-label={t("admin.openMenu")}
+        >
+          <Menu className="size-4" />
+        </button>
         <div className="flex items-center gap-2">
           <span className="rounded-lg bg-primary px-2 py-0.5 text-xs font-bold text-white">
             Admin
@@ -118,13 +125,6 @@ export function AdminMobileHeader() {
             {current ? t(current.labelKey) : t("admin.dashboard")}
           </span>
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          className="flex size-9 items-center justify-center rounded-xl border border-input bg-background text-muted-foreground"
-          aria-label={t("admin.openMenu")}
-        >
-          <Menu className="size-4" />
-        </button>
       </div>
 
       {open && (
