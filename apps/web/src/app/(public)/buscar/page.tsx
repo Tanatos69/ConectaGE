@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { allListings } from "@/lib/listings";
+import { getPublishedListings } from "@/lib/supabase/queries";
 import { categories } from "@/lib/categories";
 import { filterListings } from "@/lib/search";
 import type { SearchCriteria } from "@/lib/store/app-state";
@@ -34,7 +34,7 @@ export default async function BuscarPage({ searchParams }: Props) {
     listingType: tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined,
   };
 
-  const results = filterListings(allListings, criteria);
+  const results = filterListings(await getPublishedListings(), criteria);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

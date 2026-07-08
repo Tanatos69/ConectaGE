@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, FileText, User, Eye, LayoutDashboard, Clock, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
-import { demoUser, demoMyListings, demoNotifications } from "@/lib/demo-user";
+import { redirect } from "next/navigation";
+import { Plus, FileText, User, Eye, LayoutDashboard, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { demoNotifications } from "@/lib/demo-user";
 import { formatPrice } from "@/lib/format";
+import { getUser } from "@/lib/supabase/server";
+import { getProfile, getListingsByOwner, mapListingRow, monthYearLabel } from "@/lib/supabase/queries";
+import { FavoritesKpi } from "@/components/account/favorites-kpi";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -23,19 +27,47 @@ const notifColors: Record<string, string> = {
   review_approved: "text-green-600 bg-green-50",
 };
 
-export default function DashboardPage() {
+const statusLabel: Record<string, string> = {
+  published: "Publicado",
+  pending: "En revisión",
+  rejected: "Rechazado",
+  expired: "Expirado",
+};
+
+const statusStyle: Record<string, string> = {
+  published: "bg-green-50 text-green-700",
+  pending: "bg-amber-50 text-amber-700",
+  rejected: "bg-red-50 text-red-700",
+  expired: "bg-muted text-muted-foreground",
+};
+
+export default async function DashboardPage() {
+  const user = await getUser();
+  if (!user) redirect("/login?next=/mi-cuenta");
+
+  const [profile, rows] = await Promise.all([
+    getProfile(user.id),
+    getListingsByOwner(user.id),
+  ]);
+
+  const firstName = (profile?.full_name?.trim() || user.email?.split("@")[0] || "").split(" ")[0];
+  const active = rows.filter((r) => r.status === "published");
+  const pending = rows.filter((r) => r.status === "pending");
+  const totalViews = rows.reduce((sum, r) => sum + r.views_count, 0);
+  const latest = rows.slice(0, 3);
   const unread = demoNotifications.filter((n) => !n.read).length;
-  const recentListings = demoMyListings.slice(0, 3);
 
   return (
     <div className="space-y-6">
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          Hola, {demoUser.name.split(" ")[0]} 👋
+          Hola, {firstName} 👋
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Miembro desde {demoUser.memberSince} · {demoUser.city}
+          {profile
+            ? `Miembro desde ${monthYearLabel(profile.created_at)}${profile.city ? ` · ${profile.city}` : ""}`
+            : ""}
         </p>
       </div>
 
@@ -44,27 +76,15 @@ export default function DashboardPage() {
         {[
           {
             label: "Anuncios activos",
-            value: demoUser.stats.activeListings,
+            value: active.length,
             href: "/mi-cuenta/anuncios",
             color: "text-blue-600 bg-blue-50",
           },
           {
             label: "En revisión",
-            value: demoUser.stats.pendingListings,
+            value: pending.length,
             href: "/mi-cuenta/anuncios?status=pending",
             color: "text-amber-600 bg-amber-50",
-          },
-          {
-            label: "Favoritos",
-            value: demoUser.stats.favorites,
-            href: "/mi-cuenta/favoritos",
-            color: "text-rose-600 bg-rose-50",
-          },
-          {
-            label: "Vistas totales",
-            value: demoUser.stats.totalViews,
-            href: "/mi-cuenta/anuncios",
-            color: "text-violet-600 bg-violet-50",
           },
         ].map(({ label, value, href, color }) => (
           <Link
@@ -76,6 +96,14 @@ export default function DashboardPage() {
             <p className="mt-1 text-xs text-muted-foreground">{label}</p>
           </Link>
         ))}
+        <FavoritesKpi />
+        <Link
+          href="/mi-cuenta/anuncios"
+          className="rounded-2xl border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-2xl font-extrabold text-violet-600">{totalViews}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Vistas totales</p>
+        </Link>
       </div>
 
       {/* Quick actions */}
@@ -103,7 +131,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Recent notifications */}
+      {/* Recent notifications (demo — notifications are out of scope this pass) */}
       <div className="rounded-2xl border bg-card shadow-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="text-sm font-semibold text-foreground">Notificaciones recientes</h2>
@@ -144,39 +172,46 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="text-sm font-semibold text-foreground">Mis últimos anuncios</h2>
         </div>
-        <div className="divide-y">
-          {recentListings.map((listing) => (
-            <div key={listing.slug} className="flex items-center gap-3 px-5 py-3.5">
-              <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-secondary">
-                <Image src={listing.image} alt={listing.title} fill sizes="48px" className="object-cover" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{listing.title}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    listing.status === "published" ? "bg-green-50 text-green-700" :
-                    listing.status === "pending" ? "bg-amber-50 text-amber-700" :
-                    listing.status === "rejected" ? "bg-red-50 text-red-700" :
-                    "bg-muted text-muted-foreground"
-                  }`}>
-                    {{ published: "Publicado", pending: "En revisión", rejected: "Rechazado", expired: "Expirado" }[listing.status]}
-                  </span>
-                  {listing.views > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Eye className="size-3" />
-                      {listing.views}
-                    </span>
-                  )}
+        {latest.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-muted-foreground">Aún no has publicado ningún anuncio.</p>
+            <Link href="/publicar" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
+              Publicar mi primer anuncio →
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {latest.map((row) => {
+              const listing = mapListingRow(row);
+              return (
+                <div key={row.id} className="flex items-center gap-3 px-5 py-3.5">
+                  <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-secondary">
+                    <Image src={listing.image} alt={listing.title} fill sizes="48px" className="object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{listing.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusStyle[row.status]}`}>
+                        {statusLabel[row.status]}
+                      </span>
+                      {row.views_count > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="size-3" />
+                          {row.views_count}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatPrice(listing)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold text-foreground">
-                  {formatPrice(listing)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
         <div className="px-5 py-3 border-t">
           <Link href="/mi-cuenta/anuncios" className="text-xs font-medium text-primary hover:underline">
             Ver todos mis anuncios →

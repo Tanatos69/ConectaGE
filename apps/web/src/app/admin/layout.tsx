@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AdminNav, AdminMobileHeader, AdminSidebarFooter } from "@/components/admin/admin-nav";
 import { AdminBanner } from "@/components/admin/admin-banner";
+import { getUser } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: { default: "Admin — ConectaGE", template: "%s | Admin ConectaGE" },
 };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Defense-in-depth: the middleware already gates /admin, but this layout
+  // re-checks with its own getUser() + role lookup so a middleware matcher
+  // gap can never expose the admin UI.
+  const user = await getUser();
+  if (!user) redirect("/login?next=/admin");
+  const profile = await getProfile(user.id);
+  if (profile?.role !== "admin") redirect("/");
+
   return (
     <div className="min-h-screen">
       <AdminBanner />

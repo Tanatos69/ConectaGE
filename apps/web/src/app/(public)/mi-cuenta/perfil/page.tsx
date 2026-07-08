@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useTransition } from "react";
 import { CheckCircle, Save, AlertTriangle, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { demoUser } from "@/lib/demo-user";
+import { useAuth } from "@/lib/auth/context";
+import { updateProfileAction, updatePasswordAction } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 import { GE_CITIES } from "@/lib/cities";
 import { useAppState } from "@/lib/store/app-state";
 
 const cities = [...GE_CITIES, "Otra"];
-const countries = ["Guinea Ecuatorial", "España", "Francia", "Camerún", "Nigeria", "Otro"];
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -38,29 +38,77 @@ function Field({
   );
 }
 
+const inputClass =
+  "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
+
 export default function PerfilPage() {
+  const { user, profile } = useAuth();
   const { profilePicture, setProfilePicture, clearProfilePicture } = useAppState();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
   const [form, setForm] = useState({
-    name: demoUser.name,
-    username: demoUser.username,
-    bio: demoUser.bio,
-    city: demoUser.city,
-    country: demoUser.country,
-    phone: demoUser.phone,
-    whatsapp: demoUser.whatsapp,
-    email: demoUser.email,
-    showPhone: true,
-    showEmail: false,
-    notifyApproved: true,
-    notifyRejected: true,
-    notifyExpiring: true,
-    notifyReview: false,
+    name: profile?.full_name ?? "",
+    city: profile?.city ?? "",
+    phone: profile?.phone ?? "",
   });
 
-  const inputClass =
-    "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
+  // Refill the form when the profile arrives/changes (render-time adjustment).
+  const [loadedProfileId, setLoadedProfileId] = useState<string | null>(profile?.id ?? null);
+  if (profile && profile.id !== loadedProfileId) {
+    setLoadedProfileId(profile.id);
+    setForm({
+      name: profile.full_name ?? "",
+      city: profile.city ?? "",
+      phone: profile.phone ?? "",
+    });
+  }
+
+  // Password change state
+  const [passwords, setPasswords] = useState({ next: "", confirm: "" });
+  const [passwordMsg, setPasswordMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [passwordPending, startPasswordTransition] = useTransition();
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    startTransition(async () => {
+      const result = await updateProfileAction({
+        fullName: form.name,
+        phone: form.phone,
+        city: form.city,
+      });
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    });
+  }
+
+  function handlePasswordChange() {
+    if (passwords.next.length < 8) {
+      setPasswordMsg({ ok: false, text: "La contraseña debe tener al menos 8 caracteres." });
+      return;
+    }
+    if (passwords.next !== passwords.confirm) {
+      setPasswordMsg({ ok: false, text: "Las contraseñas no coinciden." });
+      return;
+    }
+    setPasswordMsg(null);
+    startPasswordTransition(async () => {
+      const result = await updatePasswordAction(passwords.next);
+      if (result?.error) {
+        setPasswordMsg({ ok: false, text: result.error });
+      } else {
+        setPasswordMsg({ ok: true, text: "Contraseña actualizada." });
+        setPasswords({ next: "", confirm: "" });
+      }
+    });
+  }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -74,34 +122,33 @@ export default function PerfilPage() {
     e.target.value = "";
   }
 
-  function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  }
-
   return (
     <form onSubmit={handleSave} className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Mi perfil</h1>
         <button
           type="submit"
+          disabled={pending}
           className={cn(
-            "flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors",
+            "flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60",
             saved
               ? "bg-green-600 text-white"
               : "bg-primary text-white hover:bg-primary/90",
           )}
         >
           {saved ? <CheckCircle className="size-4" /> : <Save className="size-4" />}
-          {saved ? "¡Guardado!" : "Guardar cambios"}
+          {saved ? "¡Guardado!" : pending ? "Guardando…" : "Guardar cambios"}
         </button>
       </div>
+
+      {error && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+      )}
 
       {/* Avatar */}
       <SectionCard title="Foto de perfil">
         <div className="flex items-center gap-4">
-          <UserAvatar name={form.name} src={profilePicture} size="lg" />
+          <UserAvatar name={form.name || "U"} src={profilePicture} size="lg" />
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <button
@@ -146,46 +193,14 @@ export default function PerfilPage() {
                 className={inputClass}
               />
             </Field>
-            <Field
-              label="Nombre de usuario"
-              hint="Aparece en la URL de tu perfil público: /usuario/francisco_ge"
-            >
-              <input
-                type="text"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-                className={inputClass}
-              />
-            </Field>
-          </div>
-
-          <Field label="Biografía" hint="Máximo 300 caracteres.">
-            <textarea
-              value={form.bio}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              maxLength={300}
-              rows={3}
-              className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Ciudad">
               <select
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
                 className={inputClass}
               >
+                <option value="">Selecciona tu ciudad</option>
                 {cities.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-            <Field label="País">
-              <select
-                value={form.country}
-                onChange={(e) => setForm({ ...form, country: e.target.value })}
-                className={inputClass}
-              >
-                {countries.map((c) => <option key={c}>{c}</option>)}
               </select>
             </Field>
           </div>
@@ -195,86 +210,74 @@ export default function PerfilPage() {
       {/* Contact info */}
       <SectionCard title="Información de contacto">
         <div className="space-y-4">
-          <Field label="Teléfono">
+          <Field
+            label="Teléfono (WhatsApp)"
+            hint="Número que aparecerá en los botones de contacto de tus anuncios. Formato: +240222000000"
+          >
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="+240 222 000 000"
               className={inputClass}
             />
           </Field>
-          <Field label="WhatsApp" hint="Número que aparecerá en los botones de contacto de tus anuncios.">
-            <input
-              type="tel"
-              value={form.whatsapp}
-              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Correo electrónico">
+          <Field label="Correo electrónico" hint="El correo de acceso no se puede cambiar desde aquí.">
             <input
               type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={inputClass}
+              value={user?.email ?? ""}
+              disabled
+              className={cn(inputClass, "opacity-60")}
             />
           </Field>
-          <div className="space-y-2.5">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Visibilidad</p>
-            {[
-              { key: "showPhone" as const, label: "Mostrar teléfono en mis anuncios" },
-              { key: "showEmail" as const, label: "Mostrar correo en mi perfil público" },
-            ].map(({ key, label }) => (
-              <label key={key} className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form[key]}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
-                  className="size-4 accent-primary rounded"
-                />
-                <span className="text-sm text-muted-foreground">{label}</span>
-              </label>
-            ))}
-          </div>
         </div>
       </SectionCard>
 
       {/* Security */}
       <SectionCard title="Seguridad">
         <div className="space-y-4">
-          <Field label="Contraseña actual">
-            <input type="password" placeholder="••••••••" className={inputClass} />
-          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nueva contraseña">
-              <input type="password" placeholder="Mínimo 8 caracteres" className={inputClass} />
+              <input
+                type="password"
+                placeholder="Mínimo 8 caracteres"
+                value={passwords.next}
+                onChange={(e) => setPasswords({ ...passwords, next: e.target.value })}
+                autoComplete="new-password"
+                className={inputClass}
+              />
             </Field>
             <Field label="Confirmar nueva contraseña">
-              <input type="password" placeholder="Repite la contraseña" className={inputClass} />
+              <input
+                type="password"
+                placeholder="Repite la contraseña"
+                value={passwords.confirm}
+                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                autoComplete="new-password"
+                className={inputClass}
+              />
             </Field>
           </div>
-        </div>
-      </SectionCard>
-
-      {/* Notification preferences */}
-      <SectionCard title="Preferencias de notificación">
-        <div className="space-y-2.5">
-          {[
-            { key: "notifyApproved" as const, label: "Anuncio aprobado" },
-            { key: "notifyRejected" as const, label: "Anuncio rechazado" },
-            { key: "notifyExpiring" as const, label: "Anuncio próximo a expirar" },
-            { key: "notifyReview" as const, label: "Nueva reseña recibida" },
-          ].map(({ key, label }) => (
-            <label key={key} className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
-                className="size-4 accent-primary rounded"
-              />
-              <span className="text-sm text-muted-foreground">{label}</span>
-            </label>
-          ))}
+          {passwordMsg && (
+            <p
+              className={cn(
+                "rounded-lg px-3 py-2 text-sm",
+                passwordMsg.ok
+                  ? "bg-green-50 text-green-700"
+                  : "bg-destructive/10 text-destructive",
+              )}
+            >
+              {passwordMsg.text}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handlePasswordChange}
+            disabled={passwordPending || !passwords.next}
+            className="rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-50"
+          >
+            {passwordPending ? "Actualizando…" : "Cambiar contraseña"}
+          </button>
         </div>
       </SectionCard>
 
@@ -284,16 +287,21 @@ export default function PerfilPage() {
           <AlertTriangle className="size-4 text-destructive" />
           <h2 className="text-sm font-semibold text-destructive">Zona de peligro</h2>
         </div>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Para desactivar o eliminar tu cuenta, contáctanos desde la página de contacto.
+        </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
             type="button"
-            className="rounded-xl border border-destructive/30 bg-background px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/5"
+            disabled
+            className="rounded-xl border border-destructive/30 bg-background px-4 py-2.5 text-sm font-medium text-destructive opacity-60"
           >
             Desactivar mi cuenta
           </button>
           <button
             type="button"
-            className="rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90"
+            disabled
+            className="rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-white opacity-60"
           >
             Eliminar mi cuenta
           </button>

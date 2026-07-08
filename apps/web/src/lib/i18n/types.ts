@@ -142,6 +142,8 @@ export interface Translations {
     analytics: string;
     stores: string;
     settings: string;
+    /** Optional: missing keys fall back to Spanish (admin is Spanish-only). */
+    sellers?: string;
     viewSite: string;
     openMenu: string;
     restricted: string;

@@ -50,13 +50,15 @@ export function SellerCard({ seller }: { seller: SellerProfile }) {
         </Link>
       )}
 
-      <Link
-        href={`/usuario/${seller.username}`}
-        className="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline"
-      >
-        Ver todos sus anuncios
-        <ExternalLink className="size-3.5" />
-      </Link>
+      {seller.username && (
+        <Link
+          href={`/usuario/${seller.username}`}
+          className="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          Ver todos sus anuncios
+          <ExternalLink className="size-3.5" />
+        </Link>
+      )}
     </div>
   );
 }

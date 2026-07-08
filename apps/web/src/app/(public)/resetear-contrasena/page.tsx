@@ -1,14 +1,37 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-
-export const metadata: Metadata = {
-  title: "Nueva contraseña",
-  description: "Establece una nueva contraseña para tu cuenta de ConectaGE.",
-};
+import { updatePasswordAction } from "@/lib/actions/auth";
 
 export default function ResetearContrasenaPage() {
+  const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (password !== confirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+    setError("");
+    startTransition(async () => {
+      const result = await updatePasswordAction(password);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.push("/mi-cuenta");
+        router.refresh();
+      }
+    });
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
@@ -26,7 +49,7 @@ export default function ResetearContrasenaPage() {
             Elige una contraseña segura para proteger tu cuenta.
           </p>
 
-          <form className="mt-6 space-y-4" action="/api/auth/reset-password" method="POST">
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
                 Nueva contraseña
@@ -37,7 +60,10 @@ export default function ResetearContrasenaPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={8}
                 placeholder="Mínimo 8 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
@@ -52,16 +78,26 @@ export default function ResetearContrasenaPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={8}
                 placeholder="Repite la contraseña"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
 
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={pending}
+              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             >
-              Guardar nueva contraseña
+              {pending ? "Guardando…" : "Guardar nueva contraseña"}
             </button>
           </form>
         </div>

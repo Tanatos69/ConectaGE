@@ -3,12 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    // All listing photos & avatars are served from Cloudinary's CDN.
-    // Placeholder/demo imagery is pulled from Unsplash during the
-    // presentation phase only.
+    // Real listing photos & avatars live in Supabase Storage. Cloudinary /
+    // Unsplash remain for legacy demo imagery.
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
 };

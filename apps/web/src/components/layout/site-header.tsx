@@ -7,23 +7,13 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAppState } from "@/lib/store/app-state";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { languages } from "@/lib/languages";
 import { categories } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
-
-function useSession() {
-  const [role, setRole] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  useEffect(() => {
-    const roleMatch = document.cookie.match(/(?:^|; )conectage-role=([^;]+)/);
-    const userMatch = document.cookie.match(/(?:^|; )conectage-user=([^;]+)/);
-    setRole(roleMatch ? roleMatch[1] : null);
-    setUsername(userMatch ? decodeURIComponent(userMatch[1]) : null);
-  }, []);
-  return { role, username };
-}
+import { useAuth } from "@/lib/auth/context";
+import { signOutAction } from "@/lib/actions/auth";
 
 function SearchBar({ className }: { className?: string }) {
   const { t } = useTranslation();
@@ -119,7 +109,8 @@ function LanguageSwitcher() {
 
 export function SiteHeader() {
   const { t } = useTranslation();
-  const { role, username } = useSession();
+  const { user, profile } = useAuth();
+  const role = profile?.role ?? (user ? "buyer" : null);
   const { profilePicture } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
   const [explorarOpen, setExplorarOpen] = useState(false);
@@ -127,8 +118,7 @@ export function SiteHeader() {
   const explorarRef = useRef<HTMLDivElement>(null);
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
+    await signOutAction();
   }
 
   useEffect(() => {
@@ -155,8 +145,9 @@ export function SiteHeader() {
     };
   }, [explorarOpen]);
 
-  const displayName = username
-    ? username.length > 14 ? username.slice(0, 14) + "…" : username
+  const rawName = profile?.full_name?.trim() || user?.email?.split("@")[0] || null;
+  const displayName = rawName
+    ? rawName.length > 14 ? rawName.slice(0, 14) + "…" : rawName
     : role === "admin" ? "Admin" : null;
 
   return (

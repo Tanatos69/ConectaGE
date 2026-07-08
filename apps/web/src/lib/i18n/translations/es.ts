@@ -164,10 +164,11 @@ export const es: Translations = {
     analytics: "Analíticas",
     stores: "Tiendas",
     settings: "Ajustes",
+    sellers: "Vendedores",
     viewSite: "Ver sitio público",
     openMenu: "Abrir menú admin",
     restricted: "Área restringida.",
-    restrictedRole: "En producción, requiere sesión con rol",
+    restrictedRole: "Acceso limitado a administradores.",
   },
   stores: {
     follow: "Seguir",

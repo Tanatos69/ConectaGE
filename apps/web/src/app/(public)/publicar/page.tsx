@@ -16,6 +16,9 @@ import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
 import { cn } from "@/lib/utils";
 import { EQUATORIAL_GUINEA_CITIES_BY_PROVINCE } from "@/lib/cities";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createListingAction } from "@/lib/actions/listings";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -167,6 +170,9 @@ export default function PublicarPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(defaultForm);
   const [submitted, setSubmitted] = useState(false);
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -206,8 +212,71 @@ export default function PublicarPage() {
     return true;
   }
 
-  function handleSubmit() {
-    setSubmitted(true);
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitError("");
+    setSubmitting(true);
+
+    try {
+      // Photos upload straight from the browser to Storage (RLS only allows
+      // the user's own {uid}/ folder); the server action then validates the
+      // resulting URLs and inserts the listing with the session's user id.
+      let imageUrls: string[] = [];
+      if (isSupabaseConfigured && form.photos.length > 0) {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setSubmitError("Debes iniciar sesión para publicar.");
+          return;
+        }
+
+        const batch = Math.random().toString(36).slice(2, 10);
+        const uploads = await Promise.all(
+          form.photos.map(async (photo, i) => {
+            const ext = (photo.file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+            const path = `${user.id}/${batch}/${i}.${ext}`;
+            const { error } = await supabase.storage
+              .from("listing-images")
+              .upload(path, photo.file, { contentType: photo.file.type, upsert: false });
+            if (error) throw new Error(error.message);
+            return supabase.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
+          }),
+        );
+        imageUrls = uploads;
+      }
+
+      const result = await createListingAction({
+        title: form.title,
+        description: form.description,
+        price: form.price ? Number(form.price) : null,
+        priceType: form.priceType,
+        currency: form.currency,
+        categorySlug: form.category,
+        subcategorySlug: form.subcategory,
+        city: form.city,
+        region: form.region,
+        condition: form.listingType === "offer" ? form.condition : null,
+        whatsapp: form.whatsapp,
+        showPhone: form.showPhone,
+        phone: form.phone,
+        listingType: form.listingType,
+        extraFields: form.extraFields,
+        images: imageUrls,
+      });
+
+      if (result?.error) {
+        setSubmitError(result.error);
+        return;
+      }
+      setPublishedSlug(result?.slug ?? null);
+      setSubmitted(true);
+    } catch {
+      setSubmitError("No se pudieron subir las fotos. Revisa tu conexión e intenta de nuevo.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
@@ -217,20 +286,33 @@ export default function PublicarPage() {
           <div className="flex size-16 items-center justify-center rounded-2xl bg-green-50 mx-auto">
             <CheckCircle className="size-8 text-green-600" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">¡Anuncio enviado!</h1>
+          <h1 className="text-xl font-bold text-foreground">¡Anuncio publicado!</h1>
           <p className="text-sm text-muted-foreground">
-            Tu anuncio <strong>"{form.title}"</strong> ha sido enviado y está pendiente de revisión.
-            Normalmente aprobamos en menos de 2 horas. Te notificaremos por WhatsApp.
+            Tu anuncio <strong>&ldquo;{form.title}&rdquo;</strong> ya está publicado y visible
+            para todos los compradores.
           </p>
           <div className="flex flex-col gap-2">
+            {publishedSlug && (
+              <Link
+                href={`/anuncios/${publishedSlug}`}
+                className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90"
+              >
+                Ver mi anuncio
+              </Link>
+            )}
             <Link
               href="/mi-cuenta/anuncios"
-              className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90"
+              className={cn(
+                "rounded-xl px-5 py-3 text-sm font-semibold",
+                publishedSlug
+                  ? "border border-input bg-background text-foreground hover:bg-secondary"
+                  : "bg-primary text-white hover:bg-primary/90",
+              )}
             >
               Ver mis anuncios
             </Link>
             <button
-              onClick={() => { setForm(defaultForm); setStep(1); setSubmitted(false); }}
+              onClick={() => { setForm(defaultForm); setStep(1); setSubmitted(false); setPublishedSlug(null); }}
               className="rounded-xl border border-input bg-background px-5 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary"
             >
               Publicar otro anuncio
@@ -767,11 +849,18 @@ export default function PublicarPage() {
               <Link href="/ayuda" className="font-semibold underline">normas de la comunidad</Link>.
             </div>
 
+            {submitError && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {submitError}
+              </p>
+            )}
+
             <button
               onClick={handleSubmit}
-              className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary/90 transition-colors"
+              disabled={submitting}
+              className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary/90 transition-colors disabled:opacity-60"
             >
-              Publicar anuncio
+              {submitting ? "Publicando…" : "Publicar anuncio"}
             </button>
           </div>
         )}

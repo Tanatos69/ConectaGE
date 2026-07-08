@@ -1,56 +1,39 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { signInAction, signInWithOAuthAction } from "@/lib/actions/auth";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/mi-cuenta";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(
+    searchParams.get("error") === "auth"
+      ? "No se pudo completar el acceso. Intenta de nuevo."
+      : "",
+  );
+  const [pending, startTransition] = useTransition();
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        setError("Credenciales incorrectas. Intenta de nuevo.");
-        return;
-      }
-
-      const { role } = await res.json();
-      router.push(role === "admin" ? "/admin" : next);
-      router.refresh();
-    } catch {
-      setError("Error de conexión. Intenta de nuevo.");
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      const result = await signInAction({ email, password, next });
+      if (result?.error) setError(result.error);
+    });
   }
 
-  function fillDemo(type: "user" | "admin") {
-    if (type === "user") {
-      setEmail("usuario@demo.com");
-      setPassword("demo1234");
-    } else {
-      setEmail("admin@conectage.com");
-      setPassword("admin2024");
-    }
+  function handleOAuth(provider: "google" | "facebook") {
     setError("");
+    startTransition(async () => {
+      const result = await signInWithOAuthAction(provider, next);
+      if (result?.error) setError(result.error);
+    });
   }
 
   return (
@@ -58,31 +41,6 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
           <Logo />
-        </div>
-
-        {/* Demo credentials hint */}
-        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-xs text-blue-800">
-          <p className="mb-2 font-semibold">Cuentas de demo:</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => fillDemo("user")}
-              className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-left transition-colors hover:bg-blue-100"
-            >
-              <span className="block font-medium">Usuario</span>
-              <span className="text-blue-600">usuario@demo.com</span>
-              <span className="block text-muted-foreground">demo1234</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo("admin")}
-              className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-left transition-colors hover:bg-blue-100"
-            >
-              <span className="block font-medium">Admin</span>
-              <span className="text-blue-600">admin@conectage.com</span>
-              <span className="block text-muted-foreground">admin2024</span>
-            </button>
-          </div>
         </div>
 
         <div className="rounded-2xl border bg-card p-7 shadow-sm">
@@ -142,10 +100,10 @@ function LoginForm() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={pending}
               className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             >
-              {loading ? "Iniciando sesión…" : "Iniciar sesión"}
+              {pending ? "Iniciando sesión…" : "Iniciar sesión"}
             </button>
           </form>
 
@@ -158,6 +116,8 @@ function LoginForm() {
           <div className="space-y-3">
             <SocialButton
               provider="Google"
+              disabled={pending}
+              onClick={() => handleOAuth("google")}
               icon={
                 <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -169,6 +129,8 @@ function LoginForm() {
             />
             <SocialButton
               provider="Facebook"
+              disabled={pending}
+              onClick={() => handleOAuth("facebook")}
               icon={
                 <svg viewBox="0 0 24 24" fill="#1877F2" className="size-4" aria-hidden="true">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -197,11 +159,23 @@ export default function LoginPage() {
   );
 }
 
-function SocialButton({ provider, icon }: { provider: string; icon: React.ReactNode }) {
+function SocialButton({
+  provider,
+  icon,
+  onClick,
+  disabled,
+}: {
+  provider: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
-      className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-60"
     >
       {icon}
       Continuar con {provider}

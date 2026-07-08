@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "@/lib/fontawesome";
 import { Providers } from "@/components/providers";
+import { getUser } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/supabase/queries";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,15 +51,20 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getUser();
+  const profile = user ? await getProfile(user.id) : null;
+
   return (
     <html lang="es" className={`${inter.variable} ${plusJakarta.variable} h-full antialiased`}>
       <body className="h-full">
-        <Providers>{children}</Providers>
+        <Providers initialUser={user} initialProfile={profile}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

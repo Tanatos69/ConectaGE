@@ -4,13 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, ArrowRight, Crown, MapPin, MessageCircle } from "lucide-react";
 import { ListingCard } from "@/components/listing/listing-card";
-import { featuredListings, allListings } from "@/lib/listings";
+import type { Listing } from "@/lib/listings";
 import { useAppState } from "@/lib/store/app-state";
 import { useTranslation } from "@/lib/i18n/context";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
-function HeroCard({ listing }: { listing: (typeof allListings)[0] }) {
+function HeroCard({ listing }: { listing: Listing }) {
   const { t } = useTranslation();
 
   return (
@@ -73,12 +72,18 @@ function HeroCard({ listing }: { listing: (typeof allListings)[0] }) {
   );
 }
 
-export function FeaturedListings() {
+export function FeaturedListings({
+  featured,
+  all,
+}: {
+  featured: Listing[];
+  all: Listing[];
+}) {
   const { t } = useTranslation();
-  const { credits, isPromoted } = useAppState();
+  const { isPromoted } = useAppState();
 
-  const promotedListings = allListings.filter((l) => isPromoted(l.slug));
-  const staticFeatured = featuredListings.filter((l) => !isPromoted(l.slug));
+  const promotedListings = all.filter((l) => isPromoted(l.slug));
+  const staticFeatured = featured.filter((l) => !isPromoted(l.slug));
   const combined = [...promotedListings, ...staticFeatured];
 
   if (combined.length === 0) return null;

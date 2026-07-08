@@ -1,16 +1,78 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Logo } from "@/components/brand/logo";
-import { categories } from "@/lib/categories";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Crear cuenta",
-  description: "Regístrate gratis en ConectaGE y empieza a comprar y vender en Guinea Ecuatorial.",
-};
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { MailCheck } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
+import { signUpAction, signInWithOAuthAction } from "@/lib/actions/auth";
 
 const cities = ["Malabo", "Bata", "Ebebiyín", "Akonibe", "Mongomo", "Luba", "Moka", "Otra"];
 
+const inputClass =
+  "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
+
 export default function RegistroPage() {
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    city: "",
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function set(partial: Partial<typeof form>) {
+    setForm((prev) => ({ ...prev, ...partial }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    startTransition(async () => {
+      const result = await signUpAction(form);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        setSubmittedEmail(form.email);
+      }
+    });
+  }
+
+  function handleOAuth(provider: "google" | "facebook") {
+    setError("");
+    startTransition(async () => {
+      const result = await signInWithOAuthAction(provider);
+      if (result?.error) setError(result.error);
+    });
+  }
+
+  // Email confirmation is ON: no session until the user clicks the link.
+  if (submittedEmail) {
+    return (
+      <div className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-green-50">
+            <MailCheck className="size-8 text-green-600" />
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Revisa tu correo</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Hemos enviado un enlace de confirmación a{" "}
+            <strong className="text-foreground">{submittedEmail}</strong>. Abre el correo y pulsa
+            el enlace para activar tu cuenta. Revisa también la carpeta de spam.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-block rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90"
+          >
+            Ir a iniciar sesión
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
@@ -28,7 +90,9 @@ export default function RegistroPage() {
           <div className="mt-5 space-y-3">
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
+              disabled={pending}
+              onClick={() => handleOAuth("google")}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-60"
             >
               <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -40,7 +104,9 @@ export default function RegistroPage() {
             </button>
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary"
+              disabled={pending}
+              onClick={() => handleOAuth("facebook")}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary disabled:opacity-60"
             >
               <svg viewBox="0 0 24 24" fill="#1877F2" className="size-4" aria-hidden="true">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -55,22 +121,7 @@ export default function RegistroPage() {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <form className="space-y-4" action="/api/auth/register" method="POST">
-            <div>
-              <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
-                Número de teléfono <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                placeholder="+240 222 000 000"
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-              />
-            </div>
-
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
                 Nombre completo <span className="text-destructive">*</span>
@@ -82,8 +133,30 @@ export default function RegistroPage() {
                 autoComplete="name"
                 required
                 placeholder="Tu nombre y apellidos"
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                value={form.fullName}
+                onChange={(e) => set({ fullName: e.target.value })}
+                className={inputClass}
               />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
+                Número de teléfono (WhatsApp) <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                required
+                placeholder="+240 222 000 000"
+                value={form.phone}
+                onChange={(e) => set({ phone: e.target.value })}
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Los compradores te contactarán por WhatsApp a este número.
+              </p>
             </div>
 
             <div>
@@ -94,7 +167,9 @@ export default function RegistroPage() {
                 id="city"
                 name="city"
                 required
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                value={form.city}
+                onChange={(e) => set({ city: e.target.value })}
+                className={inputClass}
               >
                 <option value="">Selecciona tu ciudad</option>
                 {cities.map((c) => (
@@ -104,46 +179,37 @@ export default function RegistroPage() {
             </div>
 
             <div>
-              <label htmlFor="whatsapp" className="mb-1.5 block text-sm font-medium text-foreground">
-                WhatsApp{" "}
-                <span className="text-xs font-normal text-muted-foreground">(opcional, para recibir contactos)</span>
-              </label>
-              <input
-                id="whatsapp"
-                name="whatsapp"
-                type="tel"
-                placeholder="+240 222 000 000"
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-              />
-            </div>
-
-            <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-                Correo electrónico{" "}
-                <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+                Correo electrónico <span className="text-destructive">*</span>
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
+                required
                 placeholder="tu@email.com"
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                value={form.email}
+                onChange={(e) => set({ email: e.target.value })}
+                className={inputClass}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-                Contraseña{" "}
-                <span className="text-xs font-normal text-muted-foreground">(recomendada)</span>
+                Contraseña <span className="text-destructive">*</span>
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="new-password"
+                required
+                minLength={8}
                 placeholder="Mínimo 8 caracteres"
-                className="h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                value={form.password}
+                onChange={(e) => set({ password: e.target.value })}
+                className={inputClass}
               />
             </div>
 
@@ -167,11 +233,18 @@ export default function RegistroPage() {
               </label>
             </div>
 
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={pending}
+              className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             >
-              Crear cuenta gratis
+              {pending ? "Creando cuenta…" : "Crear cuenta gratis"}
             </button>
           </form>
         </div>

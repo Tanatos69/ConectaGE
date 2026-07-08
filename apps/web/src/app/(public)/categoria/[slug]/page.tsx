@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
-import { allListings, recentListings } from "@/lib/listings";
+import { getPublishedListings } from "@/lib/supabase/queries";
 import { filterListings } from "@/lib/search";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
@@ -34,11 +34,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   const listingType = tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined;
   const subs = subcategories[cat.slug] ?? [];
-  const filtered = filterListings(allListings, { category: slug, listingType });
-  // Demo fallback so empty categories still show something, but only when the
-  // user hasn't applied a type filter.
-  const listings =
-    filtered.length > 0 ? filtered : listingType ? [] : recentListings.slice(0, 8);
+  const listings = filterListings(await getPublishedListings(), {
+    category: slug,
+    listingType,
+  });
 
   const typeChips: { key: "offer" | "wanted" | undefined; label: string }[] = [
     { key: undefined, label: "Todos" },

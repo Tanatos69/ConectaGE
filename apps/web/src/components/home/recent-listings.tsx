@@ -4,12 +4,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { ListingCard } from "@/components/listing/listing-card";
-import { recentListings } from "@/lib/listings";
+import type { Listing } from "@/lib/listings";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 
-export function RecentListings() {
+export function RecentListings({ listings }: { listings: Listing[] }) {
   const { t } = useTranslation();
+
+  if (listings.length === 0) return null;
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
@@ -32,7 +34,7 @@ export function RecentListings() {
       </div>
 
       <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {recentListings.map((listing) => (
+        {listings.map((listing) => (
           <ListingCard key={listing.slug} listing={listing} />
         ))}
       </div>

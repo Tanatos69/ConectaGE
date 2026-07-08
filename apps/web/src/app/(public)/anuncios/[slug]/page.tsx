@@ -2,8 +2,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Eye, Flag, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
-import { recentListings, featuredListings } from "@/lib/listings";
-import { getListingDetail } from "@/lib/demo-detail";
+import { getListingBySlug as getDemoListingBySlug, type Listing } from "@/lib/listings";
+import { getListingDetail, type SellerProfile, type Review } from "@/lib/demo-detail";
+import {
+  getListingWithDetail,
+  getPublishedListings,
+  incrementListingViews,
+  monthYearLabel,
+} from "@/lib/supabase/queries";
 import { paymentMethods } from "@/lib/payments-logistics";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -25,36 +31,91 @@ const conditionLabel: Record<string, string> = {
   refurbished: "Reacondicionado",
 };
 
+interface DetailData {
+  listing: Listing;
+  description: string;
+  images: string[];
+  extraFields: Record<string, string>;
+  whatsappNumber: string;
+  phoneNumber?: string;
+  viewsCount?: number;
+  seller?: SellerProfile;
+  reviews: Review[];
+}
+
+/** Real listing from Supabase first; demo content as fallback. */
+async function loadDetail(slug: string): Promise<DetailData | null> {
+  const db = await getListingWithDetail(slug);
+  if (db) {
+    return {
+      listing: db.listing,
+      description: db.row.description,
+      images: db.row.images.length > 0 ? db.row.images : [db.listing.image],
+      extraFields: db.row.extra_fields ?? {},
+      whatsappNumber: db.row.whatsapp,
+      phoneNumber: db.row.show_phone && db.row.phone ? db.row.phone : undefined,
+      viewsCount: db.row.views_count,
+      seller: db.seller
+        ? {
+            username: "",
+            name: db.seller.full_name || "Vendedor",
+            memberSince: monthYearLabel(db.seller.created_at),
+            rating: 0,
+            reviewsCount: 0,
+            activeListings: 0,
+            verified: db.seller.verified,
+            whatsapp: db.row.whatsapp,
+            city: db.seller.city ?? db.listing.city,
+            bio: "",
+          }
+        : undefined,
+      reviews: [],
+    };
+  }
+
+  const listing = getDemoListingBySlug(slug);
+  if (!listing) return null;
+  const detail = getListingDetail(slug);
+  return {
+    listing,
+    description: detail?.description ?? "",
+    images: detail?.images ?? [listing.image],
+    extraFields: detail?.extraFields ?? {},
+    whatsappNumber: detail?.whatsappNumber ?? "+240222000000",
+    phoneNumber: detail?.phoneNumber,
+    viewsCount: detail?.viewsCount,
+    seller: detail?.seller,
+    reviews: detail?.reviews ?? [],
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const all = [...featuredListings, ...recentListings];
-  const listing = all.find((l) => l.slug === slug);
-  if (!listing) return {};
+  const data = await loadDetail(slug);
+  if (!data) return {};
   return {
-    title: listing.title,
-    description: `${listing.title} — ${formatPrice(listing)} — ${listing.city}, Guinea Ecuatorial. Contacta directamente por WhatsApp.`,
+    title: data.listing.title,
+    description: `${data.listing.title} — ${formatPrice(data.listing)} — ${data.listing.city}, Guinea Ecuatorial. Contacta directamente por WhatsApp.`,
   };
 }
 
 export default async function ListingDetailPage({ params }: Props) {
   const { slug } = await params;
-  const all = [...featuredListings, ...recentListings];
-  const listing = all.find((l) => l.slug === slug);
-  if (!listing) notFound();
+  const data = await loadDetail(slug);
+  if (!data) notFound();
 
-  const detail = getListingDetail(slug);
-  const images = detail?.images ?? [listing.image];
-  const reviews = detail?.reviews ?? [];
+  const { listing, reviews } = data;
   const avgRating =
     reviews.length > 0
       ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
       : (listing.rating ?? 0);
 
+  const all = await getPublishedListings();
   const related = all
     .filter((l) => l.categorySlug === listing.categorySlug && l.slug !== listing.slug)
     .slice(0, 4);
 
-  const whatsappNumber = detail?.whatsappNumber ?? "+240222000000";
+  await incrementListingViews(slug);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -68,7 +129,7 @@ export default async function ListingDetailPage({ params }: Props) {
       <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* ── Left column ── */}
         <div className="space-y-5">
-          <ImageGallery images={images} title={listing.title} />
+          <ImageGallery images={data.images} title={listing.title} />
 
           {/* Listing header */}
           <div className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -103,16 +164,16 @@ export default async function ListingDetailPage({ params }: Props) {
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-4 shrink-0" />
-                {listing.city}, {listing.region}
+                {listing.city}{listing.region ? `, ${listing.region}` : ""}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="size-4 shrink-0" />
                 {listing.postedLabel}
               </span>
-              {detail?.viewsCount && (
+              {data.viewsCount != null && data.viewsCount > 0 && (
                 <span className="flex items-center gap-1.5">
                   <Eye className="size-4 shrink-0" />
-                  {detail.viewsCount.toLocaleString("es-ES")} vistas
+                  {data.viewsCount.toLocaleString("es-ES")} vistas
                 </span>
               )}
             </div>
@@ -130,26 +191,26 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
 
           {/* Description */}
-          {detail?.description && (
+          {data.description && (
             <div className="rounded-2xl border bg-card p-5 shadow-sm">
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
                 <LayoutList className="size-4 text-primary" />
                 Descripción
               </h2>
               <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                {detail.description}
+                {data.description}
               </p>
             </div>
           )}
 
           {/* Extra fields */}
-          {detail?.extraFields && Object.keys(detail.extraFields).length > 0 && (
+          {Object.keys(data.extraFields).length > 0 && (
             <div className="rounded-2xl border bg-card p-5 shadow-sm">
               <h2 className="mb-4 text-base font-semibold text-foreground">
                 Detalles del artículo
               </h2>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-                {Object.entries(detail.extraFields).map(([key, value]) => (
+                {Object.entries(data.extraFields).map(([key, value]) => (
                   <div key={key}>
                     <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {key}
@@ -176,26 +237,26 @@ export default async function ListingDetailPage({ params }: Props) {
           {/* WhatsApp CTA */}
           <div className="rounded-2xl border bg-card p-4 shadow-sm">
             <WhatsAppCTA
-              phoneNumber={whatsappNumber}
+              phoneNumber={data.whatsappNumber}
               listingTitle={listing.title}
               size="lg"
               className="w-full"
             />
-            {detail?.phoneNumber && (
+            {data.phoneNumber && (
               <p className="mt-3 text-center text-sm text-muted-foreground">
                 Teléfono:{" "}
                 <a
-                  href={`tel:${detail.phoneNumber}`}
+                  href={`tel:${data.phoneNumber}`}
                   className="font-medium text-foreground hover:text-primary"
                 >
-                  {detail.phoneNumber}
+                  {data.phoneNumber}
                 </a>
               </p>
             )}
           </div>
 
           {/* Seller card */}
-          {detail?.seller && <SellerCard seller={detail.seller} />}
+          {data.seller && <SellerCard seller={data.seller} />}
 
           {/* Payments & delivery */}
           <div className="rounded-2xl border bg-card p-4 shadow-sm">

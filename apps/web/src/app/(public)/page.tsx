@@ -6,15 +6,21 @@ import { RecentListings } from "@/components/home/recent-listings";
 import { StoresStrip } from "@/components/home/stores-strip";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { PaymentsStrip } from "@/components/home/payments-strip";
+import { getPublishedListings, getFeaturedListings } from "@/lib/supabase/queries";
 
-export default function Home() {
+export default async function Home() {
+  const [listings, featured] = await Promise.all([
+    getPublishedListings(),
+    getFeaturedListings(),
+  ]);
+
   return (
     <>
       <Hero />
       <CategoryGrid />
-      <FeaturedListings />
+      <FeaturedListings featured={featured} all={listings} />
       <StatsBar />
-      <RecentListings />
+      <RecentListings listings={listings.slice(0, 14)} />
       <StoresStrip />
       <PaymentsStrip />
       <HowItWorks />
