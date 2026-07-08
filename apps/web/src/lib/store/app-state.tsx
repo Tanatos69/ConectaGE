@@ -73,10 +73,6 @@ interface AppStateValue {
   /** Returns false (and changes nothing) when the balance is insufficient. */
   spendCredits: (amount: number, label: string, slug?: string) => boolean;
   isPromoted: (slug: string) => boolean;
-
-  profilePicture: string | null;
-  setProfilePicture: (src: string) => void;
-  clearProfilePicture: () => void;
 }
 
 const KEYS = {
@@ -84,7 +80,6 @@ const KEYS = {
   follows: "conectage-follows",
   savedSearches: "conectage-saved-searches",
   credits: "conectage-credits",
-  profilePicture: "conectage-profile-picture",
 } as const;
 
 const DEFAULT_CREDITS: CreditsState = {
@@ -125,7 +120,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [follows, setFollows] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [credits, setCredits] = useState<CreditsState>(DEFAULT_CREDITS);
-  const [profilePicture, setProfilePictureState] = useState<string | null>(null);
 
   // Hydrate every slice once on mount.
   useEffect(() => {
@@ -134,7 +128,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setSavedSearches(readJSON<SavedSearch[]>(KEYS.savedSearches, []));
     const stored = localStorage.getItem(KEYS.credits);
     setCredits(stored ? (JSON.parse(stored) as CreditsState) : { ...DEFAULT_CREDITS });
-    setProfilePictureState(localStorage.getItem(KEYS.profilePicture) ?? null);
     setHydrated(true);
   }, []);
 
@@ -152,14 +145,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) localStorage.setItem(KEYS.credits, JSON.stringify(credits));
   }, [credits, hydrated]);
-  useEffect(() => {
-    if (!hydrated) return;
-    if (profilePicture) {
-      localStorage.setItem(KEYS.profilePicture, profilePicture);
-    } else {
-      localStorage.removeItem(KEYS.profilePicture);
-    }
-  }, [profilePicture, hydrated]);
 
   const toggleFavorite = useCallback((slug: string) => {
     setFavorites((prev) =>
@@ -221,14 +206,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [credits],
   );
 
-  const setProfilePicture = useCallback((src: string) => {
-    setProfilePictureState(src);
-  }, []);
-
-  const clearProfilePicture = useCallback(() => {
-    setProfilePictureState(null);
-  }, []);
-
   const value: AppStateValue = {
     hydrated,
     favorites,
@@ -245,9 +222,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     buyCredits,
     spendCredits,
     isPromoted: (slug) => credits.promoted.includes(slug),
-    profilePicture,
-    setProfilePicture,
-    clearProfilePicture,
   };
 
   return (

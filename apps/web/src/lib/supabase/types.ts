@@ -47,6 +47,21 @@ export interface TiendaRow {
   created_at: string;
 }
 
+export type NotificationKind =
+  | "listing_published"
+  | "seller_request_approved"
+  | "seller_request_rejected";
+
+export interface NotificationRow {
+  id: string;
+  user_id: string;
+  type: NotificationKind;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
 export interface ListingRow {
   id: string;
   seller_id: string;

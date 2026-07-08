@@ -5,8 +5,9 @@ import Link from "next/link";
 import { MailCheck } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { signUpAction, signInWithOAuthAction } from "@/lib/actions/auth";
+import { GE_CITIES } from "@/lib/cities";
 
-const cities = ["Malabo", "Bata", "Ebebiyín", "Akonibe", "Mongomo", "Luba", "Moka", "Otra"];
+const cities = [...GE_CITIES, "Otra"];
 
 const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";

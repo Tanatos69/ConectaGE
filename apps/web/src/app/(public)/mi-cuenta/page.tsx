@@ -2,29 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Plus, FileText, User, Eye, LayoutDashboard, Clock, CheckCircle, AlertTriangle } from "lucide-react";
-import { demoNotifications } from "@/lib/demo-user";
+import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { getUser } from "@/lib/supabase/server";
-import { getProfile, getListingsByOwner, mapListingRow, monthYearLabel } from "@/lib/supabase/queries";
+import {
+  getProfile,
+  getListingsByOwner,
+  getNotifications,
+  mapListingRow,
+  monthYearLabel,
+} from "@/lib/supabase/queries";
+import { postedLabel } from "@/lib/time";
+import type { NotificationKind } from "@/lib/supabase/types";
 import { FavoritesKpi } from "@/components/account/favorites-kpi";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
-const notifIcons: Record<string, React.ElementType> = {
-  approved: CheckCircle,
-  rejected: AlertTriangle,
-  expiring: Clock,
-  review: LayoutDashboard,
-  review_approved: CheckCircle,
+const notifIcons: Record<NotificationKind, React.ElementType> = {
+  listing_published: CheckCircle,
+  seller_request_approved: Store,
+  seller_request_rejected: AlertTriangle,
 };
 
-const notifColors: Record<string, string> = {
-  approved: "text-green-600 bg-green-50",
-  rejected: "text-destructive bg-destructive/10",
-  expiring: "text-amber-600 bg-amber-50",
-  review: "text-blue-600 bg-blue-50",
-  review_approved: "text-green-600 bg-green-50",
+const notifColors: Record<NotificationKind, string> = {
+  listing_published: "text-green-600 bg-green-50",
+  seller_request_approved: "text-green-600 bg-green-50",
+  seller_request_rejected: "text-destructive bg-destructive/10",
 };
 
 const statusLabel: Record<string, string> = {
@@ -45,9 +48,10 @@ export default async function DashboardPage() {
   const user = await getUser();
   if (!user) redirect("/login?next=/mi-cuenta");
 
-  const [profile, rows] = await Promise.all([
+  const [profile, rows, notifications] = await Promise.all([
     getProfile(user.id),
     getListingsByOwner(user.id),
+    getNotifications(user.id),
   ]);
 
   const firstName = (profile?.full_name?.trim() || user.email?.split("@")[0] || "").split(" ")[0];
@@ -55,7 +59,8 @@ export default async function DashboardPage() {
   const pending = rows.filter((r) => r.status === "pending");
   const totalViews = rows.reduce((sum, r) => sum + r.views_count, 0);
   const latest = rows.slice(0, 3);
-  const unread = demoNotifications.filter((n) => !n.read).length;
+  const unread = notifications.filter((n) => !n.read).length;
+  const recentNotifications = notifications.slice(0, 3);
 
   return (
     <div className="space-y-6">
@@ -131,7 +136,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Recent notifications (demo — notifications are out of scope this pass) */}
+      {/* Recent notifications */}
       <div className="rounded-2xl border bg-card shadow-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="text-sm font-semibold text-foreground">Notificaciones recientes</h2>
@@ -141,25 +146,31 @@ export default async function DashboardPage() {
             </span>
           )}
         </div>
-        <div className="divide-y">
-          {demoNotifications.slice(0, 3).map((n) => {
-            const Icon = notifIcons[n.type] ?? CheckCircle;
-            const colorClass = notifColors[n.type] ?? "text-primary bg-primary/10";
-            return (
-              <div key={n.id} className={`flex items-start gap-3 px-5 py-3.5 ${!n.read ? "bg-accent/30" : ""}`}>
-                <div className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full ${colorClass}`}>
-                  <Icon className="size-3.5" />
+        {recentNotifications.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm text-muted-foreground">No tienes notificaciones todavía.</p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {recentNotifications.map((n) => {
+              const Icon = notifIcons[n.type] ?? CheckCircle;
+              const colorClass = notifColors[n.type] ?? "text-primary bg-primary/10";
+              return (
+                <div key={n.id} className={`flex items-start gap-3 px-5 py-3.5 ${!n.read ? "bg-accent/30" : ""}`}>
+                  <div className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full ${colorClass}`}>
+                    <Icon className="size-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm ${!n.read ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                      {n.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{postedLabel(n.created_at)}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm ${!n.read ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-                    {n.message}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{n.date}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
         <div className="px-5 py-3 border-t">
           <Link href="/mi-cuenta/notificaciones" className="text-xs font-medium text-primary hover:underline">
             Ver todas las notificaciones →

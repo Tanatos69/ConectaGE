@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store, LayoutGrid } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useAppState } from "@/lib/store/app-state";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
@@ -111,7 +110,6 @@ export function SiteHeader() {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
   const role = profile?.role ?? (user ? "buyer" : null);
-  const { profilePicture } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
   const [explorarOpen, setExplorarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -258,8 +256,8 @@ export function SiteHeader() {
                     "hidden sm:inline-flex",
                   )}
                 >
-                  {profilePicture
-                    ? <UserAvatar name={displayName ?? "U"} src={profilePicture} size="sm" />
+                  {profile?.avatar_url
+                    ? <UserAvatar name={displayName ?? "U"} src={profile.avatar_url} size="sm" />
                     : <User className="size-4" />
                   }
                   {displayName ?? "Mi cuenta"}

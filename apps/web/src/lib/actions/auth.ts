@@ -243,3 +243,36 @@ export async function updateProfileAction(input: {
   revalidatePath("/", "layout");
   return { success: true };
 }
+
+/**
+ * The photo itself is uploaded client-side straight to the `avatars` bucket
+ * (RLS restricts writes to the user's own {uid}/ folder); this action only
+ * persists the resulting public URL, and only accepts one that actually
+ * lives inside that folder.
+ */
+export async function updateAvatarAction(avatarUrl: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  // Empty string clears the avatar; otherwise it must live in the user's own
+  // Storage folder.
+  const expectedPrefix = `/avatars/${user.id}/`;
+  if (avatarUrl !== "" && !avatarUrl.includes(expectedPrefix)) {
+    return { error: "Imagen no válida." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl || null })
+    .eq("id", user.id);
+
+  if (error) return { error: "No se pudo guardar la foto de perfil." };
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle, Save, AlertTriangle, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
-import { updateProfileAction, updatePasswordAction } from "@/lib/actions/auth";
+import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { GE_CITIES } from "@/lib/cities";
-import { useAppState } from "@/lib/store/app-state";
 
 const cities = [...GE_CITIES, "Otra"];
 
@@ -42,13 +43,14 @@ const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
 
 export default function PerfilPage() {
+  const router = useRouter();
   const { user, profile } = useAuth();
-  const { profilePicture, setProfilePicture, clearProfilePicture } = useAppState();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [form, setForm] = useState({
     name: profile?.full_name ?? "",
     city: profile?.city ?? "",
@@ -110,16 +112,46 @@ export default function PerfilPage() {
     });
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setProfilePicture(result);
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+    if (!file || !user) return;
+
+    setError("");
+    setAvatarUploading(true);
+    try {
+      const supabase = createClient();
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      // Bust the CDN/browser cache since we upsert the same path every time.
+      const url = `${data.publicUrl}?v=${Date.now()}`;
+
+      const result = await updateAvatarAction(url);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("No se pudo subir la foto. Revisa tu conexión e intenta de nuevo.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  function handleRemovePhoto() {
+    setError("");
+    startTransition(async () => {
+      const result = await updateAvatarAction("");
+      if (result?.error) setError(result.error);
+      else router.refresh();
+    });
   }
 
   return (
@@ -148,21 +180,23 @@ export default function PerfilPage() {
       {/* Avatar */}
       <SectionCard title="Foto de perfil">
         <div className="flex items-center gap-4">
-          <UserAvatar name={form.name || "U"} src={profilePicture} size="lg" />
+          <UserAvatar name={form.name || "U"} src={profile?.avatar_url} size="lg" />
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                disabled={avatarUploading}
+                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
               >
-                Subir foto
+                {avatarUploading ? "Subiendo…" : "Subir foto"}
               </button>
-              {profilePicture && (
+              {profile?.avatar_url && (
                 <button
                   type="button"
-                  onClick={clearProfilePicture}
-                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5"
+                  onClick={handleRemovePhoto}
+                  disabled={avatarUploading}
+                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-60"
                 >
                   <Trash2 className="size-3.5" />
                   Eliminar

@@ -3,11 +3,9 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
-import { useAppState } from "@/lib/store/app-state";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
-  const { profilePicture } = useAppState();
 
   const name = profile?.full_name?.trim() || user?.email?.split("@")[0] || "Mi cuenta";
   const city = profile?.city ?? "";
@@ -21,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="sticky top-[106px] space-y-3">
               <div className="rounded-2xl border bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <UserAvatar name={name} src={profilePicture} size="sm" />
+                  <UserAvatar name={name} src={profile?.avatar_url} size="sm" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">
                       {name}
