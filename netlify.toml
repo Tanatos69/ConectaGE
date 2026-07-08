@@ -13,6 +13,12 @@
   PNPM_VERSION = "9"
   # Ensure pnpm installs workspace deps from the repo root
   NPM_FLAGS = "--version"
+  # These two are NEXT_PUBLIC_ vars — Next.js intentionally bakes them into
+  # the browser bundle, so Netlify's secret scanner flags them as false
+  # positives. SUPABASE_SERVICE_ROLE_KEY is deliberately NOT in this list:
+  # it must never appear in client-side output, so the scanner should keep
+  # checking for it.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
