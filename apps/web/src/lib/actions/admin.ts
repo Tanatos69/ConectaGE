@@ -92,6 +92,82 @@ export async function approveSellerRequestAction(requestId: string): Promise<Act
   return { success: true };
 }
 
+// ── Admin role management ────────────────────────────────────────────────────
+// The FIRST admin is still bootstrapped by hand in Supabase Studio (there is
+// intentionally no in-app path when zero admins exist). These actions let
+// existing admins manage the rest without touching the database directly.
+
+export async function grantAdminAction(email: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const normalized = email.toLowerCase().trim();
+  if (!normalized) return { error: "Introduce un correo electrónico." };
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id, role, email")
+    .eq("email", normalized)
+    .maybeSingle();
+
+  if (!profile) {
+    return { error: "No existe ninguna cuenta con ese correo. Esa persona debe registrarse primero." };
+  }
+  if (profile.role === "admin") {
+    return { error: "Esa cuenta ya es administradora." };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ role: "admin" })
+    .eq("id", profile.id);
+  if (error) return { error: "No se pudo conceder el acceso. Intenta de nuevo." };
+
+  revalidatePath("/admin/ajustes");
+  return { success: true };
+}
+
+export async function revokeAdminAction(userId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  // Blocking self-demotion guarantees the platform always keeps ≥1 admin.
+  if (userId === gate.adminId) {
+    return { error: "No puedes revocar tu propio acceso de administrador." };
+  }
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target || target.role !== "admin") {
+    return { error: "Esa cuenta no es administradora." };
+  }
+
+  // Demoted admins keep seller status if they own a tienda.
+  const { data: tienda } = await admin
+    .from("tiendas")
+    .select("id")
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ role: tienda ? "seller" : "buyer" })
+    .eq("id", userId);
+  if (error) return { error: "No se pudo revocar el acceso. Intenta de nuevo." };
+
+  revalidatePath("/admin/ajustes");
+  return { success: true };
+}
+
 export async function rejectSellerRequestAction(requestId: string): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 

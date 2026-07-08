@@ -18,7 +18,7 @@ export default function TerminosPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold text-foreground">Términos y condiciones de uso</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Última actualización: junio de 2025</p>
+      <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
         Al acceder o utilizar la plataforma ConectaGE (&ldquo;el Servicio&rdquo;), aceptas
@@ -105,7 +105,38 @@ export default function TerminosPage() {
         </p>
       </Section>
 
-      <Section title="7. Limitación de responsabilidad">
+      <Section title="7. Tratamiento de datos y analítica">
+        <p>
+          Con el fin de operar, proteger y mejorar el Servicio, ConectaGE recopila datos de uso de
+          primera parte (<em>first-party</em>) alojados en su propia infraestructura: consultas de
+          búsqueda, visualizaciones de anuncios y clics en los botones de contacto de WhatsApp,
+          junto con metadatos técnicos básicos (tipo de dispositivo y fecha del evento). La
+          recopilación de estos datos está condicionada al consentimiento que el usuario otorga a
+          través del aviso de cookies, conforme a la{" "}
+          <a href="/cookies" className="text-primary hover:underline">Política de cookies</a>.
+        </p>
+        <p>
+          Adicionalmente, el usuario puede declarar de forma voluntaria datos demográficos
+          (género y rango de edad) desde la configuración de su perfil. Estos campos son
+          estrictamente opcionales y pueden eliminarse en cualquier momento.
+        </p>
+        <p>
+          Finalidad y limitación: los datos descritos se utilizan exclusivamente para (a) la
+          elaboración de estadísticas agregadas de uso del Servicio; (b) la personalización de la
+          experiencia del usuario, cuando este haya activado dicha categoría de consentimiento; y
+          (c) la mejora de las funcionalidades de la plataforma.{" "}
+          <strong className="text-foreground">
+            ConectaGE no cede, comparte ni vende datos personales ni datos de uso a terceros.
+          </strong>{" "}
+          El detalle completo del tratamiento se recoge en la{" "}
+          <a href="/privacidad" className="text-primary hover:underline">
+            Política de privacidad
+          </a>
+          .
+        </p>
+      </Section>
+
+      <Section title="8. Limitación de responsabilidad">
         <p>
           ConectaGE no será responsable por daños directos, indirectos, incidentales o
           consecuentes derivados del uso o la imposibilidad de uso del Servicio, incluyendo
@@ -113,7 +144,7 @@ export default function TerminosPage() {
         </p>
       </Section>
 
-      <Section title="8. Modificaciones">
+      <Section title="9. Modificaciones">
         <p>
           Nos reservamos el derecho de modificar estos Términos en cualquier momento. Los cambios
           serán notificados a los usuarios registrados por correo electrónico y/o mediante aviso
@@ -122,14 +153,14 @@ export default function TerminosPage() {
         </p>
       </Section>
 
-      <Section title="9. Ley aplicable">
+      <Section title="10. Ley aplicable">
         <p>
           Estos Términos se rigen por las leyes de la República de Guinea Ecuatorial. Cualquier
           disputa se someterá a la jurisdicción de los tribunales de Malabo.
         </p>
       </Section>
 
-      <Section title="10. Contacto">
+      <Section title="11. Contacto">
         <p>
           Para cualquier consulta sobre estos Términos, puedes contactarnos en{" "}
           <a href="mailto:legal@conectage.com" className="text-primary hover:underline">

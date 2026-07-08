@@ -18,7 +18,7 @@ export default function PrivacidadPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold text-foreground">Política de privacidad</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Última actualización: junio de 2025</p>
+      <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
         En ConectaGE nos tomamos muy en serio la privacidad de nuestros usuarios. Esta política
@@ -46,9 +46,18 @@ export default function PrivacidadPage() {
             fotografías, precio, ubicación y categoría de los artículos publicados.
           </li>
           <li>
-            <strong className="text-foreground">Datos de uso:</strong> páginas visitadas,
-            búsquedas realizadas, clics en anuncios y botones de WhatsApp, dispositivo y
-            sistema operativo, dirección IP y geolocalización aproximada.
+            <strong className="text-foreground">Datos de uso (con tu consentimiento):</strong>{" "}
+            búsquedas realizadas, anuncios visitados, clics en los botones de contacto de
+            WhatsApp y tipo de dispositivo (móvil o escritorio). Se registran en nuestra propia
+            infraestructura (analítica de primera parte, sin rastreadores de terceros) y solo si
+            aceptas la categoría de analítica en el aviso de cookies. Si además activas la
+            categoría de personalización, esta actividad se asocia a tu cuenta; en caso
+            contrario se registra de forma anónima.
+          </li>
+          <li>
+            <strong className="text-foreground">Datos demográficos (opcionales):</strong> género
+            y rango de edad, únicamente si decides declararlos en la configuración de tu perfil.
+            Puedes eliminarlos en cualquier momento.
           </li>
           <li>
             <strong className="text-foreground">Datos de comunicaciones:</strong> mensajes enviados
@@ -63,9 +72,21 @@ export default function PrivacidadPage() {
           <li>Moderar el contenido de la plataforma</li>
           <li>Enviarte notificaciones sobre tus anuncios (aprobación, expiración, reseñas)</li>
           <li>Mejorar el rendimiento y la experiencia de uso de la plataforma</li>
+          <li>
+            Elaborar estadísticas agregadas de uso y, si has activado la categoría de
+            personalización, mostrarte contenido más relevante para ti
+          </li>
           <li>Detectar y prevenir fraude y contenido ilícito</li>
           <li>Cumplir obligaciones legales aplicables</li>
         </ul>
+        <p>
+          <strong className="text-foreground">
+            No cedemos, compartimos ni vendemos tus datos personales ni tus datos de uso a
+            terceros.
+          </strong>{" "}
+          La analítica de ConectaGE es de primera parte: los datos permanecen en nuestra propia
+          infraestructura y se emplean exclusivamente para los fines descritos en esta política.
+        </p>
       </Section>
 
       <Section title="4. Base legal del tratamiento">
@@ -116,14 +137,17 @@ export default function PrivacidadPage() {
         </p>
       </Section>
 
-      <Section title="7. Cookies">
+      <Section title="7. Cookies y consentimiento">
         <p>
-          Utilizamos cookies para mejorar la experiencia de navegación y analizar el uso de la
-          plataforma. Consulta nuestra{" "}
+          Utilizamos cookies necesarias para el funcionamiento de la plataforma y, solo con tu
+          consentimiento expreso, registramos datos de uso con fines de analítica y
+          personalización. En tu primera visita te mostramos un aviso donde puedes aceptar,
+          rechazar o personalizar cada categoría; tu elección puede modificarse en cualquier
+          momento desde la{" "}
           <a href="/cookies" className="text-primary hover:underline">
             Política de cookies
-          </a>{" "}
-          para más información.
+          </a>
+          .
         </p>
       </Section>
 

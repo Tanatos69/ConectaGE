@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
-import { getPublishedListings } from "@/lib/supabase/queries";
+import { getPublishedListings, logEvent } from "@/lib/supabase/queries";
 import { filterListings } from "@/lib/search";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
@@ -38,6 +38,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     category: slug,
     listingType,
   });
+
+  // Consent-gated browse signal.
+  await logEvent("search", { categorySlug: slug, listingType });
 
   const typeChips: { key: "offer" | "wanted" | undefined; label: string }[] = [
     { key: undefined, label: "Todos" },

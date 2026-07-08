@@ -18,10 +18,15 @@ variables** (the service key must never be `NEXT_PUBLIC_`).
 
 ## 3. Database schema
 
-Supabase Studio → **SQL Editor** → paste and run
-`migrations/0001_init.sql` (this whole file, once). It creates
-`profiles`, `seller_requests`, `tiendas`, `listings`, all RLS policies,
-triggers, and the two public Storage buckets (`listing-images`, `avatars`).
+Supabase Studio → **SQL Editor** → paste and run each migration **in order**,
+one file per run:
+
+1. `migrations/0001_init.sql` — profiles, seller_requests, tiendas, listings,
+   all RLS policies, triggers, and the two public Storage buckets.
+2. `migrations/0002_notifications.sql` — notifications table + triggers.
+3. `migrations/0003_analytics.sql` — optional demographics columns and the
+   consent-gated `events` table (searches, listing views, WhatsApp clicks)
+   behind the `log_event` RPC.
 
 ## 4. Auth configuration
 
@@ -39,7 +44,12 @@ triggers, and the two public Storage buckets (`listing-images`, `avatars`).
 
 1. Sign up normally at `/registro` and confirm the email.
 2. Studio → **Table Editor → profiles** → find your row → set `role` to
-   `admin`. There is intentionally no in-app path to create admins.
+   `admin`.
+
+The Studio hand-edit is only needed for the **first** admin (chicken-and-egg).
+After that, admins grant/revoke admin access to other registered accounts
+in-app from **/admin/ajustes → Administradores**. Self-revocation is blocked,
+so the platform always keeps at least one admin.
 
 ## How roles work
 

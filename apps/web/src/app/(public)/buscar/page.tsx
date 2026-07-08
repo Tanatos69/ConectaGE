@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { getPublishedListings } from "@/lib/supabase/queries";
+import { getPublishedListings, logEvent } from "@/lib/supabase/queries";
 import { categories } from "@/lib/categories";
 import { filterListings } from "@/lib/search";
 import type { SearchCriteria } from "@/lib/store/app-state";
@@ -35,6 +35,16 @@ export default async function BuscarPage({ searchParams }: Props) {
   };
 
   const results = filterListings(await getPublishedListings(), criteria);
+
+  // Consent-gated analytics — only when an actual search/filter was made.
+  if (criteria.q || criteria.category || criteria.city || criteria.listingType) {
+    await logEvent("search", {
+      query: criteria.q,
+      categorySlug: criteria.category,
+      city: criteria.city,
+      listingType: criteria.listingType,
+    });
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

@@ -1,9 +1,17 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { readConsent } from "@/lib/consent";
 
 interface WhatsAppCTAProps {
   phoneNumber: string;
   listingTitle: string;
   listingUrl?: string;
+  /** When set, clicking logs a consent-gated whatsapp_click analytics event. */
+  listingSlug?: string;
+  categorySlug?: string;
   /** Override the default "me interesa tu anuncio" message (e.g. store contact). */
   message?: string;
   /** Override the default button label. */
@@ -16,6 +24,8 @@ export function WhatsAppCTA({
   phoneNumber,
   listingTitle,
   listingUrl,
+  listingSlug,
+  categorySlug,
   message,
   label,
   size = "default",
@@ -29,11 +39,38 @@ export function WhatsAppCTA({
       : `Hola, me interesa tu anuncio: ${listingTitle}`);
   const href = `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
 
+  function handleClick() {
+    // Fire-and-forget conversion event; the wa.me navigation opens in a new
+    // tab so this request has time to complete. Consent-gated client-side.
+    if (!listingSlug || !isSupabaseConfigured) return;
+    const consent = readConsent();
+    if (!consent?.analytics) return;
+    try {
+      const supabase = createClient();
+      const device = /mobi|android|iphone|ipad/i.test(navigator.userAgent)
+        ? "mobile"
+        : "desktop";
+      void supabase.rpc("log_event", {
+        p_type: "whatsapp_click",
+        p_query: null,
+        p_category: categorySlug ?? null,
+        p_city: null,
+        p_listing_type: null,
+        p_listing_slug: listingSlug,
+        p_device: device,
+        p_link_user: consent.personalization,
+      });
+    } catch {
+      // Analytics must never interfere with contacting the seller.
+    }
+  }
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className={cn(
         "flex items-center justify-center gap-2.5 rounded-2xl font-semibold text-white transition-all duration-200 active:scale-[0.98]",
         "bg-[#25D366] hover:bg-[#1aab4f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/50",

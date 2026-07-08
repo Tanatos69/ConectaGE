@@ -1,6 +1,14 @@
+import { cookies, headers } from "next/headers";
 import { createClient } from "./server";
 import { isSupabaseConfigured } from "./config";
-import type { ListingRow, TiendaRow, Profile, NotificationRow } from "./types";
+import { parseConsent, CONSENT_COOKIE } from "@/lib/consent";
+import type {
+  ListingRow,
+  TiendaRow,
+  Profile,
+  NotificationRow,
+  AnalyticsEventType,
+} from "./types";
 import { categories } from "@/lib/categories";
 import {
   allListings as demoAllListings,
@@ -225,6 +233,49 @@ export async function getPendingSellerRequest(userId: string) {
     .eq("status", "pending")
     .maybeSingle();
   return data;
+}
+
+// ── Analytics events (consent-gated) ─────────────────────────────────────────
+
+/**
+ * Logs a behavioral event from a Server Component, respecting the visitor's
+ * cookie-consent choice: no consent cookie or analytics off → nothing is
+ * stored; analytics on but personalization off → stored with user_id NULL.
+ * Never throws — analytics must never break a page.
+ */
+export async function logEvent(
+  type: AnalyticsEventType,
+  data: {
+    query?: string;
+    categorySlug?: string;
+    city?: string;
+    listingType?: string;
+    listingSlug?: string;
+  },
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const cookieStore = await cookies();
+    const consent = parseConsent(cookieStore.get(CONSENT_COOKIE)?.value);
+    if (!consent?.analytics) return;
+
+    const ua = (await headers()).get("user-agent") ?? "";
+    const device = /mobi|android|iphone|ipad/i.test(ua) ? "mobile" : "desktop";
+
+    const supabase = await createClient();
+    await supabase.rpc("log_event", {
+      p_type: type,
+      p_query: data.query ?? null,
+      p_category: data.categorySlug ?? null,
+      p_city: data.city ?? null,
+      p_listing_type: data.listingType ?? null,
+      p_listing_slug: data.listingSlug ?? null,
+      p_device: device,
+      p_link_user: consent.personalization,
+    });
+  } catch {
+    // Swallow: a failed analytics write is never worth a broken page.
+  }
 }
 
 // ── Notifications ────────────────────────────────────────────────────────────

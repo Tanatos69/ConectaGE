@@ -19,6 +19,7 @@ import { EQUATORIAL_GUINEA_CITIES_BY_PROVINCE } from "@/lib/cities";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createListingAction } from "@/lib/actions/listings";
+import { compressImage, LISTING_PHOTO_PRESET } from "@/lib/image-compress";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,17 +182,22 @@ export default function PublicarPage() {
   // ── Photo handling ───────────────────────────────────────────────────────
 
   const addPhotos = useCallback(
-    (files: FileList | File[]) => {
+    async (files: FileList | File[]) => {
       const arr = Array.from(files);
       const remaining = 10 - form.photos.length;
-      const toAdd = arr.slice(0, remaining).map((f) => ({
+      // Compress before previewing so the preview is exactly what gets
+      // uploaded (WebP ~380KB max side 1600px).
+      const compressed = await Promise.all(
+        arr.slice(0, remaining).map((f) => compressImage(f, LISTING_PHOTO_PRESET)),
+      );
+      const toAdd = compressed.map((f) => ({
         id: Math.random().toString(36).slice(2),
         url: URL.createObjectURL(f),
         file: f,
       }));
-      set({ photos: [...form.photos, ...toAdd] });
+      setForm((prev) => ({ ...prev, photos: [...prev.photos, ...toAdd] }));
     },
-    [form.photos],
+    [form.photos.length],
   );
 
   function removePhoto(id: string) {

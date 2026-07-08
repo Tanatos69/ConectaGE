@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
 import { GE_CITIES } from "@/lib/cities";
 
@@ -55,6 +56,8 @@ export default function PerfilPage() {
     name: profile?.full_name ?? "",
     city: profile?.city ?? "",
     phone: profile?.phone ?? "",
+    gender: profile?.gender ?? "",
+    ageRange: profile?.age_range ?? "",
   });
 
   // Refill the form when the profile arrives/changes (render-time adjustment).
@@ -65,6 +68,8 @@ export default function PerfilPage() {
       name: profile.full_name ?? "",
       city: profile.city ?? "",
       phone: profile.phone ?? "",
+      gender: profile.gender ?? "",
+      ageRange: profile.age_range ?? "",
     });
   }
 
@@ -81,6 +86,8 @@ export default function PerfilPage() {
         fullName: form.name,
         phone: form.phone,
         city: form.city,
+        gender: form.gender,
+        ageRange: form.ageRange,
       });
       if (result?.error) {
         setError(result.error);
@@ -113,13 +120,14 @@ export default function PerfilPage() {
   }
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const rawFile = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !user) return;
+    if (!rawFile || !user) return;
 
     setError("");
     setAvatarUploading(true);
     try {
+      const file = await compressImage(rawFile, AVATAR_PRESET);
       const supabase = createClient();
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
       const path = `${user.id}/avatar.${ext}`;
@@ -238,6 +246,42 @@ export default function PerfilPage() {
               </select>
             </Field>
           </div>
+        </div>
+      </SectionCard>
+
+      {/* Optional demographics */}
+      <SectionCard title="Información demográfica (opcional)">
+        <p className="mb-4 text-xs text-muted-foreground">
+          Estos datos son opcionales y nos ayudan a mejorar ConectaGE. Se usan solo de forma
+          agregada y nunca se venden a terceros.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Género">
+            <select
+              value={form.gender}
+              onChange={(e) => setForm({ ...form, gender: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">Prefiero no indicarlo</option>
+              <option value="male">Hombre</option>
+              <option value="female">Mujer</option>
+              <option value="other">Otro</option>
+            </select>
+          </Field>
+          <Field label="Rango de edad">
+            <select
+              value={form.ageRange}
+              onChange={(e) => setForm({ ...form, ageRange: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">Prefiero no indicarlo</option>
+              <option value="18-24">18–24</option>
+              <option value="25-34">25–34</option>
+              <option value="35-44">35–44</option>
+              <option value="45-54">45–54</option>
+              <option value="55+">55 o más</option>
+            </select>
+          </Field>
         </div>
       </SectionCard>
 

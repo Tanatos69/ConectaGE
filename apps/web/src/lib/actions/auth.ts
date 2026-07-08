@@ -209,12 +209,17 @@ const profileSchema = z.object({
   fullName: z.string().trim().min(3, "Introduce tu nombre completo").max(80),
   phone: phoneSchema,
   city: z.string().trim().min(1, "Selecciona tu ciudad").max(60),
+  // Optional, self-declared demographics — empty string means "not set".
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say", ""]).optional(),
+  ageRange: z.enum(["18-24", "25-34", "35-44", "45-54", "55+", ""]).optional(),
 });
 
 export async function updateProfileAction(input: {
   fullName: string;
   phone: string;
   city: string;
+  gender?: string;
+  ageRange?: string;
 }): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
@@ -235,6 +240,8 @@ export async function updateProfileAction(input: {
       full_name: parsed.data.fullName,
       phone: parsed.data.phone,
       city: parsed.data.city,
+      ...(parsed.data.gender !== undefined && { gender: parsed.data.gender || null }),
+      ...(parsed.data.ageRange !== undefined && { age_range: parsed.data.ageRange || null }),
     })
     .eq("id", user.id);
 

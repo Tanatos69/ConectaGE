@@ -8,6 +8,7 @@ import {
   getListingWithDetail,
   getPublishedListings,
   incrementListingViews,
+  logEvent,
   monthYearLabel,
 } from "@/lib/supabase/queries";
 import { paymentMethods } from "@/lib/payments-logistics";
@@ -115,7 +116,14 @@ export default async function ListingDetailPage({ params }: Props) {
     .filter((l) => l.categorySlug === listing.categorySlug && l.slug !== listing.slug)
     .slice(0, 4);
 
+  // The plain view counter is anonymous and always on; the analytics EVENT
+  // row is consent-gated inside logEvent.
   await incrementListingViews(slug);
+  await logEvent("view_listing", {
+    listingSlug: slug,
+    categorySlug: listing.categorySlug,
+    city: listing.city,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -239,6 +247,8 @@ export default async function ListingDetailPage({ params }: Props) {
             <WhatsAppCTA
               phoneNumber={data.whatsappNumber}
               listingTitle={listing.title}
+              listingSlug={listing.slug}
+              categorySlug={listing.categorySlug}
               size="lg"
               className="w-full"
             />

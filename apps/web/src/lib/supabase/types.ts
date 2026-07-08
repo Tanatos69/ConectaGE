@@ -3,6 +3,9 @@
 export type UserRole = "buyer" | "seller" | "admin";
 export type RequestStatus = "pending" | "approved" | "rejected";
 
+export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
+export type AgeRange = "18-24" | "25-34" | "35-44" | "45-54" | "55+";
+
 export interface Profile {
   id: string;
   email: string;
@@ -12,6 +15,23 @@ export interface Profile {
   avatar_url: string | null;
   role: UserRole;
   verified: boolean;
+  gender: Gender | null;
+  age_range: AgeRange | null;
+  created_at: string;
+}
+
+export type AnalyticsEventType = "search" | "view_listing" | "whatsapp_click";
+
+export interface EventRow {
+  id: string;
+  user_id: string | null;
+  event_type: AnalyticsEventType;
+  query: string | null;
+  category_slug: string | null;
+  city: string | null;
+  listing_type: string | null;
+  listing_slug: string | null;
+  device: "mobile" | "desktop" | null;
   created_at: string;
 }
 
