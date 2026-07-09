@@ -298,17 +298,40 @@ export async function logEvent(
 
 // ── Notifications ────────────────────────────────────────────────────────────
 
+/**
+ * Notification rows are always created (see the triggers in 0002/0004),
+ * but the recipient's per-category preferences (profiles.notify_*) decide
+ * what actually shows up here — filtered on read, not skipped on write, so
+ * a future admin activity view can still see everything.
+ */
 export async function getNotifications(userId: string): Promise<NotificationRow[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const [{ data, error }, { data: prefs }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("profiles")
+      .select("notify_listings, notify_seller_requests, notify_followed_stores")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
   if (error || !data) return [];
-  return data as NotificationRow[];
+  const rows = data as NotificationRow[];
+  if (!prefs) return rows;
+
+  return rows.filter((n) => {
+    if (n.type === "listing_published") return prefs.notify_listings;
+    if (n.type === "seller_request_approved" || n.type === "seller_request_rejected") {
+      return prefs.notify_seller_requests;
+    }
+    if (n.type === "followed_store_listing") return prefs.notify_followed_stores;
+    return true;
+  });
 }
 
 // ── Reviews ──────────────────────────────────────────────────────────────────

@@ -40,3 +40,37 @@ export async function markAllNotificationsReadAction(): Promise<ActionResult> {
   revalidatePath("/mi-cuenta/notificaciones");
   return { success: true };
 }
+
+/**
+ * Notifications are always created server-side (the triggers in
+ * 0002/0004_social.sql don't check these) — these preferences only control
+ * what getNotifications() shows the user, so a future admin activity view
+ * can still see everything.
+ */
+export async function updateNotificationPreferencesAction(prefs: {
+  notifyListings: boolean;
+  notifySellerRequests: boolean;
+  notifyFollowedStores: boolean;
+}): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      notify_listings: prefs.notifyListings,
+      notify_seller_requests: prefs.notifySellerRequests,
+      notify_followed_stores: prefs.notifyFollowedStores,
+    })
+    .eq("id", user.id);
+
+  if (error) return { error: "No se pudieron guardar las preferencias." };
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}

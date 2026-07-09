@@ -6,6 +6,7 @@ import { CheckCircle, Save, AlertTriangle, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
+import { updateNotificationPreferencesAction } from "@/lib/actions/notifications";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,37 @@ export default function PerfilPage() {
   const [passwords, setPasswords] = useState({ next: "", confirm: "" });
   const [passwordMsg, setPasswordMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [passwordPending, startPasswordTransition] = useTransition();
+
+  // Notification preference toggles
+  const [notifyPrefs, setNotifyPrefs] = useState({
+    notifyListings: profile?.notify_listings ?? true,
+    notifySellerRequests: profile?.notify_seller_requests ?? true,
+    notifyFollowedStores: profile?.notify_followed_stores ?? true,
+  });
+  const [loadedPrefsId, setLoadedPrefsId] = useState<string | null>(profile?.id ?? null);
+  if (profile && profile.id !== loadedPrefsId) {
+    setLoadedPrefsId(profile.id);
+    setNotifyPrefs({
+      notifyListings: profile.notify_listings,
+      notifySellerRequests: profile.notify_seller_requests,
+      notifyFollowedStores: profile.notify_followed_stores,
+    });
+  }
+  const [notifyPending, startNotifyTransition] = useTransition();
+  const [notifySaved, setNotifySaved] = useState(false);
+
+  function handleNotifyToggle(key: keyof typeof notifyPrefs, value: boolean) {
+    const next = { ...notifyPrefs, [key]: value };
+    setNotifyPrefs(next);
+    setNotifySaved(false);
+    startNotifyTransition(async () => {
+      const result = await updateNotificationPreferencesAction(next);
+      if (!result?.error) {
+        setNotifySaved(true);
+        setTimeout(() => setNotifySaved(false), 2000);
+      }
+    });
+  }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -356,6 +388,48 @@ export default function PerfilPage() {
           >
             {passwordPending ? "Actualizando…" : "Cambiar contraseña"}
           </button>
+        </div>
+      </SectionCard>
+
+      {/* Notification preferences */}
+      <SectionCard title="Preferencias de notificación">
+        <div className="space-y-3">
+          {(
+            [
+              {
+                key: "notifyListings" as const,
+                label: "Mis anuncios",
+                hint: "Cuando uno de tus anuncios se publica.",
+              },
+              {
+                key: "notifySellerRequests" as const,
+                label: "Mi tienda",
+                hint: "Cuando tu solicitud de tienda se aprueba o rechaza.",
+              },
+              {
+                key: "notifyFollowedStores" as const,
+                label: "Tiendas que sigo",
+                hint: "Cuando una tienda que sigues publica un anuncio nuevo.",
+              },
+            ]
+          ).map(({ key, label, hint }) => (
+            <label key={key} className="flex cursor-pointer items-start justify-between gap-3">
+              <span>
+                <span className="block text-sm font-medium text-foreground">{label}</span>
+                <span className="block text-xs text-muted-foreground">{hint}</span>
+              </span>
+              <input
+                type="checkbox"
+                checked={notifyPrefs[key]}
+                disabled={notifyPending}
+                onChange={(e) => handleNotifyToggle(key, e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-primary rounded"
+              />
+            </label>
+          ))}
+          {notifySaved && (
+            <p className="text-xs font-medium text-green-600">Preferencias guardadas.</p>
+          )}
         </div>
       </SectionCard>
 

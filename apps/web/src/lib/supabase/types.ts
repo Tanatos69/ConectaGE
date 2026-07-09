@@ -17,6 +17,9 @@ export interface Profile {
   verified: boolean;
   gender: Gender | null;
   age_range: AgeRange | null;
+  notify_listings: boolean;
+  notify_seller_requests: boolean;
+  notify_followed_stores: boolean;
   created_at: string;
 }
 
