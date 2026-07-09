@@ -37,12 +37,31 @@ const signInSchema = z.object({
   password: z.string().min(1, "Introduce tu contraseña"),
 });
 
+// Optional demographics: empty string means "not provided".
+const genderSchema = z.enum(["male", "female", "other", "prefer_not_to_say", ""]).optional();
+const birthDateSchema = z
+  .string()
+  .optional()
+  .refine(
+    (v) => {
+      if (!v) return true;
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return false;
+      const minAge = new Date();
+      minAge.setFullYear(minAge.getFullYear() - 16);
+      return d > new Date("1900-01-01") && d <= minAge;
+    },
+    { message: "Debes tener al menos 16 años." },
+  );
+
 const signUpSchema = z.object({
   email: z.email("Correo electrónico no válido"),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72),
   fullName: z.string().trim().min(3, "Introduce tu nombre completo").max(80),
   phone: phoneSchema,
   city: z.string().trim().min(1, "Selecciona tu ciudad").max(60),
+  gender: genderSchema,
+  birthDate: birthDateSchema,
 });
 
 // ── Sign in ──────────────────────────────────────────────────────────────────
@@ -90,6 +109,8 @@ export async function signUpAction(input: {
   fullName: string;
   phone: string;
   city: string;
+  gender?: string;
+  birthDate?: string;
 }): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
@@ -109,6 +130,8 @@ export async function signUpAction(input: {
         full_name: parsed.data.fullName,
         phone: parsed.data.phone,
         city: parsed.data.city,
+        ...(parsed.data.gender && { gender: parsed.data.gender }),
+        ...(parsed.data.birthDate && { birth_date: parsed.data.birthDate }),
       },
     },
   });
@@ -210,8 +233,8 @@ const profileSchema = z.object({
   phone: phoneSchema,
   city: z.string().trim().min(1, "Selecciona tu ciudad").max(60),
   // Optional, self-declared demographics — empty string means "not set".
-  gender: z.enum(["male", "female", "other", "prefer_not_to_say", ""]).optional(),
-  ageRange: z.enum(["18-24", "25-34", "35-44", "45-54", "55+", ""]).optional(),
+  gender: genderSchema,
+  birthDate: birthDateSchema,
 });
 
 export async function updateProfileAction(input: {
@@ -219,7 +242,7 @@ export async function updateProfileAction(input: {
   phone: string;
   city: string;
   gender?: string;
-  ageRange?: string;
+  birthDate?: string;
 }): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
@@ -241,7 +264,7 @@ export async function updateProfileAction(input: {
       phone: parsed.data.phone,
       city: parsed.data.city,
       ...(parsed.data.gender !== undefined && { gender: parsed.data.gender || null }),
-      ...(parsed.data.ageRange !== undefined && { age_range: parsed.data.ageRange || null }),
+      ...(parsed.data.birthDate !== undefined && { birth_date: parsed.data.birthDate || null }),
     })
     .eq("id", user.id);
 

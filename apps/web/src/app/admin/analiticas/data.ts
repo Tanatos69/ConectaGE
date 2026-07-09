@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { categories } from "@/lib/categories";
+import { ageFromBirthDate } from "@/lib/time";
 import type { EventRow, Profile } from "@/lib/supabase/types";
 
 /**
@@ -60,6 +61,16 @@ const GENDER_LABELS: Record<string, string> = {
 function categoryName(slug: string | null): string {
   if (!slug) return "—";
   return categories.find((c) => c.slug === slug)?.name ?? slug;
+}
+
+function ageBucket(age: number | null): string | null {
+  if (age == null) return null;
+  if (age < 18) return "16-17";
+  if (age <= 24) return "18-24";
+  if (age <= 34) return "25-34";
+  if (age <= 44) return "35-44";
+  if (age <= 54) return "45-54";
+  return "55+";
 }
 
 /** Parse the page/export searchParams into validated filters. */
@@ -151,7 +162,7 @@ export async function getAnalytics(filters: AnalyticsFilters): Promise<Analytics
     await Promise.all([
       eventsQuery,
       listingsQuery,
-      admin.from("profiles").select("created_at, gender, age_range"),
+      admin.from("profiles").select("created_at, gender, birth_date"),
       admin.from("tiendas").select("name, slug, category_slug, owner_id"),
     ]);
 
@@ -168,7 +179,7 @@ export async function getAnalytics(filters: AnalyticsFilters): Promise<Analytics
     views_count: number;
     seller_id: string;
   }[];
-  const profiles = (profileRows ?? []) as Pick<Profile, "created_at" | "gender" | "age_range">[];
+  const profiles = (profileRows ?? []) as Pick<Profile, "created_at" | "gender" | "birth_date">[];
   const tiendas = (tiendaRows ?? []) as {
     name: string;
     slug: string;
@@ -215,8 +226,9 @@ export async function getAnalytics(filters: AnalyticsFilters): Promise<Analytics
       e.device === "mobile" ? "Móvil" : e.device === "desktop" ? "Escritorio" : null,
     ),
     genderBreakdown: countBy(profiles, (p) => (p.gender ? GENDER_LABELS[p.gender] : null), 5),
-    ageBreakdown: countBy(profiles, (p) => p.age_range, 6).sort((a, b) =>
-      a.label.localeCompare(b.label),
+    // Ages are stored as birth dates and bucketed at read time.
+    ageBreakdown: countBy(profiles, (p) => ageBucket(ageFromBirthDate(p.birth_date)), 6).sort(
+      (a, b) => a.label.localeCompare(b.label),
     ),
     topListingsByViews: listings
       .filter((l) => l.status === "published" && l.views_count > 0)

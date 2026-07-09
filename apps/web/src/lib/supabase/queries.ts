@@ -419,6 +419,62 @@ export async function getFavoriteCount(userId: string): Promise<number> {
   return count ?? 0;
 }
 
+/**
+ * Public user profile: visible only while the user has ≥1 published listing
+ * (content-driven privacy — no listings, no public page). Exposes name,
+ * avatar, city, member-since and review aggregates; never email/phone.
+ */
+export async function getPublicUserProfile(userId: string): Promise<{
+  profile: Profile;
+  listings: Listing[];
+  rating: number;
+  reviewsCount: number;
+} | null> {
+  if (!isSupabaseConfigured) return null;
+  // Only accept UUIDs — the route also serves legacy demo usernames.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) return null;
+
+  const supabase = await createClient();
+  const [{ data: profile }, { data: listingRows }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase
+      .from("listings")
+      .select("*")
+      .eq("seller_id", userId)
+      .eq("status", "published")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const rows = (listingRows ?? []) as ListingRow[];
+  if (!profile || rows.length === 0) return null;
+
+  const { data: reviewRows } = await supabase
+    .from("reviews")
+    .select("rating")
+    .in("listing_id", rows.map((r) => r.id));
+  const ratings = (reviewRows ?? []) as { rating: number }[];
+
+  return {
+    profile: profile as Profile,
+    listings: rows.map(mapListingRow),
+    rating:
+      ratings.length > 0
+        ? Math.round((ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10) / 10
+        : 0,
+    reviewsCount: ratings.length,
+  };
+}
+
+export async function getFollowCount(userId: string): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("store_follows")
+    .select("id", { count: "exact", head: true })
+    .eq("follower_id", userId);
+  return count ?? 0;
+}
+
 export async function getFollowedStores(userId: string): Promise<Store[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();

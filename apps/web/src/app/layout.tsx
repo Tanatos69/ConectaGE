@@ -20,7 +20,10 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://conectage.com"),
+  // Live deployment domain — makes relative og:image URLs resolve to a
+  // working address so WhatsApp/social link previews render. Update when a
+  // custom domain goes live.
+  metadataBase: new URL("https://conectage.netlify.app"),
   title: {
     default: "ConectaGE — Compra y vende en Guinea Ecuatorial",
     template: "%s · ConectaGE",

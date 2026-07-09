@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle, Bell } from "lucide-react";
+import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle, Bell, Sparkles, Circle, Camera, Building2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { getUser } from "@/lib/supabase/server";
 import {
@@ -10,6 +10,7 @@ import {
   getListingsByOwner,
   getNotifications,
   getFavoriteCount,
+  getFollowCount,
   mapListingRow,
   monthYearLabel,
 } from "@/lib/supabase/queries";
@@ -23,6 +24,7 @@ const notifIcons: Record<NotificationKind, React.ElementType> = {
   seller_request_approved: Store,
   seller_request_rejected: AlertTriangle,
   followed_store_listing: Bell,
+  welcome: Sparkles,
 };
 
 const notifColors: Record<NotificationKind, string> = {
@@ -30,6 +32,7 @@ const notifColors: Record<NotificationKind, string> = {
   seller_request_approved: "text-green-600 bg-green-50",
   seller_request_rejected: "text-destructive bg-destructive/10",
   followed_store_listing: "text-blue-600 bg-blue-50",
+  welcome: "text-primary bg-primary/10",
 };
 
 const statusLabel: Record<string, string> = {
@@ -50,11 +53,12 @@ export default async function DashboardPage() {
   const user = await getUser();
   if (!user) redirect("/login?next=/mi-cuenta");
 
-  const [profile, rows, notifications, favoriteCount] = await Promise.all([
+  const [profile, rows, notifications, favoriteCount, followCount] = await Promise.all([
     getProfile(user.id),
     getListingsByOwner(user.id),
     getNotifications(user.id),
     getFavoriteCount(user.id),
+    getFollowCount(user.id),
   ]);
 
   const firstName = (profile?.full_name?.trim() || user.email?.split("@")[0] || "").split(" ")[0];
@@ -64,6 +68,32 @@ export default async function DashboardPage() {
   const latest = rows.slice(0, 3);
   const unread = notifications.filter((n) => !n.read).length;
   const recentNotifications = notifications.slice(0, 3);
+
+  // First-steps checklist — hidden once everything is done.
+  const steps = [
+    {
+      done: Boolean(profile?.avatar_url),
+      label: "Añade tu foto de perfil",
+      hint: "Genera más confianza con compradores y vendedores.",
+      href: "/mi-cuenta/perfil/editar",
+      icon: Camera,
+    },
+    {
+      done: rows.length > 0,
+      label: "Publica tu primer anuncio",
+      hint: "Es gratis y tarda menos de 2 minutos.",
+      href: "/publicar",
+      icon: Plus,
+    },
+    {
+      done: followCount > 0,
+      label: "Sigue tiendas que te interesen",
+      hint: "Te avisamos cuando publiquen novedades.",
+      href: "/tiendas",
+      icon: Building2,
+    },
+  ];
+  const showFirstSteps = steps.some((s) => !s.done);
 
   return (
     <div className="space-y-6">
@@ -78,6 +108,43 @@ export default async function DashboardPage() {
             : ""}
         </p>
       </div>
+
+      {/* First-steps checklist for new users */}
+      {showFirstSteps && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Primeros pasos</h2>
+          </div>
+          <div className="space-y-2">
+            {steps.map(({ done, label, hint, href, icon: Icon }) =>
+              done ? (
+                <div key={label} className="flex items-center gap-3 rounded-xl px-3 py-2 opacity-60">
+                  <CheckCircle className="size-4 shrink-0 text-green-600" />
+                  <span className="text-sm text-muted-foreground line-through">{label}</span>
+                </div>
+              ) : (
+                <Link
+                  key={label}
+                  href={href}
+                  className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 shadow-sm transition-colors hover:bg-secondary"
+                >
+                  <Circle className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-foreground">{label}</span>
+                    <span className="block text-xs text-muted-foreground">{hint}</span>
+                  </span>
+                  <Icon className="size-4 shrink-0 text-primary" />
+                </Link>
+              ),
+            )}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Recuerda: compradores y vendedores tratan directamente por WhatsApp. Queda en lugares
+            públicos y no pagues por adelantado.
+          </p>
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -137,7 +204,7 @@ export default async function DashboardPage() {
           Mis anuncios
         </Link>
         <Link
-          href="/mi-cuenta/perfil"
+          href="/mi-cuenta/perfil/editar"
           className="flex items-center gap-2 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
         >
           <User className="size-4" />

@@ -12,6 +12,11 @@ const cities = [...GE_CITIES, "Otra"];
 const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
 
+// Latest selectable birth date (must be at least 16 years old).
+const MAX_BIRTH_DATE = new Date(Date.now() - 16 * 365.25 * 24 * 3600 * 1000)
+  .toISOString()
+  .slice(0, 10);
+
 export default function RegistroPage() {
   const [form, setForm] = useState({
     fullName: "",
@@ -19,6 +24,9 @@ export default function RegistroPage() {
     city: "",
     email: "",
     password: "",
+    confirmPassword: "",
+    gender: "",
+    birthDate: "",
   });
   const [error, setError] = useState("");
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
@@ -30,9 +38,21 @@ export default function RegistroPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (form.password !== form.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
     setError("");
     startTransition(async () => {
-      const result = await signUpAction(form);
+      const result = await signUpAction({
+        fullName: form.fullName,
+        phone: form.phone,
+        city: form.city,
+        email: form.email,
+        password: form.password,
+        gender: form.gender,
+        birthDate: form.birthDate,
+      });
       if (result?.error) {
         setError(result.error);
       } else {
@@ -212,6 +232,61 @@ export default function RegistroPage() {
                 onChange={(e) => set({ password: e.target.value })}
                 className={inputClass}
               />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium text-foreground">
+                Confirmar contraseña <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                placeholder="Repite la contraseña"
+                value={form.confirmPassword}
+                onChange={(e) => set({ confirmPassword: e.target.value })}
+                className={inputClass}
+              />
+              {form.confirmPassword.length > 0 && form.password !== form.confirmPassword && (
+                <p className="mt-1 text-xs text-destructive">Las contraseñas no coinciden.</p>
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="gender" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Género{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+                </label>
+                <select
+                  id="gender"
+                  value={form.gender}
+                  onChange={(e) => set({ gender: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="">Prefiero no indicarlo</option>
+                  <option value="male">Hombre</option>
+                  <option value="female">Mujer</option>
+                  <option value="other">Otro</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="birthDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Fecha de nacimiento{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+                </label>
+                <input
+                  id="birthDate"
+                  type="date"
+                  value={form.birthDate}
+                  onChange={(e) => set({ birthDate: e.target.value })}
+                  max={MAX_BIRTH_DATE}
+                  className={inputClass}
+                />
+              </div>
             </div>
 
             <div className="flex items-start gap-3 pt-1">

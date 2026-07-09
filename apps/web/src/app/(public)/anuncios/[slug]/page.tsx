@@ -13,6 +13,7 @@ import {
   monthYearLabel,
 } from "@/lib/supabase/queries";
 import { getUser } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { postedLabel } from "@/lib/time";
 import { paymentMethods } from "@/lib/payments-logistics";
 import { formatPrice } from "@/lib/format";
@@ -118,10 +119,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const data = await loadDetail(slug);
   if (!data) return {};
+  const description = `${data.listing.title} — ${formatPrice(data.listing)} — ${data.listing.city}, Guinea Ecuatorial. Contacta directamente por WhatsApp.`;
   return {
     title: data.listing.title,
-    description: `${data.listing.title} — ${formatPrice(data.listing)} — ${data.listing.city}, Guinea Ecuatorial. Contacta directamente por WhatsApp.`,
+    description,
+    // og:image makes the product photo render as a rich preview when the
+    // listing link is shared on WhatsApp — no screenshots needed.
+    openGraph: {
+      title: data.listing.title,
+      description,
+      images: [{ url: data.images[0] }],
+      type: "website",
+    },
   };
+}
+
+/** Absolute public URL of the current deployment, from the request headers. */
+async function siteOrigin(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "conectage.netlify.app";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
 }
 
 export default async function ListingDetailPage({ params }: Props) {
@@ -280,6 +298,7 @@ export default async function ListingDetailPage({ params }: Props) {
             <WhatsAppCTA
               phoneNumber={data.whatsappNumber}
               listingTitle={listing.title}
+              listingUrl={`${await siteOrigin()}/anuncios/${listing.slug}`}
               listingSlug={listing.slug}
               categorySlug={listing.categorySlug}
               size="lg"
@@ -299,7 +318,7 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
 
           {/* Seller card */}
-          {data.seller && <SellerCard seller={data.seller} />}
+          {data.seller && <SellerCard seller={data.seller} profileId={data.sellerId} />}
 
           {/* Payments & delivery */}
           <div className="rounded-2xl border bg-card p-4 shadow-sm">

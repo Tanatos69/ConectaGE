@@ -4,7 +4,19 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import type { SellerProfile } from "@/lib/demo-detail";
 
-export function SellerCard({ seller }: { seller: SellerProfile }) {
+export function SellerCard({
+  seller,
+  profileId,
+}: {
+  seller: SellerProfile;
+  /** Real profile UUID — links to /usuario/[id] (visible once they have published listings). */
+  profileId?: string;
+}) {
+  const profileHref = profileId
+    ? `/usuario/${profileId}`
+    : seller.username
+      ? `/usuario/${seller.username}`
+      : null;
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
       <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -50,9 +62,9 @@ export function SellerCard({ seller }: { seller: SellerProfile }) {
         </Link>
       )}
 
-      {seller.username && (
+      {profileHref && (
         <Link
-          href={`/usuario/${seller.username}`}
+          href={profileHref}
           className="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium text-primary hover:underline"
         >
           Ver todos sus anuncios

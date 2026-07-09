@@ -1,464 +1,111 @@
-"use client";
-
-import { useState, useRef, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { CheckCircle, Save, AlertTriangle, Trash2 } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Pencil, MapPin, Calendar, Mail, Phone, ShieldCheck } from "lucide-react";
+import { getUser } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/supabase/queries";
+import { monthYearLabel } from "@/lib/time";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useAuth } from "@/lib/auth/context";
-import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
-import { updateNotificationPreferencesAction } from "@/lib/actions/notifications";
-import { createClient } from "@/lib/supabase/client";
-import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
-import { cn } from "@/lib/utils";
-import { GE_CITIES } from "@/lib/cities";
 
-const cities = [...GE_CITIES, "Otra"];
+export const metadata: Metadata = { title: "Mi perfil" };
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border bg-card p-5 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
-      {children}
-    </div>
-  );
-}
+const roleLabel: Record<string, string> = {
+  buyer: "Comprador",
+  seller: "Vendedor",
+  admin: "Administrador",
+};
 
-function Field({
-  label,
-  children,
-  hint,
-}: {
-  label: string;
-  children: React.ReactNode;
-  hint?: string;
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-sm font-medium text-foreground">{label}</label>
-      {children}
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-    </div>
-  );
-}
+const roleStyle: Record<string, string> = {
+  buyer: "bg-secondary text-muted-foreground",
+  seller: "bg-primary/10 text-primary",
+  admin: "bg-amber-50 text-amber-700",
+};
 
-const inputClass =
-  "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
+export default async function PerfilPage() {
+  const user = await getUser();
+  if (!user) redirect("/login?next=/mi-cuenta/perfil");
 
-export default function PerfilPage() {
-  const router = useRouter();
-  const { user, profile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [avatarUploading, setAvatarUploading] = useState(false);
-  const [form, setForm] = useState({
-    name: profile?.full_name ?? "",
-    city: profile?.city ?? "",
-    phone: profile?.phone ?? "",
-    gender: profile?.gender ?? "",
-    ageRange: profile?.age_range ?? "",
-  });
-
-  // Refill the form when the profile arrives/changes (render-time adjustment).
-  const [loadedProfileId, setLoadedProfileId] = useState<string | null>(profile?.id ?? null);
-  if (profile && profile.id !== loadedProfileId) {
-    setLoadedProfileId(profile.id);
-    setForm({
-      name: profile.full_name ?? "",
-      city: profile.city ?? "",
-      phone: profile.phone ?? "",
-      gender: profile.gender ?? "",
-      ageRange: profile.age_range ?? "",
-    });
-  }
-
-  // Password change state
-  const [passwords, setPasswords] = useState({ next: "", confirm: "" });
-  const [passwordMsg, setPasswordMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [passwordPending, startPasswordTransition] = useTransition();
-
-  // Notification preference toggles
-  const [notifyPrefs, setNotifyPrefs] = useState({
-    notifyListings: profile?.notify_listings ?? true,
-    notifySellerRequests: profile?.notify_seller_requests ?? true,
-    notifyFollowedStores: profile?.notify_followed_stores ?? true,
-  });
-  const [loadedPrefsId, setLoadedPrefsId] = useState<string | null>(profile?.id ?? null);
-  if (profile && profile.id !== loadedPrefsId) {
-    setLoadedPrefsId(profile.id);
-    setNotifyPrefs({
-      notifyListings: profile.notify_listings,
-      notifySellerRequests: profile.notify_seller_requests,
-      notifyFollowedStores: profile.notify_followed_stores,
-    });
-  }
-  const [notifyPending, startNotifyTransition] = useTransition();
-  const [notifySaved, setNotifySaved] = useState(false);
-
-  function handleNotifyToggle(key: keyof typeof notifyPrefs, value: boolean) {
-    const next = { ...notifyPrefs, [key]: value };
-    setNotifyPrefs(next);
-    setNotifySaved(false);
-    startNotifyTransition(async () => {
-      const result = await updateNotificationPreferencesAction(next);
-      if (!result?.error) {
-        setNotifySaved(true);
-        setTimeout(() => setNotifySaved(false), 2000);
-      }
-    });
-  }
-
-  function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    startTransition(async () => {
-      const result = await updateProfileAction({
-        fullName: form.name,
-        phone: form.phone,
-        city: form.city,
-        gender: form.gender,
-        ageRange: form.ageRange,
-      });
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      }
-    });
-  }
-
-  function handlePasswordChange() {
-    if (passwords.next.length < 8) {
-      setPasswordMsg({ ok: false, text: "La contraseña debe tener al menos 8 caracteres." });
-      return;
-    }
-    if (passwords.next !== passwords.confirm) {
-      setPasswordMsg({ ok: false, text: "Las contraseñas no coinciden." });
-      return;
-    }
-    setPasswordMsg(null);
-    startPasswordTransition(async () => {
-      const result = await updatePasswordAction(passwords.next);
-      if (result?.error) {
-        setPasswordMsg({ ok: false, text: result.error });
-      } else {
-        setPasswordMsg({ ok: true, text: "Contraseña actualizada." });
-        setPasswords({ next: "", confirm: "" });
-      }
-    });
-  }
-
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const rawFile = e.target.files?.[0];
-    e.target.value = "";
-    if (!rawFile || !user) return;
-
-    setError("");
-    setAvatarUploading(true);
-    try {
-      const file = await compressImage(rawFile, AVATAR_PRESET);
-      const supabase = createClient();
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (uploadError) throw new Error(uploadError.message);
-
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      // Bust the CDN/browser cache since we upsert the same path every time.
-      const url = `${data.publicUrl}?v=${Date.now()}`;
-
-      const result = await updateAvatarAction(url);
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        router.refresh();
-      }
-    } catch {
-      setError("No se pudo subir la foto. Revisa tu conexión e intenta de nuevo.");
-    } finally {
-      setAvatarUploading(false);
-    }
-  }
-
-  function handleRemovePhoto() {
-    setError("");
-    startTransition(async () => {
-      const result = await updateAvatarAction("");
-      if (result?.error) setError(result.error);
-      else router.refresh();
-    });
-  }
+  const profile = await getProfile(user.id);
+  const name = profile?.full_name?.trim() || user.email?.split("@")[0] || "Usuario";
+  const role = profile?.role ?? "buyer";
 
   return (
-    <form onSubmit={handleSave} className="space-y-5">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Mi perfil</h1>
-        <button
-          type="submit"
-          disabled={pending}
-          className={cn(
-            "flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60",
-            saved
-              ? "bg-green-600 text-white"
-              : "bg-primary text-white hover:bg-primary/90",
-          )}
+        <Link
+          href="/mi-cuenta/perfil/editar"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90"
         >
-          {saved ? <CheckCircle className="size-4" /> : <Save className="size-4" />}
-          {saved ? "¡Guardado!" : pending ? "Guardando…" : "Guardar cambios"}
-        </button>
+          <Pencil className="size-4" />
+          Editar perfil
+        </Link>
       </div>
 
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
-
-      {/* Avatar */}
-      <SectionCard title="Foto de perfil">
-        <div className="flex items-center gap-4">
-          <UserAvatar name={form.name || "U"} src={profile?.avatar_url} size="lg" />
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarUploading}
-                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
+      {/* Identity card */}
+      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+          <UserAvatar name={name} src={profile?.avatar_url} size="lg" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <h2 className="text-xl font-bold text-foreground">{name}</h2>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${roleStyle[role]}`}
               >
-                {avatarUploading ? "Subiendo…" : "Subir foto"}
-              </button>
-              {profile?.avatar_url && (
-                <button
-                  type="button"
-                  onClick={handleRemovePhoto}
-                  disabled={avatarUploading}
-                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-60"
-                >
-                  <Trash2 className="size-3.5" />
-                  Eliminar
-                </button>
+                {roleLabel[role]}
+              </span>
+              {profile?.verified && (
+                <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  <ShieldCheck className="size-3.5" />
+                  Verificado
+                </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">JPG, PNG o WebP. Máx. 5 MB.</p>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={handlePhotoChange}
-          />
-        </div>
-      </SectionCard>
-
-      {/* Personal info */}
-      <SectionCard title="Información personal">
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nombre completo">
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Ciudad">
-              <select
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                className={inputClass}
-              >
-                <option value="">Selecciona tu ciudad</option>
-                {cities.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* Optional demographics */}
-      <SectionCard title="Información demográfica (opcional)">
-        <p className="mb-4 text-xs text-muted-foreground">
-          Estos datos son opcionales y nos ayudan a mejorar ConectaGE. Se usan solo de forma
-          agregada y nunca se venden a terceros.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Género">
-            <select
-              value={form.gender}
-              onChange={(e) => setForm({ ...form, gender: e.target.value })}
-              className={inputClass}
-            >
-              <option value="">Prefiero no indicarlo</option>
-              <option value="male">Hombre</option>
-              <option value="female">Mujer</option>
-              <option value="other">Otro</option>
-            </select>
-          </Field>
-          <Field label="Rango de edad">
-            <select
-              value={form.ageRange}
-              onChange={(e) => setForm({ ...form, ageRange: e.target.value })}
-              className={inputClass}
-            >
-              <option value="">Prefiero no indicarlo</option>
-              <option value="18-24">18–24</option>
-              <option value="25-34">25–34</option>
-              <option value="35-44">35–44</option>
-              <option value="45-54">45–54</option>
-              <option value="55+">55 o más</option>
-            </select>
-          </Field>
-        </div>
-      </SectionCard>
-
-      {/* Contact info */}
-      <SectionCard title="Información de contacto">
-        <div className="space-y-4">
-          <Field
-            label="Teléfono (WhatsApp)"
-            hint="Número que aparecerá en los botones de contacto de tus anuncios. Formato: +240222000000"
-          >
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="+240 222 000 000"
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Correo electrónico" hint="El correo de acceso no se puede cambiar desde aquí.">
-            <input
-              type="email"
-              value={user?.email ?? ""}
-              disabled
-              className={cn(inputClass, "opacity-60")}
-            />
-          </Field>
-        </div>
-      </SectionCard>
-
-      {/* Security */}
-      <SectionCard title="Seguridad">
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nueva contraseña">
-              <input
-                type="password"
-                placeholder="Mínimo 8 caracteres"
-                value={passwords.next}
-                onChange={(e) => setPasswords({ ...passwords, next: e.target.value })}
-                autoComplete="new-password"
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Confirmar nueva contraseña">
-              <input
-                type="password"
-                placeholder="Repite la contraseña"
-                value={passwords.confirm}
-                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                autoComplete="new-password"
-                className={inputClass}
-              />
-            </Field>
-          </div>
-          {passwordMsg && (
-            <p
-              className={cn(
-                "rounded-lg px-3 py-2 text-sm",
-                passwordMsg.ok
-                  ? "bg-green-50 text-green-700"
-                  : "bg-destructive/10 text-destructive",
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-muted-foreground sm:justify-start">
+              {profile?.city && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="size-4 shrink-0" />
+                  {profile.city}
+                </span>
               )}
-            >
-              {passwordMsg.text}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={handlePasswordChange}
-            disabled={passwordPending || !passwords.next}
-            className="rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-50"
-          >
-            {passwordPending ? "Actualizando…" : "Cambiar contraseña"}
-          </button>
-        </div>
-      </SectionCard>
-
-      {/* Notification preferences */}
-      <SectionCard title="Preferencias de notificación">
-        <div className="space-y-3">
-          {(
-            [
-              {
-                key: "notifyListings" as const,
-                label: "Mis anuncios",
-                hint: "Cuando uno de tus anuncios se publica.",
-              },
-              {
-                key: "notifySellerRequests" as const,
-                label: "Mi tienda",
-                hint: "Cuando tu solicitud de tienda se aprueba o rechaza.",
-              },
-              {
-                key: "notifyFollowedStores" as const,
-                label: "Tiendas que sigo",
-                hint: "Cuando una tienda que sigues publica un anuncio nuevo.",
-              },
-            ]
-          ).map(({ key, label, hint }) => (
-            <label key={key} className="flex cursor-pointer items-start justify-between gap-3">
-              <span>
-                <span className="block text-sm font-medium text-foreground">{label}</span>
-                <span className="block text-xs text-muted-foreground">{hint}</span>
-              </span>
-              <input
-                type="checkbox"
-                checked={notifyPrefs[key]}
-                disabled={notifyPending}
-                onChange={(e) => handleNotifyToggle(key, e.target.checked)}
-                className="mt-0.5 size-4 shrink-0 accent-primary rounded"
-              />
-            </label>
-          ))}
-          {notifySaved && (
-            <p className="text-xs font-medium text-green-600">Preferencias guardadas.</p>
-          )}
-        </div>
-      </SectionCard>
-
-      {/* Danger zone */}
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="size-4 text-destructive" />
-          <h2 className="text-sm font-semibold text-destructive">Zona de peligro</h2>
-        </div>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Para desactivar o eliminar tu cuenta, contáctanos desde la página de contacto.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            disabled
-            className="rounded-xl border border-destructive/30 bg-background px-4 py-2.5 text-sm font-medium text-destructive opacity-60"
-          >
-            Desactivar mi cuenta
-          </button>
-          <button
-            type="button"
-            disabled
-            className="rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-white opacity-60"
-          >
-            Eliminar mi cuenta
-          </button>
+              {profile?.created_at && (
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="size-4 shrink-0" />
+                  Miembro desde {monthYearLabel(profile.created_at)}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </form>
+
+      {/* Contact info (read-only overview) */}
+      <div className="rounded-2xl border bg-card p-5 shadow-sm">
+        <h2 className="mb-4 text-sm font-semibold text-foreground">Información de contacto</h2>
+        <div className="space-y-3 text-sm">
+          <div className="flex items-center gap-3">
+            <Mail className="size-4 shrink-0 text-muted-foreground" />
+            <span className="text-foreground">{user.email}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Phone className="size-4 shrink-0 text-muted-foreground" />
+            {profile?.phone ? (
+              <span className="text-foreground">{profile.phone}</span>
+            ) : (
+              <Link
+                href="/mi-cuenta/perfil/editar"
+                className="font-medium text-primary hover:underline"
+              >
+                Añade tu número de WhatsApp →
+              </Link>
+            )}
+          </div>
+        </div>
+        <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">
+          Tu correo nunca se muestra públicamente. Tu WhatsApp solo aparece en los anuncios que
+          publicas.
+        </p>
+      </div>
+    </div>
   );
 }

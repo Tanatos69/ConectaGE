@@ -21,3 +21,17 @@ export function monthYearLabel(iso: string): string {
   });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
+
+/** Current age in whole years from an ISO birth date, or null if invalid. */
+export function ageFromBirthDate(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const birth = new Date(iso);
+  if (isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const hadBirthday =
+    now.getMonth() > birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+  if (!hadBirthday) age -= 1;
+  return age >= 0 && age < 130 ? age : null;
+}

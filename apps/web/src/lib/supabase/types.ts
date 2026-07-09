@@ -4,7 +4,6 @@ export type UserRole = "buyer" | "seller" | "admin";
 export type RequestStatus = "pending" | "approved" | "rejected";
 
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
-export type AgeRange = "18-24" | "25-34" | "35-44" | "45-54" | "55+";
 
 export interface Profile {
   id: string;
@@ -16,7 +15,8 @@ export interface Profile {
   role: UserRole;
   verified: boolean;
   gender: Gender | null;
-  age_range: AgeRange | null;
+  /** ISO date (yyyy-mm-dd); age is always derived from this, never stored. */
+  birth_date: string | null;
   notify_listings: boolean;
   notify_seller_requests: boolean;
   notify_followed_stores: boolean;
@@ -75,7 +75,8 @@ export type NotificationKind =
   | "listing_published"
   | "seller_request_approved"
   | "seller_request_rejected"
-  | "followed_store_listing";
+  | "followed_store_listing"
+  | "welcome";
 
 export interface NotificationRow {
   id: string;
