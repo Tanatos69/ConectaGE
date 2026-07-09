@@ -64,13 +64,15 @@ export interface TiendaRow {
   whatsapp: string;
   description: string;
   verified: boolean;
+  followers_count: number;
   created_at: string;
 }
 
 export type NotificationKind =
   | "listing_published"
   | "seller_request_approved"
-  | "seller_request_rejected";
+  | "seller_request_rejected"
+  | "followed_store_listing";
 
 export interface NotificationRow {
   id: string;
@@ -104,6 +106,17 @@ export interface ListingRow {
   status: "published" | "pending" | "rejected" | "expired";
   extra_fields: Record<string, string>;
   views_count: number;
+  favorites_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ReviewRow {
+  id: string;
+  listing_id: string;
+  reviewer_id: string;
+  rating: number;
+  comment: string;
+  seller_reply: string | null;
+  created_at: string;
 }

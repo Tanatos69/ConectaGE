@@ -1,14 +1,16 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { Heart, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppState } from "@/lib/store/app-state";
+import { useFollows } from "@/lib/store/follows-context";
 import { useTranslation } from "@/lib/i18n/context";
 
 /**
- * Follow/unfollow a vendor store. Persists the store slug to the shared
- * `follows` slice. Used on the store directory cards and the store header.
- * Stops propagation so it can sit inside a linked card.
+ * Follow/unfollow a vendor store. Persists to the real `store_follows` table
+ * (via FollowsProvider) so followers can be notified when the store posts.
+ * Used on the store directory cards and the store header. Stops propagation
+ * so it can sit inside a linked card.
  */
 export function FollowButton({
   slug,
@@ -19,7 +21,9 @@ export function FollowButton({
   className?: string;
   size?: "sm" | "default";
 }) {
-  const { isFollowing, toggleFollow } = useAppState();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isFollowing, toggleFollow } = useFollows();
   const { t } = useTranslation();
   const following = isFollowing(slug);
 
@@ -27,10 +31,11 @@ export function FollowButton({
     <button
       type="button"
       aria-pressed={following}
-      onClick={(e) => {
+      onClick={async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleFollow(slug);
+        const ok = await toggleFollow(slug);
+        if (!ok) router.push(`/login?next=${encodeURIComponent(pathname)}`);
       }}
       className={cn(
         "inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition-all active:scale-[0.98]",

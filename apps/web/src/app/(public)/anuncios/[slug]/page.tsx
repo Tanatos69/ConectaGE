@@ -3,21 +3,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Eye, Flag, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
 import { getListingBySlug as getDemoListingBySlug, type Listing } from "@/lib/listings";
-import { getListingDetail, type SellerProfile, type Review } from "@/lib/demo-detail";
+import { getListingDetail, type SellerProfile } from "@/lib/demo-detail";
 import {
   getListingWithDetail,
   getPublishedListings,
+  getReviewsForListing,
   incrementListingViews,
   logEvent,
   monthYearLabel,
 } from "@/lib/supabase/queries";
+import { getUser } from "@/lib/supabase/server";
+import { postedLabel } from "@/lib/time";
 import { paymentMethods } from "@/lib/payments-logistics";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { ListingCard } from "@/components/listing/listing-card";
 import { ImageGallery } from "@/components/listing/image-gallery";
 import { SellerCard } from "@/components/listing/seller-card";
-import { ReviewsSection } from "@/components/listing/reviews-section";
+import { ReviewsSection, type ReviewItem } from "@/components/listing/reviews-section";
 import { WhatsAppCTA } from "@/components/listing/whatsapp-cta";
 import { PageBreadcrumb } from "@/components/listing/page-breadcrumb";
 import { FavoriteButton } from "@/components/listing/favorite-button";
@@ -41,13 +44,17 @@ interface DetailData {
   phoneNumber?: string;
   viewsCount?: number;
   seller?: SellerProfile;
-  reviews: Review[];
+  reviews: ReviewItem[];
+  /** Present only for real (Supabase) listings — powers the write-review form. */
+  listingId?: string;
+  sellerId?: string;
 }
 
 /** Real listing from Supabase first; demo content as fallback. */
 async function loadDetail(slug: string): Promise<DetailData | null> {
   const db = await getListingWithDetail(slug);
   if (db) {
+    const reviews = await getReviewsForListing(db.row.id);
     return {
       listing: db.listing,
       description: db.row.description,
@@ -70,7 +77,17 @@ async function loadDetail(slug: string): Promise<DetailData | null> {
             bio: "",
           }
         : undefined,
-      reviews: [],
+      reviews: reviews.map((r) => ({
+        id: r.id,
+        reviewerId: r.reviewer_id,
+        reviewerName: r.reviewerName,
+        rating: r.rating,
+        comment: r.comment,
+        createdLabel: postedLabel(r.created_at),
+        sellerReply: r.seller_reply,
+      })),
+      listingId: db.row.id,
+      sellerId: db.row.seller_id,
     };
   }
 
@@ -86,7 +103,14 @@ async function loadDetail(slug: string): Promise<DetailData | null> {
     phoneNumber: detail?.phoneNumber,
     viewsCount: detail?.viewsCount,
     seller: detail?.seller,
-    reviews: detail?.reviews ?? [],
+    reviews: (detail?.reviews ?? []).map((r) => ({
+      id: r.id,
+      reviewerName: r.reviewerName,
+      rating: r.rating,
+      comment: r.comment,
+      createdLabel: r.date,
+      sellerReply: r.sellerReply,
+    })),
   };
 }
 
@@ -110,6 +134,12 @@ export default async function ListingDetailPage({ params }: Props) {
     reviews.length > 0
       ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
       : (listing.rating ?? 0);
+
+  const currentUser = await getUser();
+  const isSeller = Boolean(currentUser && data.sellerId && currentUser.id === data.sellerId);
+  const alreadyReviewed = Boolean(
+    currentUser && reviews.some((r) => r.reviewerId === currentUser.id),
+  );
 
   const all = await getPublishedListings();
   const related = all
@@ -231,13 +261,16 @@ export default async function ListingDetailPage({ params }: Props) {
           )}
 
           {/* Reviews */}
-          {reviews.length > 0 && (
-            <ReviewsSection
-              reviews={reviews}
-              avgRating={avgRating}
-              totalCount={listing.reviews ?? reviews.length}
-            />
-          )}
+          <ReviewsSection
+            reviews={reviews}
+            avgRating={avgRating}
+            totalCount={reviews.length}
+            listingId={data.listingId}
+            listingSlug={listing.slug}
+            isLoggedIn={Boolean(currentUser)}
+            isSeller={isSeller}
+            alreadyReviewed={alreadyReviewed}
+          />
         </div>
 
         {/* ── Right sidebar ── */}

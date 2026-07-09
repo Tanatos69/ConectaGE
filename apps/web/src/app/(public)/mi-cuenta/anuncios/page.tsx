@@ -26,6 +26,7 @@ export default async function MisAnunciosPage() {
       image: listing.image,
       status: row.status,
       views: row.views_count,
+      favorites: row.favorites_count,
       postedLabel: listing.postedLabel,
     };
   });

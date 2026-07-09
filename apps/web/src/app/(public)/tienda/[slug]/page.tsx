@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getStoreBySlug, getStoreListings } from "@/lib/supabase/queries";
-import { demoReviews } from "@/lib/demo-detail";
+import { getStoreBySlug, getStoreListings, getReviewsForStore } from "@/lib/supabase/queries";
+import { postedLabel } from "@/lib/time";
 import { StoreView } from "@/components/store/store-view";
 
 interface Props {
@@ -23,7 +23,23 @@ export default async function StorePage({ params }: Props) {
   const store = await getStoreBySlug(slug);
   if (!store) notFound();
 
-  const listings = await getStoreListings(store);
+  const [listings, reviews] = await Promise.all([
+    getStoreListings(store),
+    getReviewsForStore(store.listingSlugs),
+  ]);
 
-  return <StoreView store={store} listings={listings} reviews={demoReviews} />;
+  return (
+    <StoreView
+      store={store}
+      listings={listings}
+      reviews={reviews.map((r) => ({
+        id: r.id,
+        reviewerName: r.reviewerName,
+        rating: r.rating,
+        comment: r.comment,
+        createdLabel: postedLabel(r.created_at),
+        sellerReply: r.seller_reply,
+      }))}
+    />
+  );
 }

@@ -7,11 +7,10 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { FollowButton } from "@/components/store/follow-button";
 import { WhatsAppCTA } from "@/components/listing/whatsapp-cta";
 import { ListingCard } from "@/components/listing/listing-card";
-import { ReviewsSection } from "@/components/listing/reviews-section";
+import { ReviewsSection, type ReviewItem } from "@/components/listing/reviews-section";
 import { useTranslation } from "@/lib/i18n/context";
 import type { Store } from "@/lib/stores";
 import type { Listing } from "@/lib/listings";
-import type { Review } from "@/lib/demo-detail";
 
 export function StoreView({
   store,
@@ -20,7 +19,7 @@ export function StoreView({
 }: {
   store: Store;
   listings: Listing[];
-  reviews: Review[];
+  reviews: ReviewItem[];
 }) {
   const { t } = useTranslation();
   const isVerified = store.verificationStatus === "verified";

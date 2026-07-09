@@ -35,6 +35,7 @@ export default async function MiTiendaPage() {
             businessHours: tienda.business_hours,
             instagram: tienda.instagram,
             facebook: tienda.facebook,
+            logo: tienda.logo,
             verified: tienda.verified,
           }}
         />

@@ -8,6 +8,7 @@ import type {
   Profile,
   NotificationRow,
   AnalyticsEventType,
+  ReviewRow,
 } from "./types";
 import { categories } from "@/lib/categories";
 import {
@@ -160,7 +161,7 @@ export function mapTiendaRow(row: TiendaRow, listingSlugs: string[] = []): Store
     verificationStatus: row.verified ? "verified" : "unverified",
     professional: true,
     memberSince: monthYearLabel(row.created_at),
-    followers: 0,
+    followers: row.followers_count,
     rating: 0,
     reviewsCount: 0,
     whatsapp: row.whatsapp,
@@ -182,10 +183,27 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
   const row = data as TiendaRow;
   const { data: rows } = await supabase
     .from("listings")
-    .select("slug")
+    .select("id, slug")
     .eq("seller_id", row.owner_id)
     .eq("status", "published");
-  return mapTiendaRow(row, (rows ?? []).map((r: { slug: string }) => r.slug));
+  const listingRows = (rows ?? []) as { id: string; slug: string }[];
+
+  const store = mapTiendaRow(row, listingRows.map((r) => r.slug));
+
+  if (listingRows.length > 0) {
+    const { data: reviewRows } = await supabase
+      .from("reviews")
+      .select("rating")
+      .in("listing_id", listingRows.map((r) => r.id));
+    const ratings = (reviewRows ?? []) as { rating: number }[];
+    if (ratings.length > 0) {
+      store.rating =
+        Math.round((ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10) / 10;
+      store.reviewsCount = ratings.length;
+    }
+  }
+
+  return store;
 }
 
 export async function getStoreListings(store: Store): Promise<Listing[]> {
@@ -291,4 +309,119 @@ export async function getNotifications(userId: string): Promise<NotificationRow[
     .limit(100);
   if (error || !data) return [];
   return data as NotificationRow[];
+}
+
+// ── Reviews ──────────────────────────────────────────────────────────────────
+
+export async function getReviewsForListing(listingId: string): Promise<
+  (ReviewRow & { reviewerName: string })[]
+> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false });
+  const rows = (reviews ?? []) as ReviewRow[];
+  if (rows.length === 0) return [];
+
+  const { data: reviewers } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", rows.map((r) => r.reviewer_id));
+  const nameById = new Map(
+    ((reviewers ?? []) as { id: string; full_name: string }[]).map((p) => [p.id, p.full_name]),
+  );
+
+  return rows.map((r) => ({ ...r, reviewerName: nameById.get(r.reviewer_id) || "Usuario" }));
+}
+
+/** Aggregate, read-only reviews across every listing a store has published. */
+export async function getReviewsForStore(listingSlugs: string[]): Promise<
+  (ReviewRow & { reviewerName: string })[]
+> {
+  if (!isSupabaseConfigured || listingSlugs.length === 0) return [];
+  const supabase = await createClient();
+  const { data: listingRows } = await supabase
+    .from("listings")
+    .select("id")
+    .in("slug", listingSlugs);
+  const listingIds = (listingRows ?? []).map((r: { id: string }) => r.id);
+  if (listingIds.length === 0) return [];
+
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("*")
+    .in("listing_id", listingIds)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const rows = (reviews ?? []) as ReviewRow[];
+  if (rows.length === 0) return [];
+
+  const { data: reviewers } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", rows.map((r) => r.reviewer_id));
+  const nameById = new Map(
+    ((reviewers ?? []) as { id: string; full_name: string }[]).map((p) => [p.id, p.full_name]),
+  );
+
+  return rows.map((r) => ({ ...r, reviewerName: nameById.get(r.reviewer_id) || "Usuario" }));
+}
+
+// ── Favorites / follows ──────────────────────────────────────────────────────
+
+export async function getFavoriteListings(userId: string): Promise<Listing[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data: favRows } = await supabase
+    .from("listing_favorites")
+    .select("listing_slug")
+    .eq("user_id", userId);
+  const slugs = (favRows ?? []).map((r: { listing_slug: string }) => r.listing_slug);
+  if (slugs.length === 0) return [];
+
+  const { data } = await supabase.from("listings").select("*").in("slug", slugs);
+  return ((data ?? []) as ListingRow[]).map(mapListingRow);
+}
+
+export async function getFavoriteCount(userId: string): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("listing_favorites")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  return count ?? 0;
+}
+
+export async function getFollowedStores(userId: string): Promise<Store[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data: followRows } = await supabase
+    .from("store_follows")
+    .select("tienda_slug")
+    .eq("follower_id", userId);
+  const slugs = (followRows ?? []).map((r: { tienda_slug: string }) => r.tienda_slug);
+  if (slugs.length === 0) return [];
+
+  const { data } = await supabase.from("tiendas").select("*").in("slug", slugs);
+  const tiendas = (data ?? []) as TiendaRow[];
+  if (tiendas.length === 0) return [];
+
+  const ownerIds = tiendas.map((t) => t.owner_id);
+  const { data: listingRows } = await supabase
+    .from("listings")
+    .select("slug, seller_id")
+    .in("seller_id", ownerIds)
+    .eq("status", "published");
+  const slugsByOwner = new Map<string, string[]>();
+  for (const row of (listingRows ?? []) as { slug: string; seller_id: string }[]) {
+    const list = slugsByOwner.get(row.seller_id) ?? [];
+    list.push(row.slug);
+    slugsByOwner.set(row.seller_id, list);
+  }
+
+  return tiendas.map((t) => mapTiendaRow(t, slugsByOwner.get(t.owner_id) ?? []));
 }

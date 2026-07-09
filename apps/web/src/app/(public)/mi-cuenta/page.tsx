@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle, Bell } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { getUser } from "@/lib/supabase/server";
 import {
   getProfile,
   getListingsByOwner,
   getNotifications,
+  getFavoriteCount,
   mapListingRow,
   monthYearLabel,
 } from "@/lib/supabase/queries";
 import { postedLabel } from "@/lib/time";
 import type { NotificationKind } from "@/lib/supabase/types";
-import { FavoritesKpi } from "@/components/account/favorites-kpi";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -22,12 +22,14 @@ const notifIcons: Record<NotificationKind, React.ElementType> = {
   listing_published: CheckCircle,
   seller_request_approved: Store,
   seller_request_rejected: AlertTriangle,
+  followed_store_listing: Bell,
 };
 
 const notifColors: Record<NotificationKind, string> = {
   listing_published: "text-green-600 bg-green-50",
   seller_request_approved: "text-green-600 bg-green-50",
   seller_request_rejected: "text-destructive bg-destructive/10",
+  followed_store_listing: "text-blue-600 bg-blue-50",
 };
 
 const statusLabel: Record<string, string> = {
@@ -48,10 +50,11 @@ export default async function DashboardPage() {
   const user = await getUser();
   if (!user) redirect("/login?next=/mi-cuenta");
 
-  const [profile, rows, notifications] = await Promise.all([
+  const [profile, rows, notifications, favoriteCount] = await Promise.all([
     getProfile(user.id),
     getListingsByOwner(user.id),
     getNotifications(user.id),
+    getFavoriteCount(user.id),
   ]);
 
   const firstName = (profile?.full_name?.trim() || user.email?.split("@")[0] || "").split(" ")[0];
@@ -101,7 +104,13 @@ export default async function DashboardPage() {
             <p className="mt-1 text-xs text-muted-foreground">{label}</p>
           </Link>
         ))}
-        <FavoritesKpi />
+        <Link
+          href="/mi-cuenta/favoritos"
+          className="rounded-2xl border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-2xl font-extrabold text-rose-600">{favoriteCount}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Favoritos</p>
+        </Link>
         <Link
           href="/mi-cuenta/anuncios"
           className="rounded-2xl border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"

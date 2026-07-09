@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, Pencil, Trash2, Star, ExternalLink, Plus } from "lucide-react";
+import { Eye, Heart, Pencil, Trash2, Star, ExternalLink, Plus } from "lucide-react";
 import type { ListingStatus } from "@/lib/demo-user";
 import { formatPrice } from "@/lib/format";
 import { useAppState } from "@/lib/store/app-state";
@@ -22,6 +22,7 @@ export interface MyListingItem {
   image: string;
   status: ListingStatus;
   views: number;
+  favorites: number;
   postedLabel: string;
 }
 
@@ -156,6 +157,12 @@ export function MyListingsList({ items }: { items: MyListingItem[] }) {
                       <span className="flex items-center gap-1">
                         <Eye className="size-3" />
                         {listing.views} vistas
+                      </span>
+                    )}
+                    {listing.favorites > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Heart className="size-3 fill-rose-500 text-rose-500" />
+                        {listing.favorites}
                       </span>
                     )}
                   </div>

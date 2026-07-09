@@ -1,13 +1,15 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppState } from "@/lib/store/app-state";
+import { useFavorites } from "@/lib/store/favorites-context";
 
 /**
- * Heart toggle on listing cards and detail pages. Persists the listing slug to
- * the shared app state (localStorage in the demo, a `favorites` table in
- * production). Stops the click from following the surrounding card link.
+ * Heart toggle on listing cards and detail pages. Persists to the real
+ * `listing_favorites` table (via FavoritesProvider) so sellers can see a
+ * real like count on their own listings. Stops the click from following the
+ * surrounding card link.
  */
 export function FavoriteButton({
   slug,
@@ -16,7 +18,9 @@ export function FavoriteButton({
   slug: string;
   className?: string;
 }) {
-  const { isFavorite, toggleFavorite } = useAppState();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const saved = isFavorite(slug);
 
   return (
@@ -24,10 +28,11 @@ export function FavoriteButton({
       type="button"
       aria-label={saved ? "Quitar de favoritos" : "Guardar en favoritos"}
       aria-pressed={saved}
-      onClick={(e) => {
+      onClick={async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggleFavorite(slug);
+        const ok = await toggleFavorite(slug);
+        if (!ok) router.push(`/login?next=${encodeURIComponent(pathname)}`);
       }}
       className={cn(
         "flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur transition-all hover:scale-110 hover:bg-background",

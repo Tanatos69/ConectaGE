@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { CheckCircle, Save, Store, AlertTriangle, Trash2, Clock, MapPin, AtSign, Share2, ShieldCheck } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { updateTiendaAction } from "@/lib/actions/seller";
+import { useAuth } from "@/lib/auth/context";
+import { createClient } from "@/lib/supabase/client";
+import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
 import { GE_CITIES } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +21,7 @@ export interface StoreSettings {
   businessHours: string;
   instagram: string;
   facebook: string;
+  logo: string | null;
   verified: boolean;
 }
 
@@ -44,12 +48,13 @@ const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
 
 export function StoreSettingsForm({ store }: { store: StoreSettings }) {
-  const LOGO_KEY = `conectage-store-logo-${store.slug}`;
+  const { user } = useAuth();
 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logo, setLogo] = useState<string | null>(store.logo);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [nif, setNif] = useState("");
   const [nifRequested, setNifRequested] = useState(false);
   const [form, setForm] = useState({
@@ -66,34 +71,49 @@ export function StoreSettingsForm({ store }: { store: StoreSettings }) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(LOGO_KEY);
-    if (stored) setLogo(stored);
-  }, [LOGO_KEY]);
-
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setLogo(result);
-      localStorage.setItem(LOGO_KEY, result);
-    };
-    reader.readAsDataURL(file);
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFile = e.target.files?.[0];
     e.target.value = "";
+    if (!rawFile || !user) return;
+
+    setError("");
+    setLogoUploading(true);
+    try {
+      const file = await compressImage(rawFile, AVATAR_PRESET);
+      const supabase = createClient();
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+      const path = `${user.id}/store-logo.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = `${data.publicUrl}?v=${Date.now()}`;
+
+      const result = await updateTiendaAction({ ...form, logo: url });
+      if (result?.error) setError(result.error);
+      else setLogo(url);
+    } catch {
+      setError("No se pudo subir el logo. Revisa tu conexión e intenta de nuevo.");
+    } finally {
+      setLogoUploading(false);
+    }
   }
 
   function handleRemoveLogo() {
-    setLogo(null);
-    localStorage.removeItem(LOGO_KEY);
+    startTransition(async () => {
+      const result = await updateTiendaAction({ ...form, logo: "" });
+      if (result?.error) setError(result.error);
+      else setLogo(null);
+    });
   }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const result = await updateTiendaAction({ ...form });
+      const result = await updateTiendaAction({ ...form, logo: logo ?? "" });
       if (result?.error) {
         setError(result.error);
       } else {
@@ -138,15 +158,17 @@ export function StoreSettingsForm({ store }: { store: StoreSettings }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                disabled={logoUploading}
+                className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
               >
-                Subir logo
+                {logoUploading ? "Subiendo…" : "Subir logo"}
               </button>
               {logo && (
                 <button
                   type="button"
                   onClick={handleRemoveLogo}
-                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5"
+                  disabled={logoUploading || pending}
+                  className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/5 disabled:opacity-60"
                 >
                   <Trash2 className="size-3.5" />
                   Eliminar

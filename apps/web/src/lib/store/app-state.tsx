@@ -10,13 +10,11 @@ import {
 } from "react";
 
 /**
- * Client-side persistence for the demo. In production these slices become real
- * API calls (favorites/follows tables, a credits ledger, saved-search alerts).
- * For the presentation build we persist to localStorage, mirroring the pattern
- * used by the i18n context (default state on the server, hydrate in useEffect).
- *
- * Every interactive marketplace feature (favorites, store follows, saved
- * searches, credits/promotions) plugs into this single provider.
+ * Client-side persistence for what's still demo-only: saved searches and
+ * credits/promotions. Favorites and store follows moved to real Supabase
+ * tables (lib/store/favorites-context.tsx, lib/store/follows-context.tsx).
+ * Persists to localStorage, mirroring the pattern used by the i18n context
+ * (default state on the server, hydrate in useEffect).
  */
 
 export interface SearchCriteria {
@@ -55,14 +53,6 @@ export interface CreditsState {
 interface AppStateValue {
   hydrated: boolean;
 
-  favorites: string[];
-  isFavorite: (slug: string) => boolean;
-  toggleFavorite: (slug: string) => void;
-
-  follows: string[];
-  isFollowing: (slug: string) => boolean;
-  toggleFollow: (slug: string) => void;
-
   savedSearches: SavedSearch[];
   addSavedSearch: (label: string, criteria: SearchCriteria) => void;
   removeSavedSearch: (id: string) => void;
@@ -76,8 +66,6 @@ interface AppStateValue {
 }
 
 const KEYS = {
-  favorites: "conectage-favorites",
-  follows: "conectage-follows",
   savedSearches: "conectage-saved-searches",
   credits: "conectage-credits",
 } as const;
@@ -116,15 +104,11 @@ const AppStateContext = createContext<AppStateValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [follows, setFollows] = useState<string[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [credits, setCredits] = useState<CreditsState>(DEFAULT_CREDITS);
 
   // Hydrate every slice once on mount.
   useEffect(() => {
-    setFavorites(readJSON<string[]>(KEYS.favorites, []));
-    setFollows(readJSON<string[]>(KEYS.follows, []));
     setSavedSearches(readJSON<SavedSearch[]>(KEYS.savedSearches, []));
     const stored = localStorage.getItem(KEYS.credits);
     setCredits(stored ? (JSON.parse(stored) as CreditsState) : { ...DEFAULT_CREDITS });
@@ -133,30 +117,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // Persist on change, but never before hydration.
   useEffect(() => {
-    if (hydrated) localStorage.setItem(KEYS.favorites, JSON.stringify(favorites));
-  }, [favorites, hydrated]);
-  useEffect(() => {
-    if (hydrated) localStorage.setItem(KEYS.follows, JSON.stringify(follows));
-  }, [follows, hydrated]);
-  useEffect(() => {
     if (hydrated)
       localStorage.setItem(KEYS.savedSearches, JSON.stringify(savedSearches));
   }, [savedSearches, hydrated]);
   useEffect(() => {
     if (hydrated) localStorage.setItem(KEYS.credits, JSON.stringify(credits));
   }, [credits, hydrated]);
-
-  const toggleFavorite = useCallback((slug: string) => {
-    setFavorites((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
-  }, []);
-
-  const toggleFollow = useCallback((slug: string) => {
-    setFollows((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
-  }, []);
 
   const addSavedSearch = useCallback((label: string, criteria: SearchCriteria) => {
     setSavedSearches((prev) => {
@@ -208,12 +174,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const value: AppStateValue = {
     hydrated,
-    favorites,
-    isFavorite: (slug) => favorites.includes(slug),
-    toggleFavorite,
-    follows,
-    isFollowing: (slug) => follows.includes(slug),
-    toggleFollow,
     savedSearches,
     addSavedSearch,
     removeSavedSearch,
