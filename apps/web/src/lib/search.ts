@@ -1,11 +1,21 @@
 import type { Listing } from "@/lib/listings";
-import type { SearchCriteria } from "@/lib/store/app-state";
+
+/** A set of search filters — persisted as jsonb in saved_searches. */
+export interface SearchCriteria {
+  q?: string;
+  category?: string;
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  condition?: string;
+  listingType?: "offer" | "wanted";
+  sort?: string;
+}
 
 /**
  * Single source of truth for matching listings against a set of criteria.
  * Reused by /buscar, the category pages, and the saved-search "matching now"
- * counts. (`SearchCriteria` is a type-only import from the client store, so this
- * module stays usable from both server and client components.)
+ * counts. Plain module — usable from both server and client components.
  */
 export function filterListings(listings: Listing[], c: SearchCriteria): Listing[] {
   const q = c.q?.toLowerCase().trim();

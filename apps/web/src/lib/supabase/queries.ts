@@ -502,6 +502,27 @@ export async function getTiendaByOwner(userId: string): Promise<TiendaRow | null
   return (data as TiendaRow | null) ?? null;
 }
 
+// ── Saved searches ───────────────────────────────────────────────────────────
+
+export interface SavedSearchRow {
+  id: string;
+  label: string;
+  criteria: Record<string, unknown>;
+  alerts: boolean;
+  created_at: string;
+}
+
+export async function getSavedSearches(userId: string): Promise<SavedSearchRow[]> {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("saved_searches")
+    .select("id, label, criteria, alerts, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  return (data ?? []) as SavedSearchRow[];
+}
+
 // ── Profiles / seller requests ───────────────────────────────────────────────
 
 export async function getProfile(userId: string): Promise<Profile | null> {

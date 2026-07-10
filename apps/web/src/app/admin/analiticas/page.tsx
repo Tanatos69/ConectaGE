@@ -456,8 +456,11 @@ export default async function AdminAnaliticasPage({ searchParams }: Props) {
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Los ingresos por créditos no se muestran todavía: el sistema de pagos está pendiente de
-        implementación (&ldquo;próximamente&rdquo;).
+        Los ingresos por anuncios destacados se gestionan en{" "}
+        <Link href="/admin/destacados" className="text-primary hover:underline">
+          Destacados
+        </Link>{" "}
+        (confirmación manual de pagos).
       </p>
     </div>
   );

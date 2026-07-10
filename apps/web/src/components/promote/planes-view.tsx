@@ -1,25 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Star } from "lucide-react";
-import { CreditPacks } from "@/components/promote/credit-packs";
-import { promotionOptions, sellerPlans } from "@/lib/promotions";
+import { Star, Landmark, Smartphone, BadgeCheck } from "lucide-react";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-const waBase = "https://wa.me/240222000000?text=";
 
 const faq = [
   {
-    q: "¿Cómo funcionan los créditos?",
-    a: "Compras un paquete de créditos y los usas para destacar tus anuncios con las opciones de visibilidad. Cada opción tiene un coste en créditos y una duración.",
+    q: "¿Cómo destaco mi anuncio?",
+    a: "Desde 'Mi cuenta → Mis anuncios', pulsa 'Destacar' en el anuncio que quieras promocionar, elige el plan y el método de pago. Recibirás las instrucciones de pago al momento.",
   },
   {
     q: "¿Qué métodos de pago aceptáis?",
-    a: "Muni Dinero, Rosa Money, BGF Mobile y transferencia bancaria (CCEI, BGFI, BANGE). El pago con tarjeta llegará próximamente.",
+    a: "Dinero móvil (Muni Dinero) y transferencia bancaria (BANGE). Envía el comprobante por WhatsApp y confirmamos tu destacado, normalmente en menos de 24 horas.",
   },
   {
     q: "¿Cuándo empieza a contar el período de destacado?",
-    a: "El período comienza en el momento en que aplicas la promoción a tu anuncio desde 'Mis anuncios'.",
+    a: "El período comienza cuando confirmamos tu pago, no cuando envías la solicitud.",
   },
   {
     q: "¿Puedo destacar cualquier anuncio?",
@@ -27,74 +24,40 @@ const faq = [
   },
 ];
 
-export function PlanesView() {
+export function PlanesView({
+  prices,
+  paymentInstructions,
+  whatsapp,
+}: {
+  prices: Record<7 | 15 | 30, number>;
+  paymentInstructions: string;
+  whatsapp: string;
+}) {
+  const waBase = `https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}?text=`;
+
+  const plans: { days: 7 | 15 | 30; name: string; popular?: boolean; blurb: string }[] = [
+    { days: 7, name: "Impulso", blurb: "Para vender artículos concretos rápido." },
+    { days: 15, name: "Visibilidad", popular: true, blurb: "El equilibrio perfecto entre precio y alcance." },
+    { days: 30, name: "Máximo alcance", blurb: "Para vehículos, inmuebles y ventas importantes." },
+  ];
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Hero */}
       <div className="mb-12 text-center">
         <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">Destaca tu anuncio</h1>
         <p className="mx-auto mt-3 max-w-xl text-lg text-muted-foreground">
-          Llega a más compradores y vende más rápido con las opciones de visibilidad de ConectaGE.
+          Llega a más compradores y vende más rápido. Sin suscripciones: pagas solo por el
+          anuncio que quieres destacar.
         </p>
       </div>
 
-      {/* Visibility options */}
+      {/* Plans */}
       <section className="mb-14">
-        <h2 className="mb-1 text-xl font-bold text-foreground">Opciones de visibilidad</h2>
-        <p className="mb-5 text-sm text-muted-foreground">
-          Aplica estas promociones a tus anuncios usando créditos.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {promotionOptions.map((opt) => {
-            const Icon = opt.icon;
-            return (
-              <div
-                key={opt.id}
-                className={cn(
-                  "flex gap-4 rounded-2xl border bg-card p-5 shadow-sm",
-                  opt.highlight && "border-amber-300/70 bg-amber-50/40",
-                )}
-              >
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="size-6" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-bold text-foreground">{opt.name}</h3>
-                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                      {opt.credits} créditos
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{opt.description}</p>
-                  <p className="mt-2 text-xs font-medium text-muted-foreground">
-                    Duración: {opt.durationLabel}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Credit packs */}
-      <section className="mb-14">
-        <h2 className="mb-1 text-xl font-bold text-foreground">Compra créditos</h2>
-        <p className="mb-5 text-sm text-muted-foreground">
-          Elige un paquete. Cuanto mayor el paquete, más créditos de regalo.
-        </p>
-        <CreditPacks showBalance />
-      </section>
-
-      {/* Seller plans */}
-      <section className="mb-14">
-        <h2 className="mb-1 text-xl font-bold text-foreground">Planes para vendedores</h2>
-        <p className="mb-5 text-sm text-muted-foreground">
-          Para profesionales y empresas que venden de forma habitual.
-        </p>
         <div className="grid gap-5 sm:grid-cols-3">
-          {sellerPlans.map((plan) => (
+          {plans.map((plan) => (
             <div
-              key={plan.id}
+              key={plan.days}
               className={cn(
                 "relative flex flex-col rounded-2xl border bg-card p-6 shadow-sm",
                 plan.popular && "border-2 border-primary",
@@ -105,41 +68,49 @@ export function PlanesView() {
                   RECOMENDADO
                 </span>
               )}
-              <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-              <p className="mb-4 mt-1 text-2xl font-extrabold text-foreground">{plan.priceLabel}</p>
-              <ul className="mb-6 flex-1 space-y-2.5">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-green-600" />
-                    <span className="text-muted-foreground">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              {plan.id === "particular" ? (
-                <Link
-                  href="/publicar"
-                  className="rounded-xl border border-primary py-2.5 text-center text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
-                >
-                  Empezar gratis
-                </Link>
-              ) : (
-                <a
-                  href={`${waBase}${encodeURIComponent(`Hola, me interesa el plan ${plan.name} para vendedores en ConectaGE.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "rounded-xl py-2.5 text-center text-sm font-semibold transition-colors",
-                    plan.popular
-                      ? "bg-primary text-white hover:bg-primary/90"
-                      : "border border-primary text-primary hover:bg-primary hover:text-white",
-                  )}
-                >
-                  Contratar
-                </a>
-              )}
+              <div className="mb-2 flex items-center gap-2">
+                <Star className="size-5 fill-amber-400 text-amber-500" />
+                <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+              </div>
+              <p className="text-2xl font-extrabold text-foreground">
+                {formatNumber(prices[plan.days])} <span className="text-sm font-semibold">FCFA</span>
+              </p>
+              <p className="mt-0.5 text-sm font-medium text-primary">{plan.days} días destacado</p>
+              <p className="mb-6 mt-3 flex-1 text-sm text-muted-foreground">{plan.blurb}</p>
+              <Link
+                href="/mi-cuenta/anuncios"
+                className={cn(
+                  "rounded-xl py-2.5 text-center text-sm font-semibold transition-colors",
+                  plan.popular
+                    ? "bg-primary text-white hover:bg-primary/90"
+                    : "border border-primary text-primary hover:bg-primary hover:text-white",
+                )}
+              >
+                Destacar un anuncio
+              </Link>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* How to pay */}
+      <section className="mb-14 rounded-2xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-3 text-lg font-bold text-foreground">Cómo pagar</h2>
+        <div className="mb-4 flex flex-wrap gap-3">
+          <span className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-foreground">
+            <Smartphone className="size-4 text-primary" />
+            Dinero móvil
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-foreground">
+            <Landmark className="size-4 text-primary" />
+            Transferencia bancaria
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-medium text-foreground">
+            <BadgeCheck className="size-4 text-green-600" />
+            Confirmación en menos de 24 h
+          </span>
+        </div>
+        <p className="text-sm leading-relaxed text-muted-foreground">{paymentInstructions}</p>
       </section>
 
       {/* What "featured" means */}
@@ -178,7 +149,7 @@ export function PlanesView() {
           ¿Tienes dudas? Contáctanos y te ayudamos a elegir la mejor opción.
         </p>
         <a
-          href={`${waBase}${encodeURIComponent("Hola, quiero información sobre las opciones de visibilidad y créditos.")}`}
+          href={`${waBase}${encodeURIComponent("Hola, quiero información sobre los planes de anuncios destacados.")}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2.5 rounded-2xl bg-[#25D366] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1aab4f]"

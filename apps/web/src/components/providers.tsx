@@ -1,7 +1,6 @@
 "use client";
 
 import { LanguageProvider } from "@/lib/i18n/context";
-import { AppStateProvider } from "@/lib/store/app-state";
 import { AuthProvider } from "@/lib/auth/context";
 import { FollowsProvider } from "@/lib/store/follows-context";
 import { FavoritesProvider } from "@/lib/store/favorites-context";
@@ -22,9 +21,7 @@ export function Providers({
     <AuthProvider initialUser={initialUser} initialProfile={initialProfile}>
       <FollowsProvider>
         <FavoritesProvider>
-          <LanguageProvider>
-            <AppStateProvider>{children}</AppStateProvider>
-          </LanguageProvider>
+          <LanguageProvider>{children}</LanguageProvider>
         </FavoritesProvider>
       </FollowsProvider>
     </AuthProvider>

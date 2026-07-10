@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, Heart, Pencil, Trash2, Star, ExternalLink, Plus } from "lucide-react";
+import { Eye, Heart, Pencil, Trash2, Star, ExternalLink, Plus, Clock } from "lucide-react";
 import type { ListingStatus } from "@/lib/demo-user";
 import { formatPrice } from "@/lib/format";
-import { useAppState } from "@/lib/store/app-state";
 import { PromoteDialog } from "@/components/promote/promote-dialog";
+import type { FeaturedPlanDays } from "@/lib/actions/featured";
 import { deleteListingAction } from "@/lib/actions/listings";
 
 export interface MyListingItem {
@@ -24,6 +24,10 @@ export interface MyListingItem {
   views: number;
   favorites: number;
   postedLabel: string;
+  /** Currently featured (real listings.is_featured flag). */
+  featured: boolean;
+  /** Has a featured request awaiting admin payment confirmation. */
+  pendingFeatured: boolean;
 }
 
 const tabs: { key: ListingStatus | "all"; label: string }[] = [
@@ -48,13 +52,20 @@ const statusLabel: Record<ListingStatus, string> = {
   expired: "Expirado",
 };
 
-export function MyListingsList({ items }: { items: MyListingItem[] }) {
+export function MyListingsList({
+  items,
+  featuredPrices,
+  paymentInstructions,
+}: {
+  items: MyListingItem[];
+  featuredPrices: Record<FeaturedPlanDays, number>;
+  paymentInstructions: string;
+}) {
   const [active, setActive] = useState<ListingStatus | "all">("all");
-  const [promote, setPromote] = useState<{ slug: string; title: string } | null>(null);
+  const [promote, setPromote] = useState<{ id: string; title: string } | null>(null);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const { isPromoted } = useAppState();
 
   const listings = active === "all" ? items : items.filter((l) => l.status === active);
 
@@ -190,14 +201,19 @@ export function MyListingsList({ items }: { items: MyListingItem[] }) {
                   Editar
                 </Link>
                 {listing.status === "published" &&
-                  (isPromoted(listing.slug) ? (
+                  (listing.featured ? (
                     <span className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
                       <Star className="size-3.5 fill-amber-400 text-amber-500" />
                       Destacado
                     </span>
+                  ) : listing.pendingFeatured ? (
+                    <span className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-1.5 text-xs font-medium text-amber-700">
+                      <Clock className="size-3.5" />
+                      Destacado pendiente de pago
+                    </span>
                   ) : (
                     <button
-                      onClick={() => setPromote({ slug: listing.slug, title: listing.title })}
+                      onClick={() => setPromote({ id: listing.id, title: listing.title })}
                       className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100"
                     >
                       <Star className="size-3.5" />
@@ -220,8 +236,10 @@ export function MyListingsList({ items }: { items: MyListingItem[] }) {
 
       {promote && (
         <PromoteDialog
-          slug={promote.slug}
+          listingId={promote.id}
           title={promote.title}
+          prices={featuredPrices}
+          paymentInstructions={paymentInstructions}
           onClose={() => setPromote(null)}
         />
       )}

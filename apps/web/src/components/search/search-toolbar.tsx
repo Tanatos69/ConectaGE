@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useTransition, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bookmark, BookmarkCheck } from "lucide-react";
-import { useAppState, type SearchCriteria } from "@/lib/store/app-state";
-import { criteriaToSearchUrl } from "@/lib/search";
+import { useAuth } from "@/lib/auth/context";
+import { addSavedSearchAction } from "@/lib/actions/saved-searches";
+import { criteriaToSearchUrl, type SearchCriteria } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 const chips: { key: "offer" | "wanted" | undefined; label: string }[] = [
@@ -15,15 +17,22 @@ const chips: { key: "offer" | "wanted" | undefined; label: string }[] = [
 
 /**
  * Type filter (Todos / Ofertas / Busco) + "Guardar búsqueda". The chips are
- * links that set the `tipo` URL param (functional, server-side filtering); the
- * save button stores the active criteria for alerts.
+ * links that set the `tipo` URL param (functional, server-side filtering);
+ * the save button persists the active criteria to saved_searches for alerts
+ * (login required — anonymous users are sent to /login first).
  */
 export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria; leading?: ReactNode }) {
-  const { addSavedSearch } = useAppState();
+  const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     setSaved(false);
+    setError("");
   }, [criteria]);
 
   function buildLabel() {
@@ -32,6 +41,20 @@ export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria;
     if (criteria.listingType === "wanted") parts.push("Busco");
     if (criteria.city) parts.push(criteria.city);
     return parts.length > 0 ? parts.join(" · ") : "Todos los anuncios";
+  }
+
+  function save() {
+    if (!user) {
+      const qs = searchParams.toString();
+      router.push(`/login?next=${encodeURIComponent(qs ? `${pathname}?${qs}` : pathname)}`);
+      return;
+    }
+    setError("");
+    startTransition(async () => {
+      const result = await addSavedSearchAction(buildLabel(), criteria);
+      if (result?.error) setError(result.error);
+      else setSaved(true);
+    });
   }
 
   return (
@@ -57,7 +80,8 @@ export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria;
         })}
       </div>
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        {error && <span className="text-xs text-destructive">{error}</span>}
         {saved ? (
           <Link
             href="/mi-cuenta/busquedas"
@@ -69,14 +93,12 @@ export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria;
         ) : (
           <button
             type="button"
-            onClick={() => {
-              addSavedSearch(buildLabel(), criteria);
-              setSaved(true);
-            }}
-            className="flex items-center gap-1.5 rounded-full border border-primary px-3.5 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+            onClick={save}
+            disabled={pending}
+            className="flex items-center gap-1.5 rounded-full border border-primary px-3.5 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-60"
           >
             <Bookmark className="size-4" />
-            Guardar búsqueda
+            {pending ? "Guardando…" : "Guardar búsqueda"}
           </button>
         )}
       </div>
