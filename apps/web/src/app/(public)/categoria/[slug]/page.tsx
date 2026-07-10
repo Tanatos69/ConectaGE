@@ -2,9 +2,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { categories } from "@/lib/categories";
-import { subcategories } from "@/lib/subcategories";
-import { getPublishedListings, logEvent } from "@/lib/supabase/queries";
+import { iconByName } from "@/lib/categories";
+import {
+  getPublishedListings,
+  getCategoryTree,
+  getCategoryListingCounts,
+  logEvent,
+} from "@/lib/supabase/queries";
 import { filterListings } from "@/lib/search";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
@@ -18,7 +22,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const cat = categories.find((c) => c.slug === slug);
+  const tree = await getCategoryTree();
+  const cat = tree.find((c) => c.parentId === null && c.slug === slug);
   if (!cat) return {};
   return {
     title: `${cat.name} en Guinea Ecuatorial`,
@@ -29,11 +34,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tipo } = await searchParams;
-  const cat = categories.find((c) => c.slug === slug);
+  const [tree, counts] = await Promise.all([getCategoryTree(), getCategoryListingCounts()]);
+  const cat = tree.find((c) => c.parentId === null && c.slug === slug);
   if (!cat) notFound();
 
+  const icon = (cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen;
+  const catCount = counts.byCategory.get(cat.slug) ?? 0;
   const listingType = tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined;
-  const subs = subcategories[cat.slug] ?? [];
+  const subs = tree.filter((c) => c.parentId === cat.id);
   const listings = filterListings(await getPublishedListings(), {
     category: slug,
     listingType,
@@ -55,11 +63,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       />
 
       <div className="mb-5 mt-6 flex items-center gap-3">
-        <FontAwesomeIcon icon={cat.icon} className="size-8 text-muted-foreground" aria-hidden="true" />
+        <FontAwesomeIcon icon={icon} className="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{cat.name}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {cat.count.toLocaleString("es-ES")} anuncios publicados
+            {catCount.toLocaleString("es-ES")} anuncios publicados
           </p>
         </div>
       </div>
@@ -67,17 +75,17 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       {subs.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           <span className="flex items-center rounded-full border-2 border-primary bg-primary/10 px-3.5 py-1.5 text-sm font-medium text-primary">
-            Todos ({cat.count.toLocaleString("es-ES")})
+            Todos ({catCount.toLocaleString("es-ES")})
           </span>
           {subs.map((sub) => (
             <Link
-              key={sub.slug}
+              key={sub.id}
               href={`/categoria/${cat.slug}/${sub.slug}`}
               className="flex items-center rounded-full border border-input bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:bg-accent hover:text-foreground"
             >
               {sub.name}
               <span className="ml-1.5 text-xs text-muted-foreground/70">
-                ({sub.count.toLocaleString("es-ES")})
+                ({(counts.bySubcategory.get(`${cat.slug}:${sub.slug}`) ?? 0).toLocaleString("es-ES")})
               </span>
             </Link>
           ))}
@@ -131,7 +139,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FontAwesomeIcon icon={cat.icon} className="mb-4 size-12 text-muted-foreground/40" aria-hidden="true" />
+              <FontAwesomeIcon icon={icon} className="mb-4 size-12 text-muted-foreground/40" aria-hidden="true" />
               <h2 className="text-lg font-semibold text-foreground">
                 No hay anuncios en esta categoría aún
               </h2>

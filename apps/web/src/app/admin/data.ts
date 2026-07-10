@@ -1,7 +1,14 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { Profile, ListingRow, ReportRow, ReviewRow, TiendaRow } from "@/lib/supabase/types";
+import type {
+  Profile,
+  ListingRow,
+  ReportRow,
+  ReviewRow,
+  TiendaRow,
+  FeaturedRequestRow,
+} from "@/lib/supabase/types";
 
 /**
  * Service-role reads for the admin section (bypasses RLS — every page using
@@ -129,6 +136,8 @@ export interface AdminUserRow {
   phone: string | null;
   city: string | null;
   role: Profile["role"];
+  blocked_at: string | null;
+  blocked_reason: string | null;
   created_at: string;
   listingsCount: number;
 }
@@ -139,7 +148,7 @@ export async function getAdminUsers(): Promise<AdminUserRow[]> {
   const [{ data: profiles }, { data: listings }] = await Promise.all([
     admin
       .from("profiles")
-      .select("id, full_name, email, phone, city, role, created_at")
+      .select("id, full_name, email, phone, city, role, blocked_at, blocked_reason, created_at")
       .order("created_at", { ascending: false })
       .limit(500),
     admin.from("listings").select("seller_id"),
@@ -154,6 +163,33 @@ export async function getAdminUsers(): Promise<AdminUserRow[]> {
     ...p,
     listingsCount: countBySeller.get(p.id) ?? 0,
   }));
+}
+
+export interface AdminUserDetail {
+  profile: Profile;
+  listings: Pick<ListingRow, "id" | "slug" | "title" | "status" | "created_at" | "views_count">[];
+  tienda: Pick<TiendaRow, "id" | "slug" | "name" | "verified"> | null;
+}
+
+export async function getAdminUserDetail(userId: string): Promise<AdminUserDetail | null> {
+  if (!ready()) return null;
+  const admin = createAdminClient();
+  const [{ data: profile }, { data: listings }, { data: tienda }] = await Promise.all([
+    admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    admin
+      .from("listings")
+      .select("id, slug, title, status, created_at, views_count")
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false }),
+    admin.from("tiendas").select("id, slug, name, verified").eq("owner_id", userId).maybeSingle(),
+  ]);
+  if (!profile) return null;
+
+  return {
+    profile: profile as Profile,
+    listings: (listings ?? []) as AdminUserDetail["listings"],
+    tienda: (tienda as AdminUserDetail["tienda"]) ?? null,
+  };
 }
 
 export interface AdminListingRow {
@@ -200,6 +236,113 @@ export async function getAdminListings(): Promise<AdminListingRow[]> {
     sellerName: byId.get(r.seller_id)?.full_name || "—",
     sellerEmail: byId.get(r.seller_id)?.email || "—",
   }));
+}
+
+function normalizeTitle(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+export interface AdminModerationListing {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  price: number | null;
+  city: string;
+  category_slug: string;
+  images: string[];
+  created_at: string;
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  sellerMemberSince: string;
+  /** Same seller's other published listings with a near-identical title. */
+  duplicateCount: number;
+  pendingReportCount: number;
+}
+
+/**
+ * Real post-publish review queue (item 8): listings already auto-publish,
+ * so this is a spot-check tool, not a pre-publish gate. Duplicate detection
+ * is a simple normalized-title match across a seller's own published
+ * listings — no ML/scoring, just a signal for the admin to look twice.
+ */
+export async function getAdminModerationListings(): Promise<AdminModerationListing[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const [{ data: listings }, { data: allTitles }, { data: pendingReports }] = await Promise.all([
+    admin
+      .from("listings")
+      .select("id, slug, title, description, price, city, category_slug, images, created_at, seller_id")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    // Lightweight full scan (title only) so duplicate counts aren't limited
+    // to whatever fits in the page above — this app's whole scale is small.
+    admin.from("listings").select("seller_id, title").eq("status", "published"),
+    admin.from("reports").select("listing_slug").eq("status", "pending"),
+  ]);
+
+  const rows = (listings ?? []) as {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    price: number | null;
+    city: string;
+    category_slug: string;
+    images: string[];
+    created_at: string;
+    seller_id: string;
+  }[];
+  if (rows.length === 0) return [];
+
+  const sellerIds = [...new Set(rows.map((r) => r.seller_id))];
+  const { data: sellers } = await admin
+    .from("profiles")
+    .select("id, full_name, email, created_at")
+    .in("id", sellerIds);
+  const sellerById = new Map(
+    (
+      (sellers ?? []) as { id: string; full_name: string; email: string; created_at: string }[]
+    ).map((s) => [s.id, s]),
+  );
+
+  const reportCountBySlug = new Map<string, number>();
+  for (const r of (pendingReports ?? []) as { listing_slug: string }[]) {
+    reportCountBySlug.set(r.listing_slug, (reportCountBySlug.get(r.listing_slug) ?? 0) + 1);
+  }
+
+  const titlesBySeller = new Map<string, string[]>();
+  for (const r of (allTitles ?? []) as { seller_id: string; title: string }[]) {
+    const list = titlesBySeller.get(r.seller_id) ?? [];
+    list.push(normalizeTitle(r.title));
+    titlesBySeller.set(r.seller_id, list);
+  }
+
+  return rows.map((r) => {
+    const seller = sellerById.get(r.seller_id);
+    const normalized = normalizeTitle(r.title);
+    const sellerTitles = titlesBySeller.get(r.seller_id) ?? [];
+    const matches = sellerTitles.filter((t) => t === normalized).length;
+    return {
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      description: r.description,
+      price: r.price,
+      city: r.city,
+      category_slug: r.category_slug,
+      images: r.images,
+      created_at: r.created_at,
+      sellerId: r.seller_id,
+      sellerName: seller?.full_name || "—",
+      sellerEmail: seller?.email || "—",
+      sellerMemberSince: seller?.created_at || r.created_at,
+      duplicateCount: Math.max(0, matches - 1),
+      pendingReportCount: reportCountBySlug.get(r.slug) ?? 0,
+    };
+  });
 }
 
 export interface AdminReviewRow extends ReviewRow {
@@ -253,7 +396,11 @@ export async function getAdminReviews(): Promise<AdminReviewRow[]> {
 export interface AdminReportRow extends ReportRow {
   reporterName: string;
   reporterEmail: string;
+  listingId: string | null;
   listingTitle: string;
+  sellerId: string | null;
+  sellerName: string;
+  sellerEmail: string;
 }
 
 export async function getAdminReports(): Promise<AdminReportRow[]> {
@@ -274,23 +421,198 @@ export async function getAdminReports(): Promise<AdminReportRow[]> {
       .in("id", [...new Set(rows.map((r) => r.reporter_id))]),
     admin
       .from("listings")
-      .select("slug, title")
+      .select("id, slug, title, seller_id")
       .in("slug", [...new Set(rows.map((r) => r.listing_slug))]),
   ]);
 
   const reporterById = new Map(
     ((reporters ?? []) as { id: string; full_name: string; email: string }[]).map((p) => [p.id, p]),
   );
-  const titleBySlug = new Map(
-    ((listings ?? []) as { slug: string; title: string }[]).map((l) => [l.slug, l.title]),
+  const listingBySlug = new Map(
+    (
+      (listings ?? []) as { id: string; slug: string; title: string; seller_id: string }[]
+    ).map((l) => [l.slug, l]),
+  );
+
+  const sellerIds = [...new Set(Array.from(listingBySlug.values()).map((l) => l.seller_id))];
+  const { data: sellers } =
+    sellerIds.length > 0
+      ? await admin.from("profiles").select("id, full_name, email").in("id", sellerIds)
+      : { data: [] };
+  const sellerById = new Map(
+    ((sellers ?? []) as { id: string; full_name: string; email: string }[]).map((p) => [p.id, p]),
+  );
+
+  return rows.map((r) => {
+    const listing = listingBySlug.get(r.listing_slug);
+    const seller = listing ? sellerById.get(listing.seller_id) : undefined;
+    return {
+      ...r,
+      reporterName: reporterById.get(r.reporter_id)?.full_name || "—",
+      reporterEmail: reporterById.get(r.reporter_id)?.email || "—",
+      listingId: listing?.id ?? null,
+      listingTitle: listing?.title || r.listing_slug,
+      sellerId: listing?.seller_id ?? null,
+      sellerName: seller?.full_name || "—",
+      sellerEmail: seller?.email || "—",
+    };
+  });
+}
+
+export interface AdminTiendaRow {
+  id: string;
+  slug: string;
+  name: string;
+  city: string;
+  category_slug: string;
+  verified: boolean;
+  followers_count: number;
+  created_at: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail: string;
+  listingsCount: number;
+}
+
+export async function getAdminTiendas(): Promise<AdminTiendaRow[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const [{ data: tiendas }, { data: listings }] = await Promise.all([
+    admin
+      .from("tiendas")
+      .select("id, slug, name, city, category_slug, verified, followers_count, created_at, owner_id")
+      .order("created_at", { ascending: false }),
+    admin.from("listings").select("seller_id"),
+  ]);
+  const rows = (tiendas ?? []) as {
+    id: string;
+    slug: string;
+    name: string;
+    city: string;
+    category_slug: string;
+    verified: boolean;
+    followers_count: number;
+    created_at: string;
+    owner_id: string;
+  }[];
+  if (rows.length === 0) return [];
+
+  const countBySeller = new Map<string, number>();
+  for (const l of (listings ?? []) as { seller_id: string }[]) {
+    countBySeller.set(l.seller_id, (countBySeller.get(l.seller_id) ?? 0) + 1);
+  }
+
+  const { data: owners } = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", [...new Set(rows.map((r) => r.owner_id))]);
+  const ownerById = new Map(
+    ((owners ?? []) as { id: string; full_name: string; email: string }[]).map((o) => [o.id, o]),
   );
 
   return rows.map((r) => ({
-    ...r,
-    reporterName: reporterById.get(r.reporter_id)?.full_name || "—",
-    reporterEmail: reporterById.get(r.reporter_id)?.email || "—",
-    listingTitle: titleBySlug.get(r.listing_slug) || r.listing_slug,
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    city: r.city,
+    category_slug: r.category_slug,
+    verified: r.verified,
+    followers_count: r.followers_count,
+    created_at: r.created_at,
+    ownerId: r.owner_id,
+    ownerName: ownerById.get(r.owner_id)?.full_name || "—",
+    ownerEmail: ownerById.get(r.owner_id)?.email || "—",
+    listingsCount: countBySeller.get(r.owner_id) ?? 0,
   }));
+}
+
+export interface AdminCategoryNode {
+  id: string;
+  slug: string;
+  parentId: string | null;
+  name: string;
+  icon: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/** Unlike the public getCategoryTree(), this includes inactive rows too so
+ * an admin can find and re-enable something they previously hid. */
+export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("categories")
+    .select("id, slug, parent_id, name, icon, sort_order, is_active")
+    .order("sort_order", { ascending: true });
+
+  return (
+    (data ?? []) as {
+      id: string;
+      slug: string;
+      parent_id: string | null;
+      name: string;
+      icon: string | null;
+      sort_order: number;
+      is_active: boolean;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    parentId: r.parent_id,
+    name: r.name,
+    icon: r.icon,
+    sortOrder: r.sort_order,
+    isActive: r.is_active,
+  }));
+}
+
+export interface AdminFeaturedRequestRow extends FeaturedRequestRow {
+  listingSlug: string;
+  listingTitle: string;
+  sellerName: string;
+  sellerEmail: string;
+}
+
+export async function getAdminFeaturedRequests(): Promise<AdminFeaturedRequestRow[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const { data: requests } = await admin
+    .from("featured_requests")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  const rows = (requests ?? []) as FeaturedRequestRow[];
+  if (rows.length === 0) return [];
+
+  const [{ data: listings }, { data: users }] = await Promise.all([
+    admin
+      .from("listings")
+      .select("id, slug, title")
+      .in("id", [...new Set(rows.map((r) => r.listing_id))]),
+    admin
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", [...new Set(rows.map((r) => r.user_id))]),
+  ]);
+  const listingById = new Map(
+    ((listings ?? []) as { id: string; slug: string; title: string }[]).map((l) => [l.id, l]),
+  );
+  const userById = new Map(
+    ((users ?? []) as { id: string; full_name: string; email: string }[]).map((u) => [u.id, u]),
+  );
+
+  return rows.map((r) => {
+    const listing = listingById.get(r.listing_id);
+    const user = userById.get(r.user_id);
+    return {
+      ...r,
+      listingSlug: listing?.slug ?? "",
+      listingTitle: listing?.title ?? "—",
+      sellerName: user?.full_name || "—",
+      sellerEmail: user?.email || "—",
+    };
+  });
 }
 
 export type { TiendaRow };

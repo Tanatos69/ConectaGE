@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen">
-      <AdminBanner />
+      <AdminBanner name={profile.full_name} avatarUrl={profile.avatar_url} />
       <AdminMobileHeader badges={badges} />
 
       <div className="mx-auto flex max-w-screen-xl">

@@ -148,6 +148,8 @@ export interface Translations {
     openMenu: string;
     restricted: string;
     restrictedRole: string;
+    /** Optional: missing keys fall back to Spanish (admin is Spanish-only). */
+    logout?: string;
   };
   stores: {
     follow: string;

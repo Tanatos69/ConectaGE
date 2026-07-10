@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { categories } from "@/lib/categories";
-import { subcategories } from "@/lib/subcategories";
+import { iconByName } from "@/lib/categories";
+import { getCategoryTree, getCategoryListingCounts } from "@/lib/supabase/queries";
 import { recentListings } from "@/lib/listings";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterSidebar } from "@/components/listing/filter-sidebar";
@@ -15,8 +15,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, subslug } = await params;
-  const cat = categories.find((c) => c.slug === slug);
-  const sub = (subcategories[slug] ?? []).find((s) => s.slug === subslug);
+  const tree = await getCategoryTree();
+  const cat = tree.find((c) => c.parentId === null && c.slug === slug);
+  const sub = cat && tree.find((c) => c.parentId === cat.id && c.slug === subslug);
   if (!cat || !sub) return {};
   return {
     title: `${sub.name} — ${cat.name}`,
@@ -26,11 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SubcategoryPage({ params }: Props) {
   const { slug, subslug } = await params;
-  const cat = categories.find((c) => c.slug === slug);
-  const subs = subcategories[slug] ?? [];
+  const [tree, counts] = await Promise.all([getCategoryTree(), getCategoryListingCounts()]);
+  const cat = tree.find((c) => c.parentId === null && c.slug === slug);
+  const subs = cat ? tree.filter((c) => c.parentId === cat.id) : [];
   const sub = subs.find((s) => s.slug === subslug);
   if (!cat || !sub) notFound();
 
+  const icon = (cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen;
+  const subCount = counts.bySubcategory.get(`${cat.slug}:${sub.slug}`) ?? 0;
   const listings = recentListings.slice(0, 6);
 
   return (
@@ -44,11 +48,11 @@ export default async function SubcategoryPage({ params }: Props) {
       />
 
       <div className="mb-5 mt-6 flex items-center gap-3">
-        <FontAwesomeIcon icon={cat.icon} className="size-8 text-muted-foreground" aria-hidden="true" />
+        <FontAwesomeIcon icon={icon} className="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{sub.name}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {sub.count.toLocaleString("es-ES")} anuncios en {cat.name}
+            {subCount.toLocaleString("es-ES")} anuncios en {cat.name}
           </p>
         </div>
       </div>
@@ -66,7 +70,7 @@ export default async function SubcategoryPage({ params }: Props) {
         </Link>
         {subs.map((s) => (
           <Link
-            key={s.slug}
+            key={s.id}
             href={`/categoria/${cat.slug}/${s.slug}`}
             className={`flex items-center rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               s.slug === sub.slug

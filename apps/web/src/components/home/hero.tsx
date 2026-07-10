@@ -4,12 +4,13 @@ import Link from "next/link";
 import { Search, MapPin, ShieldCheck, Zap, Tag } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { buttonVariants } from "@/components/ui/button";
-import { categories } from "@/lib/categories";
+import { iconByName, translatedCategoryName } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 import { GE_CITIES } from "@/lib/cities";
+import type { CategoryNode } from "@/lib/supabase/queries";
 
-export function Hero() {
+export function Hero({ categories }: { categories: CategoryNode[] }) {
   const { t } = useTranslation();
 
   return (
@@ -123,12 +124,16 @@ export function Hero() {
             <span className="text-sm text-muted-foreground">{t("hero.popular")}</span>
             {categories.slice(0, 5).map((cat) => (
               <Link
-                key={cat.slug}
+                key={cat.id}
                 href={`/categoria/${cat.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary hover:text-primary"
               >
-                <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0" aria-hidden="true" />
-                {t(`categories.${cat.slug}`)}
+                <FontAwesomeIcon
+                  icon={(cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen}
+                  className="size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                {translatedCategoryName(t, cat.slug, cat.name)}
               </Link>
             ))}
           </div>

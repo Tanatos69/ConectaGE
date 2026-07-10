@@ -43,6 +43,7 @@ interface DetailData {
   description: string;
   images: string[];
   extraFields: Record<string, string>;
+  quantity?: number | null;
   whatsappNumber: string;
   phoneNumber?: string;
   viewsCount?: number;
@@ -63,6 +64,7 @@ async function loadDetail(slug: string): Promise<DetailData | null> {
       description: db.row.description,
       images: db.row.images.length > 0 ? db.row.images : [db.listing.image],
       extraFields: db.row.extra_fields ?? {},
+      quantity: db.row.quantity,
       whatsappNumber: db.row.whatsapp,
       phoneNumber: db.row.show_phone && db.row.phone ? db.row.phone : undefined,
       viewsCount: db.row.views_count,
@@ -259,12 +261,20 @@ export default async function ListingDetailPage({ params }: Props) {
           )}
 
           {/* Extra fields */}
-          {Object.keys(data.extraFields).length > 0 && (
+          {(Object.keys(data.extraFields).length > 0 || data.quantity != null) && (
             <div className="rounded-2xl border bg-card p-5 shadow-sm">
               <h2 className="mb-4 text-base font-semibold text-foreground">
                 Detalles del artículo
               </h2>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                {data.quantity != null && (
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Cantidad disponible
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-semibold text-foreground">{data.quantity}</dd>
+                  </div>
+                )}
                 {Object.entries(data.extraFields).map(([key, value]) => (
                   <div key={key}>
                     <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

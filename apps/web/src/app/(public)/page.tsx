@@ -6,18 +6,26 @@ import { RecentListings } from "@/components/home/recent-listings";
 import { StoresStrip } from "@/components/home/stores-strip";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { PaymentsStrip } from "@/components/home/payments-strip";
-import { getPublishedListings, getFeaturedListings } from "@/lib/supabase/queries";
+import {
+  getPublishedListings,
+  getFeaturedListings,
+  getCategoryTree,
+  getCategoryListingCounts,
+} from "@/lib/supabase/queries";
 
 export default async function Home() {
-  const [listings, featured] = await Promise.all([
+  const [listings, featured, tree, counts] = await Promise.all([
     getPublishedListings(),
     getFeaturedListings(),
+    getCategoryTree(),
+    getCategoryListingCounts(),
   ]);
+  const topLevelCategories = tree.filter((c) => c.parentId === null);
 
   return (
     <>
-      <Hero />
-      <CategoryGrid />
+      <Hero categories={topLevelCategories} />
+      <CategoryGrid categories={topLevelCategories} counts={counts.byCategory} />
       <FeaturedListings featured={featured} all={listings} />
       <StatsBar />
       <RecentListings listings={listings.slice(0, 14)} />

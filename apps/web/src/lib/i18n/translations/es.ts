@@ -169,6 +169,7 @@ export const es: Translations = {
     openMenu: "Abrir menú admin",
     restricted: "Área restringida.",
     restrictedRole: "Acceso limitado a administradores.",
+    logout: "Cerrar sesión",
   },
   stores: {
     follow: "Seguir",

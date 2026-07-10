@@ -6,13 +6,13 @@ import Link from "next/link";
 import { Star, SlidersHorizontal, Crown, X } from "lucide-react";
 import { ListingCard } from "@/components/listing/listing-card";
 import { featuredListings, allListings } from "@/lib/listings";
-import { categories } from "@/lib/categories";
 import { useAppState } from "@/lib/store/app-state";
 import { cn } from "@/lib/utils";
+import type { CategoryNode } from "@/lib/supabase/queries";
 
 const CITIES = ["Malabo", "Bata", "Mongomo", "Ebebiyín"];
 
-export function DestacadosView() {
+export function DestacadosView({ categories }: { categories: CategoryNode[] }) {
   const { isPromoted } = useAppState();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -92,7 +92,7 @@ export function DestacadosView() {
                 </button>
                 {categories.slice(0, 8).map((c) => (
                   <button
-                    key={c.slug}
+                    key={c.id}
                     onClick={() => setParam("cat", c.slug)}
                     className={cn(
                       "w-full rounded-lg px-3 py-1.5 text-left text-sm transition-colors hover:bg-secondary",

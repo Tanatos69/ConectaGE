@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { getPublishedListings, logEvent } from "@/lib/supabase/queries";
-import { categories } from "@/lib/categories";
+import { getPublishedListings, getCategoryTree, logEvent } from "@/lib/supabase/queries";
+import { iconByName } from "@/lib/categories";
 import { filterListings } from "@/lib/search";
 import type { SearchCriteria } from "@/lib/store/app-state";
 import { ListingCard } from "@/components/listing/listing-card";
@@ -34,7 +34,11 @@ export default async function BuscarPage({ searchParams }: Props) {
     listingType: tipo === "wanted" ? "wanted" : tipo === "offer" ? "offer" : undefined,
   };
 
-  const results = filterListings(await getPublishedListings(), criteria);
+  const [results, categoryTree] = await Promise.all([
+    getPublishedListings().then((listings) => filterListings(listings, criteria)),
+    getCategoryTree(),
+  ]);
+  const topLevelCategories = categoryTree.filter((c) => c.parentId === null);
 
   // Consent-gated analytics — only when an actual search/filter was made.
   if (criteria.q || criteria.category || criteria.city || criteria.listingType) {
@@ -102,13 +106,17 @@ export default async function BuscarPage({ searchParams }: Props) {
                 Intenta con otras palabras o explora nuestras categorías.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {categories.slice(0, 6).map((category) => (
+                {topLevelCategories.slice(0, 6).map((category) => (
                   <Link
-                    key={category.slug}
+                    key={category.id}
                     href={`/categoria/${category.slug}`}
                     className="flex items-center gap-1.5 rounded-full border border-input bg-background px-3.5 py-1.5 text-sm font-medium transition-colors hover:bg-secondary"
                   >
-                    <FontAwesomeIcon icon={category.icon} className="size-4 shrink-0" aria-hidden="true" />
+                    <FontAwesomeIcon
+                      icon={(category.icon && iconByName[category.icon]) || iconByName.faBoxOpen}
+                      className="size-4 shrink-0"
+                      aria-hidden="true"
+                    />
                     {category.name}
                   </Link>
                 ))}

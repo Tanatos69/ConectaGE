@@ -6,6 +6,7 @@ import Link from "next/link";
 import { updateListingAction } from "@/lib/actions/listings";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { GE_CITIES } from "@/lib/cities";
+import { QUANTITY_CATEGORIES } from "@/lib/categories";
 
 interface EditableListing {
   id: string;
@@ -16,6 +17,8 @@ interface EditableListing {
   city: string;
   condition: "new" | "used" | "refurbished" | null;
   whatsapp: string;
+  categorySlug: string;
+  quantity: number | null;
 }
 
 const inputClass =
@@ -31,9 +34,11 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
     city: listing.city,
     condition: listing.condition ?? "used",
     whatsapp: listing.whatsapp,
+    quantity: listing.quantity != null ? String(listing.quantity) : "",
   });
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const showQuantity = QUANTITY_CATEGORIES.has(listing.categorySlug);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +52,7 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
         city: form.city,
         condition: listing.condition === null ? null : form.condition,
         whatsapp: form.whatsapp,
+        quantity: showQuantity && form.quantity ? Number(form.quantity) : null,
       });
       if (result?.error) {
         setError(result.error);
@@ -147,6 +153,21 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
                 <option value="used">Segunda mano</option>
                 <option value="refurbished">Reacondicionado</option>
               </select>
+            </div>
+          )}
+          {showQuantity && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Cantidad disponible
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                placeholder="Ej: 5"
+                className={inputClass}
+              />
             </div>
           )}
         </div>

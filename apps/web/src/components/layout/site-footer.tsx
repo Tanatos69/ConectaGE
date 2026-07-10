@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-import { categories } from "@/lib/categories";
+import { translatedCategoryName } from "@/lib/categories";
 import { paymentMethods } from "@/lib/payments-logistics";
 import { useTranslation } from "@/lib/i18n/context";
+import type { CategoryNode } from "@/lib/supabase/queries";
 
-export function SiteFooter() {
+export function SiteFooter({ categories }: { categories: CategoryNode[] }) {
   const { t } = useTranslation();
 
   const navColumns = [
@@ -90,12 +91,12 @@ export function SiteFooter() {
             <h3 className="text-sm font-semibold text-foreground">{t("footer.popular")}</h3>
             <ul className="mt-4 space-y-3">
               {categories.slice(0, 5).map((cat) => (
-                <li key={cat.slug}>
+                <li key={cat.id}>
                   <Link
                     href={`/categoria/${cat.slug}`}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary"
                   >
-                    {t(`categories.${cat.slug}`)}
+                    {translatedCategoryName(t, cat.slug, cat.name)}
                   </Link>
                 </li>
               ))}

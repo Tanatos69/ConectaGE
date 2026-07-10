@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Star, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Star, MessageSquare, ChevronDown } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
 import {
@@ -202,10 +203,19 @@ export function ReviewsSection({
   /** Anti review-bombing: the form only unlocks after a WhatsApp contact. */
   hasContacted?: boolean;
 }) {
+  const router = useRouter();
   const hasTarget = Boolean((listingId && listingSlug) || tiendaSlug);
   const replyPath = tiendaSlug ? `/tienda/${tiendaSlug}` : `/anuncios/${listingSlug}`;
   const loginNext = tiendaSlug ? `/tienda/${tiendaSlug}` : `/anuncios/${listingSlug}`;
   const canReview = hasTarget && isLoggedIn && !isSeller && !alreadyReviewed && hasContacted;
+
+  const [showAll, setShowAll] = useState(false);
+  const visibleReviews = showAll ? reviews : reviews.slice(0, 3);
+
+  function handleSeeMore() {
+    if (isLoggedIn) setShowAll(true);
+    else router.push(`/login?next=${loginNext}`);
+  }
 
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -225,7 +235,7 @@ export function ReviewsSection({
 
       {reviews.length > 0 && (
         <div className="space-y-5">
-          {reviews.map((review) => (
+          {visibleReviews.map((review) => (
             <article key={review.id} className="border-t pt-4 first:border-t-0 first:pt-0">
               <div className="flex items-start gap-3">
                 <UserAvatar name={review.reviewerName} size="sm" />
@@ -254,6 +264,17 @@ export function ReviewsSection({
             </article>
           ))}
         </div>
+      )}
+
+      {!showAll && reviews.length > 3 && (
+        <button
+          type="button"
+          onClick={handleSeeMore}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-input py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <ChevronDown className="size-4" />
+          Ver más reseñas ({reviews.length - 3})
+        </button>
       )}
 
       <div className="mt-5 border-t pt-4">

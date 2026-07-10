@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured, NOT_CONFIGURED_ERROR } from "@/lib/supabase/config";
+import { DEFAULT_ICON_NAME } from "@/lib/categories";
 import type { ActionResult } from "./auth";
 
 /**
@@ -36,6 +37,30 @@ function storeSlugify(name: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 50);
   return base || "tienda";
+}
+
+/** Shared by every path that removes a listing outright, so the seller is
+ * told once, consistently, instead of drifting between two message strings. */
+async function notifyListingRemoved(
+  admin: ReturnType<typeof createAdminClient>,
+  listing: { seller_id: string; title: string },
+): Promise<void> {
+  await admin.from("notifications").insert({
+    user_id: listing.seller_id,
+    type: "listing_removed",
+    title: listing.title,
+    message: `Tu anuncio "${listing.title}" ha sido eliminado por un administrador.`,
+  });
+}
+
+/** Guards against ever leaving the platform without at least one admin. */
+async function isLastAdmin(admin: ReturnType<typeof createAdminClient>, role: string): Promise<boolean> {
+  if (role !== "admin") return false;
+  const { count } = await admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "admin");
+  return (count ?? 0) <= 1;
 }
 
 export async function approveSellerRequestAction(requestId: string): Promise<ActionResult> {
@@ -89,6 +114,75 @@ export async function approveSellerRequestAction(requestId: string): Promise<Act
     .eq("id", requestId);
 
   revalidatePath("/admin/vendedores");
+  return { success: true };
+}
+
+export async function rejectSellerRequestAction(requestId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("seller_requests")
+    .update({ status: "rejected", reviewed_by: gate.adminId, reviewed_at: new Date().toISOString() })
+    .eq("id", requestId)
+    .eq("status", "pending");
+
+  if (error) return { error: "No se pudo rechazar la solicitud." };
+
+  revalidatePath("/admin/vendedores");
+  return { success: true };
+}
+
+/**
+ * Manual buyer→seller promotion (item 3) — an admin picks an arbitrary
+ * buyer, not a request that user submitted themselves. Mirrors
+ * approveSellerRequestAction's tienda-creation logic exactly so a manually
+ * promoted seller ends up in the same valid state (role='seller' AND owns a
+ * tienda) as a request-approved one — 'seller' without a tienda is a state
+ * nothing else in this app expects.
+ */
+export async function promoteToSellerAction(userId: string, storeName: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const name = storeName.trim();
+  if (name.length < 3) return { error: "El nombre de la tienda debe tener al menos 3 caracteres." };
+
+  const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role, phone, city")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target) return { error: "Ese usuario ya no existe." };
+  if (target.role !== "buyer") {
+    return { error: "Solo se puede convertir en vendedora una cuenta de comprador." };
+  }
+
+  let slug = storeSlugify(name);
+  const { data: slugTaken } = await admin.from("tiendas").select("id").eq("slug", slug).maybeSingle();
+  if (slugTaken) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+
+  const { error: tiendaError } = await admin.from("tiendas").insert({
+    owner_id: userId,
+    slug,
+    name,
+    city: target.city ?? "",
+    whatsapp: target.phone ?? "",
+  });
+  if (tiendaError) return { error: "No se pudo crear la tienda." };
+
+  const { error: roleError } = await admin.from("profiles").update({ role: "seller" }).eq("id", userId);
+  if (roleError) return { error: "No se pudo actualizar el rol del usuario." };
+
+  revalidatePath(`/admin/usuarios/${userId}`);
+  revalidatePath("/admin/usuarios");
   return { success: true };
 }
 
@@ -168,6 +262,96 @@ export async function revokeAdminAction(userId: string): Promise<ActionResult> {
   return { success: true };
 }
 
+// ── Account moderation (block / delete) ──────────────────────────────────────
+// Blocking is reversible (a stored reason, lifted anytime); deletion is not.
+// Both refuse to target yourself or the platform's last remaining admin.
+
+export async function blockUserAction(userId: string, reason: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  if (userId === gate.adminId) return { error: "No puedes bloquear tu propia cuenta." };
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) return { error: "Indica un motivo para el bloqueo." };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target) return { error: "Ese usuario ya no existe." };
+  if (await isLastAdmin(admin, target.role)) {
+    return { error: "No puedes bloquear al único administrador restante." };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ blocked_at: new Date().toISOString(), blocked_reason: trimmedReason, blocked_by: gate.adminId })
+    .eq("id", userId);
+  if (error) return { error: "No se pudo bloquear la cuenta." };
+
+  revalidatePath(`/admin/usuarios/${userId}`);
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function unblockUserAction(userId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ blocked_at: null, blocked_reason: null, blocked_by: null })
+    .eq("id", userId);
+  if (error) return { error: "No se pudo desbloquear la cuenta." };
+
+  revalidatePath(`/admin/usuarios/${userId}`);
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * Permanent, irreversible. Deletes the auth.users row via the Admin Auth
+ * API — every table below cascades from profiles(id) on delete cascade
+ * (listings, reviews, reports, tiendas, notifications, favorites, follows,
+ * listing_contacts...), since profiles.id itself cascades from auth.users.
+ */
+export async function deleteUserAction(userId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  if (userId === gate.adminId) return { error: "No puedes eliminar tu propia cuenta." };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!target) return { error: "Ese usuario ya no existe." };
+  if (await isLastAdmin(admin, target.role)) {
+    return { error: "No puedes eliminar al único administrador restante." };
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) return { error: "No se pudo eliminar la cuenta." };
+
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/");
+  return { success: true };
+}
+
 // ── Content moderation ───────────────────────────────────────────────────────
 
 export async function adminDeleteListingAction(listingId: string): Promise<ActionResult> {
@@ -177,11 +361,52 @@ export async function adminDeleteListingAction(listingId: string): Promise<Actio
   if ("error" in gate) return { error: gate.error };
 
   const admin = createAdminClient();
+
+  const { data: listing } = await admin
+    .from("listings")
+    .select("seller_id, title")
+    .eq("id", listingId)
+    .maybeSingle();
+
   const { error } = await admin.from("listings").delete().eq("id", listingId);
   if (error) return { error: "No se pudo eliminar el anuncio." };
 
+  if (listing) await notifyListingRemoved(admin, listing);
+
   revalidatePath("/admin/anuncios");
+  revalidatePath("/admin/moderacion");
   revalidatePath("/admin/reportes");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * "Take it down while it's investigated" (item 11) and "revoke on
+ * spot-checking" (item 8) are the same operation: flip status to the
+ * existing 'rejected' value (never a new enum value — see the migration's
+ * notes) with a reason. The DB trigger from 0009 notifies the seller
+ * automatically; unlike a hard delete this is reversible by editing the
+ * listing back, and does not resolve any report tied to it.
+ */
+export async function unpublishListingAction(listingId: string, reason: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) return { error: "Indica un motivo." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("listings")
+    .update({ status: "rejected", rejection_reason: trimmedReason })
+    .eq("id", listingId);
+  if (error) return { error: "No se pudo despublicar el anuncio." };
+
+  revalidatePath("/admin/moderacion");
+  revalidatePath("/admin/reportes");
+  revalidatePath("/admin/anuncios");
   revalidatePath("/");
   return { success: true };
 }
@@ -220,6 +445,12 @@ export async function resolveReportAction(
   if (!report) return { error: "Reporte no encontrado." };
 
   if (outcome === "resolved" && options?.deleteListing) {
+    const { data: listing } = await admin
+      .from("listings")
+      .select("seller_id, title")
+      .eq("slug", report.listing_slug)
+      .maybeSingle();
+
     // Cascades: the reports rows for this listing go with it, so mark first.
     await admin
       .from("reports")
@@ -235,6 +466,8 @@ export async function resolveReportAction(
       .delete()
       .eq("slug", report.listing_slug);
     if (error) return { error: "No se pudo eliminar el anuncio reportado." };
+
+    if (listing) await notifyListingRemoved(admin, listing);
   } else {
     const { error } = await admin
       .from("reports")
@@ -252,7 +485,215 @@ export async function resolveReportAction(
   return { success: true };
 }
 
-export async function rejectSellerRequestAction(requestId: string): Promise<ActionResult> {
+// ── Store verification ───────────────────────────────────────────────────────
+// tiendas.verified is a plain boolean (no separate "pending" DB state) —
+// "reject" is simply setting it back to false.
+
+export async function verifyTiendaAction(tiendaId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("tiendas").update({ verified: true }).eq("id", tiendaId);
+  if (error) return { error: "No se pudo verificar la tienda." };
+
+  revalidatePath("/admin/tiendas");
+  return { success: true };
+}
+
+export async function unverifyTiendaAction(tiendaId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("tiendas").update({ verified: false }).eq("id", tiendaId);
+  if (error) return { error: "No se pudo actualizar la tienda." };
+
+  revalidatePath("/admin/tiendas");
+  return { success: true };
+}
+
+// ── Category management ──────────────────────────────────────────────────────
+// Categories live in a real table (migration 0011) with no client-write RLS
+// policy at all — every mutation here goes through the service role, same
+// idiom as tiendas inserts.
+
+function categorySlugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+function revalidateCategoryPaths() {
+  revalidatePath("/admin/categorias");
+  revalidatePath("/");
+  revalidatePath("/categorias");
+  revalidatePath("/publicar");
+  revalidatePath("/buscar");
+}
+
+export async function createCategoryAction(
+  name: string,
+  icon: string,
+  parentId: string | null,
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2) return { error: "El nombre debe tener al menos 2 caracteres." };
+
+  const slug = categorySlugify(trimmedName);
+  if (!slug) return { error: "No se pudo generar un identificador válido para ese nombre." };
+
+  const admin = createAdminClient();
+
+  // Uniqueness only needs to hold within the same parent (matches the
+  // migration's unique(parent_id, slug) — a subcategory slug can validly
+  // repeat under a different parent, or even match a top-level slug).
+  const dupQuery = admin.from("categories").select("id").eq("slug", slug);
+  const { data: existing } = await (
+    parentId ? dupQuery.eq("parent_id", parentId) : dupQuery.is("parent_id", null)
+  ).maybeSingle();
+  if (existing) return { error: "Ya existe una categoría con ese nombre en este nivel." };
+
+  const countQuery = admin.from("categories").select("id", { count: "exact", head: true });
+  const { count } = await (
+    parentId ? countQuery.eq("parent_id", parentId) : countQuery.is("parent_id", null)
+  );
+
+  const { error } = await admin.from("categories").insert({
+    slug,
+    parent_id: parentId,
+    name: trimmedName,
+    // Subcategories render as plain text pills (no icon), matching today's
+    // site-wide convention — only top-level categories carry an icon.
+    icon: parentId ? null : icon || DEFAULT_ICON_NAME,
+    sort_order: count ?? 0,
+  });
+  if (error) return { error: "No se pudo crear la categoría." };
+
+  revalidateCategoryPaths();
+  return { success: true };
+}
+
+export async function updateCategoryAction(
+  id: string,
+  input: { name: string; icon?: string },
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedName = input.name.trim();
+  if (trimmedName.length < 2) return { error: "El nombre debe tener al menos 2 caracteres." };
+
+  // Deliberately never touches slug: existing listings reference it (soft
+  // reference), so renaming a category must not break them.
+  const update: { name: string; icon?: string } = { name: trimmedName };
+  if (input.icon) update.icon = input.icon;
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("categories").update(update).eq("id", id);
+  if (error) return { error: "No se pudo actualizar la categoría." };
+
+  revalidateCategoryPaths();
+  return { success: true };
+}
+
+export async function setCategoryActiveAction(id: string, isActive: boolean): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("categories").update({ is_active: isActive }).eq("id", id);
+  if (error) return { error: "No se pudo actualizar la categoría." };
+
+  revalidateCategoryPaths();
+  return { success: true };
+}
+
+/** Deleting a top-level category cascades to its subcategories (migration
+ * 0011's parent_id references ... on delete cascade) — existing listings
+ * keep their now-orphaned category_slug (soft reference, never enforced). */
+export async function deleteCategoryAction(id: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("categories").delete().eq("id", id);
+  if (error) return { error: "No se pudo eliminar la categoría." };
+
+  revalidateCategoryPaths();
+  return { success: true };
+}
+
+// ── Featured listings ────────────────────────────────────────────────────────
+// featured_requests is the payment-confirmation queue; listings.is_featured/
+// featured_until is what the public site actually reads (ListingCard etc.),
+// kept in sync by every action below rather than derived at read time.
+
+function revalidateFeaturedPaths() {
+  revalidatePath("/admin/destacados");
+  revalidatePath("/");
+  revalidatePath("/destacados");
+}
+
+export async function confirmFeaturedRequestAction(requestId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { data: request } = await admin
+    .from("featured_requests")
+    .select("listing_id, plan_days")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (!request) return { error: "Solicitud no encontrada." };
+
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + request.plan_days * 24 * 3600 * 1000);
+
+  const { error: reqError } = await admin
+    .from("featured_requests")
+    .update({
+      status: "confirmed",
+      confirmed_by: gate.adminId,
+      confirmed_at: startsAt.toISOString(),
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+    })
+    .eq("id", requestId);
+  if (reqError) return { error: "No se pudo confirmar el pago." };
+
+  const { error: listingError } = await admin
+    .from("listings")
+    .update({ is_featured: true, featured_until: endsAt.toISOString() })
+    .eq("id", request.listing_id);
+  if (listingError) return { error: "No se pudo destacar el anuncio." };
+
+  revalidateFeaturedPaths();
+  return { success: true };
+}
+
+export async function rejectFeaturedRequestAction(requestId: string): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
   const gate = await requireAdmin();
@@ -260,13 +701,87 @@ export async function rejectSellerRequestAction(requestId: string): Promise<Acti
 
   const admin = createAdminClient();
   const { error } = await admin
-    .from("seller_requests")
-    .update({ status: "rejected", reviewed_by: gate.adminId, reviewed_at: new Date().toISOString() })
-    .eq("id", requestId)
-    .eq("status", "pending");
-
+    .from("featured_requests")
+    .update({ status: "rejected", confirmed_by: gate.adminId, confirmed_at: new Date().toISOString() })
+    .eq("id", requestId);
   if (error) return { error: "No se pudo rechazar la solicitud." };
 
-  revalidatePath("/admin/vendedores");
+  revalidateFeaturedPaths();
+  return { success: true };
+}
+
+export async function expireFeaturedListingAction(requestId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { data: request } = await admin
+    .from("featured_requests")
+    .select("listing_id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (!request) return { error: "Solicitud no encontrada." };
+
+  const { error: reqError } = await admin
+    .from("featured_requests")
+    .update({ status: "expired" })
+    .eq("id", requestId);
+  if (reqError) return { error: "No se pudo actualizar la solicitud." };
+
+  const { error: listingError } = await admin
+    .from("listings")
+    .update({ is_featured: false, featured_until: null })
+    .eq("id", request.listing_id);
+  if (listingError) return { error: "No se pudo actualizar el anuncio." };
+
+  revalidateFeaturedPaths();
+  return { success: true };
+}
+
+/** Admin-sponsored promotion, no payment — inserts an already-confirmed
+ * request so it still shows up in the history table alongside real ones. */
+export async function manuallyFeatureListingAction(
+  listingSlug: string,
+  planDays: 7 | 15 | 30,
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { data: listing } = await admin
+    .from("listings")
+    .select("id, seller_id")
+    .eq("slug", listingSlug.trim())
+    .maybeSingle();
+  if (!listing) return { error: "No existe ningún anuncio con ese identificador." };
+
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + planDays * 24 * 3600 * 1000);
+
+  const { error: insertError } = await admin.from("featured_requests").insert({
+    listing_id: listing.id,
+    user_id: listing.seller_id,
+    plan_days: planDays,
+    amount: 0,
+    payment_method: "admin_manual",
+    status: "confirmed",
+    confirmed_by: gate.adminId,
+    confirmed_at: startsAt.toISOString(),
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+  });
+  if (insertError) return { error: "No se pudo registrar la promoción." };
+
+  const { error: listingError } = await admin
+    .from("listings")
+    .update({ is_featured: true, featured_until: endsAt.toISOString() })
+    .eq("id", listing.id);
+  if (listingError) return { error: "No se pudo destacar el anuncio." };
+
+  revalidateFeaturedPaths();
   return { success: true };
 }

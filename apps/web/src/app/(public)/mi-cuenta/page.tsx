@@ -12,6 +12,7 @@ import {
   getFavoriteCount,
   getFollowCount,
   mapListingRow,
+  getCategoryTree,
   monthYearLabel,
 } from "@/lib/supabase/queries";
 import { postedLabel } from "@/lib/time";
@@ -25,6 +26,7 @@ const notifIcons: Record<NotificationKind, React.ElementType> = {
   seller_request_rejected: AlertTriangle,
   followed_store_listing: Bell,
   welcome: Sparkles,
+  listing_removed: AlertTriangle,
 };
 
 const notifColors: Record<NotificationKind, string> = {
@@ -33,6 +35,7 @@ const notifColors: Record<NotificationKind, string> = {
   seller_request_rejected: "text-destructive bg-destructive/10",
   followed_store_listing: "text-blue-600 bg-blue-50",
   welcome: "text-primary bg-primary/10",
+  listing_removed: "text-destructive bg-destructive/10",
 };
 
 const statusLabel: Record<string, string> = {
@@ -53,12 +56,13 @@ export default async function DashboardPage() {
   const user = await getUser();
   if (!user) redirect("/login?next=/mi-cuenta");
 
-  const [profile, rows, notifications, favoriteCount, followCount] = await Promise.all([
+  const [profile, rows, notifications, favoriteCount, followCount, categoryTree] = await Promise.all([
     getProfile(user.id),
     getListingsByOwner(user.id),
     getNotifications(user.id),
     getFavoriteCount(user.id),
     getFollowCount(user.id),
+    getCategoryTree(),
   ]);
 
   const firstName = (profile?.full_name?.trim() || user.email?.split("@")[0] || "").split(" ")[0];
@@ -269,7 +273,7 @@ export default async function DashboardPage() {
         ) : (
           <div className="divide-y">
             {latest.map((row) => {
-              const listing = mapListingRow(row);
+              const listing = mapListingRow(row, categoryTree);
               return (
                 <div key={row.id} className="flex items-center gap-3 px-5 py-3.5">
                   <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-secondary">

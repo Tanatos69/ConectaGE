@@ -34,13 +34,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  // Protect admin — requires a real user AND profiles.role === 'admin'.
-  if (pathname.startsWith("/admin") && user && supabase) {
-    const { data: profile } = await supabase
+  // Single profile lookup shared by every gate below — was two separate
+  // round trips (admin role, then completeness); now one, plus the new
+  // blocked-account check.
+  let profile: {
+    role: string;
+    phone: string | null;
+    birth_date: string | null;
+    blocked_at: string | null;
+  } | null = null;
+  if (user && supabase) {
+    const { data } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, phone, birth_date, blocked_at")
       .eq("id", user.id)
       .maybeSingle();
+    profile = data;
+  }
+
+  // Blocked account — kicked out of everywhere except the small allowlist
+  // needed to sign out and see why. Applies broadly (not just account-
+  // specific routes), since "blocked" is meant to mean blocked everywhere.
+  const blockedAllowlist =
+    pathname.startsWith("/cuenta-bloqueada") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/_next");
+  if (user && profile?.blocked_at && !blockedAllowlist) {
+    return NextResponse.redirect(new URL("/cuenta-bloqueada", request.url));
+  }
+
+  // Protect admin — requires a real user AND profiles.role === 'admin'.
+  if (pathname.startsWith("/admin") && user) {
     if (profile?.role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -52,16 +78,7 @@ export async function middleware(request: NextRequest) {
   // gated page another way (bookmark, shared link) with an incomplete
   // profile. /mi-cuenta covers browsing/managing the account; /publicar
   // covers posting — both require a real WhatsApp number and the 16+ check.
-  if (
-    (pathname.startsWith("/publicar") || pathname.startsWith("/mi-cuenta")) &&
-    user &&
-    supabase
-  ) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("phone, birth_date")
-      .eq("id", user.id)
-      .maybeSingle();
+  if ((pathname.startsWith("/publicar") || pathname.startsWith("/mi-cuenta")) && user) {
     if (!profile?.phone || !profile?.birth_date) {
       const complete = new URL("/completar-perfil", request.url);
       complete.searchParams.set("next", pathname);

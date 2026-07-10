@@ -4,10 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, NOT_CONFIGURED_ERROR, SUPABASE_URL } from "@/lib/supabase/config";
-import { categories } from "@/lib/categories";
 import type { ActionResult } from "./auth";
-
-const categorySlugs = categories.map((c) => c.slug) as [string, ...string[]];
 
 function normalizePhone(raw: string): string {
   return raw.replace(/[^+0-9]/g, "");
@@ -37,7 +34,9 @@ const listingInputSchema = z.object({
   price: z.number().min(0).max(999_999_999_999).nullable(),
   priceType: z.enum(["fixed", "negotiable", "free", "on_request"]),
   currency: z.enum(["XAF", "USD", "EUR"]),
-  categorySlug: z.enum(categorySlugs),
+  // Not a static enum anymore — categories live in the database now.
+  // Existence + is_active is checked against it below instead.
+  categorySlug: z.string().trim().min(1, "Selecciona una categoría").max(60),
   subcategorySlug: z.string().trim().max(60).default(""),
   city: z.string().trim().min(1, "Indica la ciudad").max(60),
   region: z.string().trim().max(60).default(""),
@@ -47,6 +46,8 @@ const listingInputSchema = z.object({
   phone: z.string().trim().max(20).default(""),
   listingType: z.enum(["offer", "wanted"]),
   extraFields: z.record(z.string(), z.string().max(120)).default({}),
+  /** Only shown/editable for stock-style categories; null elsewhere. */
+  quantity: z.number().int().min(0).max(999_999).nullable(),
 });
 
 export type ListingInput = z.input<typeof listingInputSchema> & { images: string[] };
@@ -79,6 +80,19 @@ export async function createListingAction(input: ListingInput): Promise<ActionRe
   if (!imagesParsed.success) return { error: imagesParsed.error.issues[0].message };
 
   const d = parsed.data;
+
+  // categorySlug has no hard FK (soft reference, same as subcategorySlug
+  // always was) — this replaces the old static Zod enum with an explicit
+  // existence + is_active check against the real table.
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", d.categorySlug)
+    .is("parent_id", null)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!category) return { error: "Selecciona una categoría válida." };
+
   const slug = slugify(d.title);
 
   const { error } = await supabase.from("listings").insert({
@@ -101,6 +115,7 @@ export async function createListingAction(input: ListingInput): Promise<ActionRe
     phone: d.showPhone ? normalizePhone(d.phone) : "",
     listing_type: d.listingType,
     extra_fields: d.extraFields,
+    quantity: d.quantity,
   });
 
   if (error) return { error: "No se pudo publicar el anuncio. Intenta de nuevo." };
@@ -119,6 +134,10 @@ const listingUpdateSchema = z.object({
   city: z.string().trim().min(1, "Indica la ciudad").max(60),
   condition: z.enum(["new", "used", "refurbished"]).nullable(),
   whatsapp: phoneSchema,
+  // Unlike category/images/extraFields, quantity is a fact that naturally
+  // changes over time (like price) — editable post-publish for the
+  // categories that show it at all.
+  quantity: z.number().int().min(0).max(999_999).nullable(),
 });
 
 export async function updateListingAction(
@@ -148,6 +167,7 @@ export async function updateListingAction(
       city: d.city,
       condition: d.condition,
       whatsapp: d.whatsapp,
+      quantity: d.quantity,
     })
     .eq("id", id)
     .eq("seller_id", user.id);

@@ -46,6 +46,8 @@ export default async function EditarAnuncioPage({ params }: Props) {
             city: own.city,
             condition: own.condition,
             whatsapp: own.whatsapp,
+            categorySlug: own.category_slug,
+            quantity: own.quantity,
           }}
         />
       ) : (

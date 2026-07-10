@@ -8,11 +8,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { languages } from "@/lib/languages";
-import { categories } from "@/lib/categories";
+import { iconByName, translatedCategoryName } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth/context";
 import { signOutAction } from "@/lib/actions/auth";
+import type { CategoryNode } from "@/lib/supabase/queries";
 
 function SearchBar({ className }: { className?: string }) {
   const { t } = useTranslation();
@@ -106,7 +107,7 @@ function LanguageSwitcher() {
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
   const role = profile?.role ?? (user ? "buyer" : null);
@@ -218,13 +219,17 @@ export function SiteHeader() {
                 <div className="grid grid-cols-4 gap-1">
                   {categories.map((cat) => (
                     <Link
-                      key={cat.slug}
+                      key={cat.id}
                       href={`/categoria/${cat.slug}`}
                       onClick={() => setExplorarOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
                     >
-                      <FontAwesomeIcon icon={cat.icon} className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                      <span className="line-clamp-1">{t(`categories.${cat.slug}`)}</span>
+                      <FontAwesomeIcon
+                        icon={(cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen}
+                        className="size-3.5 shrink-0 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <span className="line-clamp-1">{translatedCategoryName(t, cat.slug, cat.name)}</span>
                     </Link>
                   ))}
                 </div>
@@ -387,13 +392,17 @@ export function SiteHeader() {
             <nav className="mt-2 grid gap-0.5">
               {categories.map((cat) => (
                 <Link
-                  key={cat.slug}
+                  key={cat.id}
                   href={`/categoria/${cat.slug}`}
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                 >
-                  <FontAwesomeIcon icon={cat.icon} className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  {t(`categories.${cat.slug}`)}
+                  <FontAwesomeIcon
+                    icon={(cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen}
+                    className="size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  {translatedCategoryName(t, cat.slug, cat.name)}
                 </Link>
               ))}
             </nav>

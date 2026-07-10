@@ -20,9 +20,18 @@ export function OnboardingIntentModal() {
   const [dismissed, setDismissed] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  // Never stack on top of the OAuth complete-your-profile flow, and never
-  // show to logged-out visitors or once the user has already answered.
-  if (!user || !profile || profile.onboarding_intent || pathname === "/completar-perfil") {
+  // Never stack on top of the OAuth complete-your-profile flow, never show
+  // to logged-out visitors or once the user has already answered, and never
+  // ask an admin or an already-approved seller whether they want to buy or
+  // sell — 'buyer' is everyone's default/unset state, so it's the only role
+  // where the question still makes sense.
+  if (
+    !user ||
+    !profile ||
+    profile.onboarding_intent ||
+    profile.role !== "buyer" ||
+    pathname === "/completar-perfil"
+  ) {
     return null;
   }
   if (dismissed) return null;

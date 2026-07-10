@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,9 +20,11 @@ import {
   ChevronRight,
   Store,
   UserCheck,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
+import { signOutAction } from "@/lib/actions/auth";
 
 /** Real pending counts, fetched server-side in admin/layout.tsx. */
 export interface AdminNavBadges {
@@ -100,10 +102,38 @@ export function AdminNav({ badges }: { badges?: AdminNavBadges }) {
   );
 }
 
+export function LogoutButton({ onClick, className }: { onClick?: () => void; className?: string }) {
+  const { t } = useTranslation();
+  const [loggingOut, startLogout] = useTransition();
+
+  function handleLogout() {
+    if (loggingOut) return; // ignore double-clicks while the first request is in flight
+    onClick?.();
+    startLogout(async () => {
+      await signOutAction();
+    });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      disabled={loggingOut}
+      className={cn(
+        "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors disabled:opacity-60",
+        className,
+      )}
+    >
+      <LogOut className="size-4" />
+      {t("admin.logout")}
+    </button>
+  );
+}
+
 export function AdminSidebarFooter() {
   const { t } = useTranslation();
   return (
-    <div className="mt-6 border-t pt-4">
+    <div className="mt-6 space-y-0.5 border-t pt-4">
       <Link
         href="/"
         className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
@@ -111,6 +141,7 @@ export function AdminSidebarFooter() {
         <ExternalLink className="size-4" />
         {t("admin.viewSite")}
       </Link>
+      <LogoutButton />
     </div>
   );
 }
@@ -169,7 +200,7 @@ export function AdminMobileHeader({ badges }: { badges?: AdminNavBadges }) {
                 <NavLink key={item.href} item={item} badges={badges} onClick={() => setOpen(false)} />
               ))}
             </nav>
-            <div className="mt-4 border-t pt-4">
+            <div className="mt-4 space-y-0.5 border-t pt-4">
               <Link
                 href="/"
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary"
@@ -179,6 +210,7 @@ export function AdminMobileHeader({ badges }: { badges?: AdminNavBadges }) {
                 {t("admin.viewSite")}
                 <ChevronRight className="ml-auto size-3.5" />
               </Link>
+              <LogoutButton onClick={() => setOpen(false)} />
             </div>
           </div>
         </div>

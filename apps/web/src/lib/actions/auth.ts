@@ -101,9 +101,18 @@ export async function signInAction(input: {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, blocked_at, blocked_reason")
     .eq("id", data.user.id)
     .maybeSingle();
+
+  if (profile?.blocked_at) {
+    // Deny the session before it's ever used — local scope is enough since
+    // the refresh token was only just issued.
+    await supabase.auth.signOut({ scope: "local" });
+    return {
+      error: "Tu cuenta ha sido bloqueada. Motivo: " + (profile.blocked_reason || "no especificado"),
+    };
+  }
 
   revalidatePath("/", "layout");
 

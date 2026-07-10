@@ -21,6 +21,9 @@ export interface Profile {
   notify_seller_requests: boolean;
   notify_followed_stores: boolean;
   onboarding_intent: "buyer" | "seller" | "skipped" | null;
+  blocked_at: string | null;
+  blocked_reason: string | null;
+  blocked_by: string | null;
   created_at: string;
 }
 
@@ -77,7 +80,8 @@ export type NotificationKind =
   | "seller_request_approved"
   | "seller_request_rejected"
   | "followed_store_listing"
-  | "welcome";
+  | "welcome"
+  | "listing_removed";
 
 export interface NotificationRow {
   id: string;
@@ -109,11 +113,32 @@ export interface ListingRow {
   phone: string;
   listing_type: "offer" | "wanted";
   status: "published" | "pending" | "rejected" | "expired";
+  rejection_reason: string | null;
+  /** Only meaningful for stock-style categories; null = not tracked. */
+  quantity: number | null;
   extra_fields: Record<string, string>;
   views_count: number;
   favorites_count: number;
+  is_featured: boolean;
+  featured_until: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface FeaturedRequestRow {
+  id: string;
+  listing_id: string;
+  user_id: string;
+  plan_days: 7 | 15 | 30;
+  amount: number | null;
+  currency: "XAF" | "USD" | "EUR";
+  payment_method: "bank_transfer" | "mobile_money" | "admin_manual";
+  status: "pending" | "confirmed" | "rejected" | "expired";
+  confirmed_by: string | null;
+  confirmed_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
 }
 
 export interface ReviewRow {

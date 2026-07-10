@@ -80,3 +80,46 @@ export const toneStyles: Record<CategoryTone, { chip: string; hover: string }> =
   sky:     { chip: "bg-blue-50 text-blue-600",     hover: "hover:border-blue-200 hover:bg-blue-50/50" },
   fuchsia: { chip: "bg-slate-100 text-slate-600",  hover: "hover:border-slate-200 hover:bg-slate-50" },
 };
+
+/** Categories where sellers typically stock multiples of the same item —
+ * these show a "quantity available" field on the listing form. */
+export const QUANTITY_CATEGORIES = new Set(["electronica", "moda", "muebles", "salud", "varios"]);
+
+/**
+ * Categories now live in a real `categories` table (migration 0011) so
+ * admin edits are genuinely live site-wide — but `tone` (tile color) is
+ * pure presentation with no DB column, and the DB only stores the FontAwesome
+ * icon *name* string, not the renderable icon object. Both stay resolved
+ * from this static file, keyed by slug — slugs are stable regardless of
+ * which system (DB row vs. this array) is the source of truth for a given
+ * category's existence/name.
+ */
+export const toneBySlug: Record<string, CategoryTone> = Object.fromEntries(
+  categories.map((c) => [c.slug, c.tone]),
+);
+export const DEFAULT_TONE: CategoryTone = "slate";
+
+export const iconByName: Record<string, IconDefinition> = Object.fromEntries(
+  categories.map((c) => [c.iconName, c.icon]),
+);
+export const AVAILABLE_ICONS = categories.map((c) => c.iconName);
+export const DEFAULT_ICON_NAME = "faBoxOpen";
+
+/**
+ * The multi-language surfaces (header, footer, homepage) show category
+ * names via i18n `t("categories.<slug>")` keys, not the DB `name` column —
+ * that column is effectively the Spanish/admin-facing name, while a real
+ * translation into 6 languages is a separate, human task. Prefer the
+ * translation; fall back to the DB name only when no translation key
+ * exists yet (t() echoes the raw key back unresolved in that case — e.g.
+ * for a category an admin just added through the CRUD).
+ */
+export function translatedCategoryName(
+  t: (key: string) => string,
+  slug: string,
+  dbName: string,
+): string {
+  const key = `categories.${slug}`;
+  const translated = t(key);
+  return translated === key ? dbName : translated;
+}

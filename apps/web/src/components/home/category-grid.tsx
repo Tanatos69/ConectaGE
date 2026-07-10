@@ -3,11 +3,18 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { categories, toneStyles } from "@/lib/categories";
+import { toneStyles, toneBySlug, DEFAULT_TONE, iconByName, translatedCategoryName } from "@/lib/categories";
 import { formatNumber } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n/context";
+import type { CategoryNode } from "@/lib/supabase/queries";
 
-export function CategoryGrid() {
+export function CategoryGrid({
+  categories,
+  counts,
+}: {
+  categories: CategoryNode[];
+  counts: Map<string, number>;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -32,10 +39,11 @@ export function CategoryGrid() {
 
       <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7 lg:gap-4">
         {categories.map((cat) => {
-          const tone = toneStyles[cat.tone];
+          const tone = toneStyles[toneBySlug[cat.slug] ?? DEFAULT_TONE];
+          const icon = (cat.icon && iconByName[cat.icon]) || iconByName.faBoxOpen;
           return (
             <Link
-              key={cat.slug}
+              key={cat.id}
               href={`/categoria/${cat.slug}`}
               className={`group flex flex-col items-center gap-3 rounded-xl border bg-card p-4 text-center shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 ${tone.hover}`}
             >
@@ -43,14 +51,14 @@ export function CategoryGrid() {
                 className={`flex size-14 items-center justify-center rounded-lg transition-transform group-hover:scale-110 ${tone.chip}`}
                 aria-hidden="true"
               >
-                <FontAwesomeIcon icon={cat.icon} className="size-7" />
+                <FontAwesomeIcon icon={icon} className="size-7" />
               </span>
               <span className="flex flex-col gap-0.5">
                 <span className="text-sm font-semibold leading-tight text-foreground">
-                  {t(`categories.${cat.slug}`)}
+                  {translatedCategoryName(t, cat.slug, cat.name)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {formatNumber(cat.count)} {t("categoryGrid.listingsSuffix")}
+                  {formatNumber(counts.get(cat.slug) ?? 0)} {t("categoryGrid.listingsSuffix")}
                 </span>
               </span>
             </Link>

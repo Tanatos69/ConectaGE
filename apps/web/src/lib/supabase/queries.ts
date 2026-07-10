@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { createClient } from "./server";
 import { isSupabaseConfigured } from "./config";
@@ -11,6 +12,7 @@ import type {
   ReviewRow,
 } from "./types";
 import { categories } from "@/lib/categories";
+import { subcategories } from "@/lib/subcategories";
 import {
   allListings as demoAllListings,
   featuredListings as demoFeaturedListings,
@@ -38,11 +40,129 @@ export { postedLabel, monthYearLabel };
 
 const FALLBACK_IMAGE = "/demo/sofa-gris.jpg";
 
-function categoryName(slug: string): string {
-  return categories.find((c) => c.slug === slug)?.name ?? "Otros / Varios";
+export interface CategoryNode {
+  id: string;
+  slug: string;
+  parentId: string | null;
+  name: string;
+  icon: string | null;
+  sortOrder: number;
 }
 
-export function mapListingRow(row: ListingRow): Listing {
+/**
+ * Real category tree (flat list; group by parentId client-side) — cached
+ * per request with React's cache() since many independent call sites need
+ * it (header, footer, homepage, category pages, publicar wizard, admin),
+ * and this collapses them into a single DB round trip per request.
+ */
+export const getCategoryTree = cache(async function getCategoryTree(): Promise<CategoryNode[]> {
+  if (!isSupabaseConfigured) {
+    const top: CategoryNode[] = categories.map((c, i) => ({
+      id: c.slug,
+      slug: c.slug,
+      parentId: null,
+      name: c.name,
+      icon: c.iconName,
+      sortOrder: i,
+    }));
+    const children: CategoryNode[] = Object.entries(subcategories).flatMap(([parentSlug, subs]) =>
+      subs.map((s, i) => ({
+        id: `${parentSlug}:${s.slug}`,
+        slug: s.slug,
+        // Matches parent.id above (slug-as-id in this fallback tree only).
+        parentId: parentSlug,
+        name: s.name,
+        icon: null,
+        sortOrder: i,
+      })),
+    );
+    return [...top, ...children];
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("categories")
+    .select("id, slug, parent_id, name, icon, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  return (
+    (data ?? []) as {
+      id: string;
+      slug: string;
+      parent_id: string | null;
+      name: string;
+      icon: string | null;
+      sort_order: number;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    parentId: r.parent_id,
+    name: r.name,
+    icon: r.icon,
+    sortOrder: r.sort_order,
+  }));
+});
+
+function categoryNameFromTree(tree: CategoryNode[], slug: string): string {
+  return tree.find((c) => c.parentId === null && c.slug === slug)?.name ?? slug;
+}
+
+/**
+ * Real published-listing counts per category/subcategory, for the category
+ * browsing pages — replaces the old static demo `count` field. Falls back
+ * to the demo counts (not zero) while unconfigured, so the pre-setup site
+ * still reads as a populated marketplace for sales-demo purposes.
+ */
+export const getCategoryListingCounts = cache(async function getCategoryListingCounts(): Promise<{
+  byCategory: Map<string, number>;
+  bySubcategory: Map<string, number>;
+}> {
+  if (!isSupabaseConfigured) {
+    return {
+      byCategory: new Map(categories.map((c) => [c.slug, c.count])),
+      bySubcategory: new Map(
+        Object.entries(subcategories).flatMap(([catSlug, subs]) =>
+          subs.map((s) => [`${catSlug}:${s.slug}`, s.count] as const),
+        ),
+      ),
+    };
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("listings")
+    .select("category_slug, subcategory_slug")
+    .eq("status", "published");
+
+  const byCategory = new Map<string, number>();
+  const bySubcategory = new Map<string, number>();
+  for (const row of (data ?? []) as { category_slug: string; subcategory_slug: string }[]) {
+    byCategory.set(row.category_slug, (byCategory.get(row.category_slug) ?? 0) + 1);
+    if (row.subcategory_slug) {
+      const key = `${row.category_slug}:${row.subcategory_slug}`;
+      bySubcategory.set(key, (bySubcategory.get(key) ?? 0) + 1);
+    }
+  }
+  return { byCategory, bySubcategory };
+});
+
+/**
+ * A blocked seller's content is hidden from every public surface (never a
+ * status change on the listings themselves, so unblocking makes everything
+ * reappear automatically). Sellers keep seeing their own content while
+ * blocked via the unfiltered owner-scoped queries — the account itself is
+ * locked out at sign-in/middleware, not the data.
+ */
+async function getBlockedSellerIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<Set<string>> {
+  const { data } = await supabase.from("profiles").select("id").not("blocked_at", "is", null);
+  return new Set((data ?? []).map((p: { id: string }) => p.id));
+}
+
+export function mapListingRow(row: ListingRow, categoryTree: CategoryNode[]): Listing {
   return {
     slug: row.slug,
     title: row.title,
@@ -53,10 +173,14 @@ export function mapListingRow(row: ListingRow): Listing {
     region: row.region,
     postedLabel: postedLabel(row.created_at),
     categorySlug: row.category_slug,
-    categoryName: categoryName(row.category_slug),
+    categoryName: categoryNameFromTree(categoryTree, row.category_slug),
     condition: row.condition,
     image: row.images[0] ?? FALLBACK_IMAGE,
     listingType: row.listing_type,
+    // Additive with the separate localStorage credits-promoted check in
+    // ListingCard (`listing.featured || isPromoted(slug)`) — both systems
+    // can flag a listing as featured without conflicting.
+    featured: row.is_featured && Boolean(row.featured_until) && new Date(row.featured_until!) > new Date(),
   };
 }
 
@@ -72,21 +196,30 @@ export interface ListingWithDetail {
 export async function getPublishedListings(): Promise<Listing[]> {
   if (!isSupabaseConfigured) return demoAllListings;
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(500);
+  const [{ data, error }, blockedIds, categoryTree] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(500),
+    getBlockedSellerIds(supabase),
+    getCategoryTree(),
+  ]);
   if (error || !data) return [];
-  return (data as ListingRow[]).map(mapListingRow);
+  return (data as ListingRow[])
+    .filter((row) => !blockedIds.has(row.seller_id))
+    .map((row) => mapListingRow(row, categoryTree));
 }
 
 /** Featured strip: real listings when configured (newest first), demo before. */
 export async function getFeaturedListings(): Promise<Listing[]> {
   if (!isSupabaseConfigured) return demoFeaturedListings;
   const listings = await getPublishedListings();
-  return listings.slice(0, 8).map((l) => ({ ...l, featured: true }));
+  // Genuinely featured only (real is_featured flag, current) — no fake
+  // fallback padding. FeaturedListings already hides the whole section
+  // when this + the separate localStorage-promoted list are both empty.
+  return listings.filter((l) => l.featured).slice(0, 8);
 }
 
 export async function getListingWithDetail(slug: string): Promise<ListingWithDetail | null> {
@@ -100,14 +233,15 @@ export async function getListingWithDetail(slug: string): Promise<ListingWithDet
   if (error || !data) return null;
   const row = data as ListingRow;
 
-  const { data: seller } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", row.seller_id)
-    .maybeSingle();
+  const [{ data: seller }, categoryTree] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", row.seller_id).maybeSingle(),
+    getCategoryTree(),
+  ]);
+
+  if ((seller as Profile | null)?.blocked_at) return null;
 
   return {
-    listing: mapListingRow(row),
+    listing: mapListingRow(row, categoryTree),
     row,
     seller: (seller as Profile | null) ?? null,
   };
@@ -145,7 +279,7 @@ export async function incrementListingViews(slug: string): Promise<void> {
 
 // ── Stores ───────────────────────────────────────────────────────────────────
 
-export function mapTiendaRow(row: TiendaRow, listingSlugs: string[] = []): Store {
+export function mapTiendaRow(row: TiendaRow, categoryTree: CategoryNode[], listingSlugs: string[] = []): Store {
   return {
     slug: row.slug,
     name: row.name,
@@ -157,7 +291,7 @@ export function mapTiendaRow(row: TiendaRow, listingSlugs: string[] = []): Store
     neighborhood: row.neighborhood || undefined,
     businessHours: row.business_hours || undefined,
     categorySlug: row.category_slug,
-    categoryName: categoryName(row.category_slug),
+    categoryName: categoryNameFromTree(categoryTree, row.category_slug),
     verificationStatus: row.verified ? "verified" : "unverified",
     professional: true,
     memberSince: monthYearLabel(row.created_at),
@@ -181,6 +315,14 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
     return getDemoStoreBySlug(slug) ?? null;
   }
   const row = data as TiendaRow;
+
+  const { data: owner } = await supabase
+    .from("profiles")
+    .select("blocked_at")
+    .eq("id", row.owner_id)
+    .maybeSingle();
+  if ((owner as { blocked_at: string | null } | null)?.blocked_at) return null;
+
   const { data: rows } = await supabase
     .from("listings")
     .select("id, slug")
@@ -188,7 +330,8 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
     .eq("status", "published");
   const listingRows = (rows ?? []) as { id: string; slug: string }[];
 
-  const store = mapTiendaRow(row, listingRows.map((r) => r.slug));
+  const categoryTree = await getCategoryTree();
+  const store = mapTiendaRow(row, categoryTree, listingRows.map((r) => r.slug));
 
   // Aggregate rating across direct store reviews + its listings' reviews.
   const orFilter =
@@ -219,7 +362,10 @@ export async function getStoreListings(store: Store): Promise<Listing[]> {
     .in("slug", store.listingSlugs)
     .eq("status", "published")
     .order("created_at", { ascending: false });
-  if (data && data.length > 0) return (data as ListingRow[]).map(mapListingRow);
+  if (data && data.length > 0) {
+    const categoryTree = await getCategoryTree();
+    return (data as ListingRow[]).map((row) => mapListingRow(row, categoryTree));
+  }
   // Demo store fallback (its slugs point at the static arrays).
   const demo = getDemoStoreBySlug(store.slug);
   return demo ? getDemoStoreListings(demo) : [];
@@ -443,8 +589,11 @@ export async function getFavoriteListings(userId: string): Promise<Listing[]> {
   const slugs = (favRows ?? []).map((r: { listing_slug: string }) => r.listing_slug);
   if (slugs.length === 0) return [];
 
-  const { data } = await supabase.from("listings").select("*").in("slug", slugs);
-  return ((data ?? []) as ListingRow[]).map(mapListingRow);
+  const [{ data }, categoryTree] = await Promise.all([
+    supabase.from("listings").select("*").in("slug", slugs),
+    getCategoryTree(),
+  ]);
+  return ((data ?? []) as ListingRow[]).map((row) => mapListingRow(row, categoryTree));
 }
 
 export async function getFavoriteCount(userId: string): Promise<number> {
@@ -484,17 +633,17 @@ export async function getPublicUserProfile(userId: string): Promise<{
   ]);
 
   const rows = (listingRows ?? []) as ListingRow[];
-  if (!profile || rows.length === 0) return null;
+  if (!profile || (profile as Profile).blocked_at || rows.length === 0) return null;
 
-  const { data: reviewRows } = await supabase
-    .from("reviews")
-    .select("rating")
-    .in("listing_id", rows.map((r) => r.id));
+  const [{ data: reviewRows }, categoryTree] = await Promise.all([
+    supabase.from("reviews").select("rating").in("listing_id", rows.map((r) => r.id)),
+    getCategoryTree(),
+  ]);
   const ratings = (reviewRows ?? []) as { rating: number }[];
 
   return {
     profile: profile as Profile,
-    listings: rows.map(mapListingRow),
+    listings: rows.map((row) => mapListingRow(row, categoryTree)),
     rating:
       ratings.length > 0
         ? Math.round((ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10) / 10
@@ -523,8 +672,11 @@ export async function getFollowedStores(userId: string): Promise<Store[]> {
   const slugs = (followRows ?? []).map((r: { tienda_slug: string }) => r.tienda_slug);
   if (slugs.length === 0) return [];
 
-  const { data } = await supabase.from("tiendas").select("*").in("slug", slugs);
-  const tiendas = (data ?? []) as TiendaRow[];
+  const [{ data }, blockedIds] = await Promise.all([
+    supabase.from("tiendas").select("*").in("slug", slugs),
+    getBlockedSellerIds(supabase),
+  ]);
+  const tiendas = ((data ?? []) as TiendaRow[]).filter((t) => !blockedIds.has(t.owner_id));
   if (tiendas.length === 0) return [];
 
   const ownerIds = tiendas.map((t) => t.owner_id);
@@ -540,5 +692,6 @@ export async function getFollowedStores(userId: string): Promise<Store[]> {
     slugsByOwner.set(row.seller_id, list);
   }
 
-  return tiendas.map((t) => mapTiendaRow(t, slugsByOwner.get(t.owner_id) ?? []));
+  const categoryTree = await getCategoryTree();
+  return tiendas.map((t) => mapTiendaRow(t, categoryTree, slugsByOwner.get(t.owner_id) ?? []));
 }

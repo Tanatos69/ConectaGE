@@ -16,6 +16,7 @@ const iconMap: Record<NotificationKind, React.ElementType> = {
   seller_request_rejected: AlertTriangle,
   followed_store_listing: Bell,
   welcome: Sparkles,
+  listing_removed: AlertTriangle,
 };
 
 const colorMap: Record<NotificationKind, string> = {
@@ -24,6 +25,7 @@ const colorMap: Record<NotificationKind, string> = {
   seller_request_rejected: "bg-red-50 text-destructive",
   followed_store_listing: "bg-blue-50 text-blue-600",
   welcome: "bg-primary/10 text-primary",
+  listing_removed: "bg-red-50 text-destructive",
 };
 
 export function NotificationsList({ items }: { items: NotificationRow[] }) {
