@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DestacadosView } from "@/components/home/destacados-view";
-import { getCategoryTree } from "@/lib/supabase/queries";
+import { getCategoryTree, getFeaturedListings } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: "Anuncios destacados — ConectaGE",
@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 };
 
 export default async function DestacadosPage() {
-  const tree = await getCategoryTree();
+  const [tree, listings] = await Promise.all([getCategoryTree(), getFeaturedListings(100)]);
   const categories = tree.filter((c) => c.parentId === null);
 
   return (
     <Suspense>
-      <DestacadosView categories={categories} />
+      <DestacadosView categories={categories} listings={listings} />
     </Suspense>
   );
 }

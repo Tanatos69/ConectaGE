@@ -3,27 +3,27 @@
 import { useMemo, useState } from "react";
 import { Store as StoreIcon } from "lucide-react";
 import { StoreCard } from "@/components/store/store-card";
-import { demoStores } from "@/lib/stores";
+import type { Store } from "@/lib/stores";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 
-export function StoresDirectory() {
+export function StoresDirectory({ stores: allStores }: { stores: Store[] }) {
   const { t } = useTranslation();
   const [category, setCategory] = useState<string>("all");
   const [city, setCity] = useState<string>("all");
 
   const categoryOptions = useMemo(() => {
     const map = new Map<string, string>();
-    demoStores.forEach((s) => map.set(s.categorySlug, s.categoryName));
+    allStores.forEach((s) => map.set(s.categorySlug, s.categoryName));
     return Array.from(map, ([slug, name]) => ({ slug, name }));
-  }, []);
+  }, [allStores]);
 
   const cityOptions = useMemo(
-    () => Array.from(new Set(demoStores.map((s) => s.city))),
-    [],
+    () => Array.from(new Set(allStores.map((s) => s.city))),
+    [allStores],
   );
 
-  const stores = demoStores.filter(
+  const stores = allStores.filter(
     (s) =>
       (category === "all" || s.categorySlug === category) &&
       (city === "all" || s.city === city),

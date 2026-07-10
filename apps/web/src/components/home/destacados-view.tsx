@@ -5,15 +5,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { Star, SlidersHorizontal, Crown, X } from "lucide-react";
 import { ListingCard } from "@/components/listing/listing-card";
-import { featuredListings, allListings } from "@/lib/listings";
-import { useAppState } from "@/lib/store/app-state";
+import type { Listing } from "@/lib/listings";
 import { cn } from "@/lib/utils";
 import type { CategoryNode } from "@/lib/supabase/queries";
 
-const CITIES = ["Malabo", "Bata", "Mongomo", "Ebebiyín"];
-
-export function DestacadosView({ categories }: { categories: CategoryNode[] }) {
-  const { isPromoted } = useAppState();
+export function DestacadosView({
+  categories,
+  listings,
+}: {
+  categories: CategoryNode[];
+  listings: Listing[];
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -23,10 +25,13 @@ export function DestacadosView({ categories }: { categories: CategoryNode[] }) {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const promotedListings = allListings.filter((l) => isPromoted(l.slug));
-  const staticFeatured = featuredListings.filter((l) => !isPromoted(l.slug));
-  let combined = [...promotedListings, ...staticFeatured];
+  // City filter options come from the actual featured listings, so no
+  // option can ever produce an empty result out of nowhere.
+  const cities = [...new Set(listings.map((l) => l.city))].sort((a, b) =>
+    a.localeCompare(b, "es"),
+  );
 
+  let combined = listings;
   if (cat) combined = combined.filter((l) => l.categorySlug === cat);
   if (city) combined = combined.filter((l) => l.city === city);
   if (condition) combined = combined.filter((l) => l.condition === condition);
@@ -119,7 +124,7 @@ export function DestacadosView({ categories }: { categories: CategoryNode[] }) {
                 >
                   Todas
                 </button>
-                {CITIES.map((c) => (
+                {cities.map((c) => (
                   <button
                     key={c}
                     onClick={() => setParam("ciudad", c)}

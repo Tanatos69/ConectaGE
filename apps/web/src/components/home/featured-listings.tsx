@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Star, ArrowRight, Crown, MapPin, MessageCircle } from "lucide-react";
 import { ListingCard } from "@/components/listing/listing-card";
 import type { Listing } from "@/lib/listings";
-import { useAppState } from "@/lib/store/app-state";
 import { useTranslation } from "@/lib/i18n/context";
 import { formatPrice } from "@/lib/format";
 
@@ -74,17 +73,13 @@ function HeroCard({ listing }: { listing: Listing }) {
 
 export function FeaturedListings({
   featured,
-  all,
 }: {
   featured: Listing[];
-  all: Listing[];
+  /** @deprecated unused since promotions moved fully server-side. */
+  all?: Listing[];
 }) {
   const { t } = useTranslation();
-  const { isPromoted } = useAppState();
-
-  const promotedListings = all.filter((l) => isPromoted(l.slug));
-  const staticFeatured = featured.filter((l) => !isPromoted(l.slug));
-  const combined = [...promotedListings, ...staticFeatured];
+  const combined = featured;
 
   if (combined.length === 0) return null;
 

@@ -9,7 +9,6 @@ import { formatPrice } from "@/lib/format";
 import type { Listing } from "@/lib/listings";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
-import { useAppState } from "@/lib/store/app-state";
 
 export function ListingCard({
   listing,
@@ -21,9 +20,8 @@ export function ListingCard({
   className?: string;
 }) {
   const { t } = useTranslation();
-  const { isPromoted } = useAppState();
   const negotiable = listing.priceType === "negotiable";
-  const featured = listing.featured || isPromoted(listing.slug);
+  const featured = listing.featured;
 
   const conditionLabel: Record<string, string> = {
     new: t("card.new"),

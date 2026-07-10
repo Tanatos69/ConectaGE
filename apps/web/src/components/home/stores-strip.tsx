@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { ArrowRight, Store } from "lucide-react";
 import { StoreCard } from "@/components/store/store-card";
-import { demoStores } from "@/lib/stores";
+import type { Store as StoreType } from "@/lib/stores";
 import { useTranslation } from "@/lib/i18n/context";
 
-export function StoresStrip() {
+export function StoresStrip({ stores }: { stores: StoreType[] }) {
   const { t } = useTranslation();
-  const featured = demoStores.slice(0, 4);
+  const featured = stores.slice(0, 4);
+  if (featured.length === 0) return null;
 
   return (
     <section className="border-t bg-background">

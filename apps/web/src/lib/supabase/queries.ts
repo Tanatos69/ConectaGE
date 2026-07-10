@@ -21,6 +21,7 @@ import {
 import {
   getStoreBySlug as getDemoStoreBySlug,
   getStoreListings as getDemoStoreListings,
+  demoStores,
   type Store,
 } from "@/lib/stores";
 import { postedLabel, monthYearLabel } from "@/lib/time";
@@ -213,13 +214,13 @@ export async function getPublishedListings(): Promise<Listing[]> {
 }
 
 /** Featured strip: real listings when configured (newest first), demo before. */
-export async function getFeaturedListings(): Promise<Listing[]> {
+export async function getFeaturedListings(limit = 8): Promise<Listing[]> {
   if (!isSupabaseConfigured) return demoFeaturedListings;
   const listings = await getPublishedListings();
   // Genuinely featured only (real is_featured flag, current) — no fake
   // fallback padding. FeaturedListings already hides the whole section
-  // when this + the separate localStorage-promoted list are both empty.
-  return listings.filter((l) => l.featured).slice(0, 8);
+  // when this is empty.
+  return listings.filter((l) => l.featured).slice(0, limit);
 }
 
 export async function getListingWithDetail(slug: string): Promise<ListingWithDetail | null> {
@@ -306,14 +307,47 @@ export function mapTiendaRow(row: TiendaRow, categoryTree: CategoryNode[], listi
   };
 }
 
+/**
+ * Public stores directory + home strip. Real tiendas only — verified first,
+ * then by following count; blocked owners' stores hidden.
+ */
+export async function getStores(limit?: number): Promise<Store[]> {
+  if (!isSupabaseConfigured) return demoStores;
+  const supabase = await createClient();
+  let query = supabase
+    .from("tiendas")
+    .select("*")
+    .order("verified", { ascending: false })
+    .order("followers_count", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (limit) query = query.limit(limit);
+
+  const [{ data }, blockedIds] = await Promise.all([query, getBlockedSellerIds(supabase)]);
+  const tiendas = ((data ?? []) as TiendaRow[]).filter((t) => !blockedIds.has(t.owner_id));
+  if (tiendas.length === 0) return [];
+
+  const ownerIds = tiendas.map((t) => t.owner_id);
+  const { data: listingRows } = await supabase
+    .from("listings")
+    .select("slug, seller_id")
+    .in("seller_id", ownerIds)
+    .eq("status", "published");
+  const slugsByOwner = new Map<string, string[]>();
+  for (const row of (listingRows ?? []) as { slug: string; seller_id: string }[]) {
+    const list = slugsByOwner.get(row.seller_id) ?? [];
+    list.push(row.slug);
+    slugsByOwner.set(row.seller_id, list);
+  }
+
+  const categoryTree = await getCategoryTree();
+  return tiendas.map((t) => mapTiendaRow(t, categoryTree, slugsByOwner.get(t.owner_id) ?? []));
+}
+
 export async function getStoreBySlug(slug: string): Promise<Store | null> {
   if (!isSupabaseConfigured) return getDemoStoreBySlug(slug) ?? null;
   const supabase = await createClient();
   const { data } = await supabase.from("tiendas").select("*").eq("slug", slug).maybeSingle();
-  if (!data) {
-    // Demo stores linked from the (still-static) directory keep working.
-    return getDemoStoreBySlug(slug) ?? null;
-  }
+  if (!data) return null;
   const row = data as TiendaRow;
 
   const { data: owner } = await supabase
@@ -362,13 +396,9 @@ export async function getStoreListings(store: Store): Promise<Listing[]> {
     .in("slug", store.listingSlugs)
     .eq("status", "published")
     .order("created_at", { ascending: false });
-  if (data && data.length > 0) {
-    const categoryTree = await getCategoryTree();
-    return (data as ListingRow[]).map((row) => mapListingRow(row, categoryTree));
-  }
-  // Demo store fallback (its slugs point at the static arrays).
-  const demo = getDemoStoreBySlug(store.slug);
-  return demo ? getDemoStoreListings(demo) : [];
+  if (!data || data.length === 0) return [];
+  const categoryTree = await getCategoryTree();
+  return (data as ListingRow[]).map((row) => mapListingRow(row, categoryTree));
 }
 
 export async function getTiendaByOwner(userId: string): Promise<TiendaRow | null> {

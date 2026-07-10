@@ -11,16 +11,18 @@ import {
   getFeaturedListings,
   getCategoryTree,
   getCategoryListingCounts,
+  getStores,
 } from "@/lib/supabase/queries";
 import { getSiteSettings } from "@/lib/supabase/settings";
 
 export default async function Home() {
-  const [listings, featured, tree, counts, settings] = await Promise.all([
+  const [listings, featured, tree, counts, settings, stores] = await Promise.all([
     getPublishedListings(),
     getFeaturedListings(),
     getCategoryTree(),
     getCategoryListingCounts(),
     getSiteSettings(),
+    getStores(4),
   ]);
   const topLevelCategories = tree.filter((c) => c.parentId === null);
 
@@ -33,7 +35,7 @@ export default async function Home() {
       {settings.home_show_featured && <FeaturedListings featured={featured} all={listings} />}
       <StatsBar />
       <RecentListings listings={listings.slice(0, 14)} />
-      {settings.home_show_stores && <StoresStrip />}
+      {settings.home_show_stores && <StoresStrip stores={stores} />}
       <PaymentsStrip />
       <HowItWorks />
     </>
