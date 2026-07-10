@@ -12,9 +12,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
-import { GE_CITIES } from "@/lib/cities";
-
-const cities = [...GE_CITIES, "Otra"];
+import { useCities } from "@/lib/store/cities-context";
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -54,6 +52,7 @@ const MAX_BIRTH_DATE = new Date(Date.now() - 16 * 365.25 * 24 * 3600 * 1000)
 export default function EditarPerfilPage() {
   const router = useRouter();
   const { user, profile } = useAuth();
+  const cities = [...useCities().cities, "Otra"];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [saved, setSaved] = useState(false);

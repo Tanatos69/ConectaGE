@@ -7,9 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { signUpAction, signInWithOAuthAction } from "@/lib/actions/auth";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { isOAuthProviderEnabled, anyOAuthProviderEnabled } from "@/lib/oauth-providers";
-import { GE_CITIES } from "@/lib/cities";
-
-const cities = [...GE_CITIES, "Otra"];
+import { useCities } from "@/lib/store/cities-context";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -20,6 +18,7 @@ const MAX_BIRTH_DATE = new Date(Date.now() - 16 * 365.25 * 24 * 3600 * 1000)
   .slice(0, 10);
 
 export default function RegistroPage() {
+  const cities = [...useCities().cities, "Otra"];
   const [form, setForm] = useState({
     fullName: "",
     phone: "",

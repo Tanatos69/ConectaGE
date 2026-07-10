@@ -150,6 +150,7 @@ export interface Translations {
     restrictedRole: string;
     /** Optional: missing keys fall back to Spanish (admin is Spanish-only). */
     logout?: string;
+    locations?: string;
   };
   stores: {
     follow: string;

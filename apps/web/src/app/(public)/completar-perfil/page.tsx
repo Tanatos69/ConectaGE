@@ -7,9 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction } from "@/lib/actions/auth";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { GE_CITIES } from "@/lib/cities";
-
-const cities = [...GE_CITIES, "Otra"];
+import { useCities } from "@/lib/store/cities-context";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -29,6 +27,7 @@ function CompletarPerfilForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/publicar";
   const { profile } = useAuth();
+  const cities = [...useCities().cities, "Otra"];
 
   const [form, setForm] = useState({
     fullName: profile?.full_name ?? "",

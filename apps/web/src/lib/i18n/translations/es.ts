@@ -170,6 +170,7 @@ export const es: Translations = {
     restricted: "Área restringida.",
     restrictedRole: "Acceso limitado a administradores.",
     logout: "Cerrar sesión",
+    locations: "Ubicaciones",
   },
   stores: {
     follow: "Seguir",

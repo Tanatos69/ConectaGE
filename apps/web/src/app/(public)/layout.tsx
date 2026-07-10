@@ -4,12 +4,23 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { OnboardingIntentModal } from "@/components/layout/onboarding-intent-modal";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
-import { getCategoryTree, getProfile } from "@/lib/supabase/queries";
+import {
+  getCategoryTree,
+  getProfile,
+  getLocationTree,
+  locationsByProvince,
+  flatCityNames,
+} from "@/lib/supabase/queries";
 import { getSiteSettings } from "@/lib/supabase/settings";
 import { getUser } from "@/lib/supabase/server";
+import { CitiesProvider } from "@/lib/store/cities-context";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [tree, settings] = await Promise.all([getCategoryTree(), getSiteSettings()]);
+  const [tree, settings, locations] = await Promise.all([
+    getCategoryTree(),
+    getSiteSettings(),
+    getLocationTree(),
+  ]);
 
   // Maintenance mode (admin setting): the public site redirects to
   // /maintenance for everyone except admins. Enforced here — never in the
@@ -25,29 +36,31 @@ export default async function PublicLayout({ children }: { children: React.React
   const categories = tree.filter((c) => c.parentId === null);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {settings.announcement_enabled && settings.announcement_text && (
-        <AnnouncementBanner
-          text={settings.announcement_text}
-          href={settings.announcement_href || undefined}
+    <CitiesProvider cities={flatCityNames(locations)} byProvince={locationsByProvince(locations)}>
+      <div className="flex min-h-screen flex-col">
+        {settings.announcement_enabled && settings.announcement_text && (
+          <AnnouncementBanner
+            text={settings.announcement_text}
+            href={settings.announcement_href || undefined}
+          />
+        )}
+        <SiteHeader
+          categories={categories}
+          siteName={settings.site_name}
+          logoUrl={settings.logo_url}
         />
-      )}
-      <SiteHeader
-        categories={categories}
-        siteName={settings.site_name}
-        logoUrl={settings.logo_url}
-      />
-      <main className="flex-1">{children}</main>
-      <SiteFooter
-        categories={categories}
-        siteName={settings.site_name}
-        logoUrl={settings.logo_url}
-        tagline={settings.footer_tagline}
-        contactEmail={settings.contact_email}
-        contactWhatsapp={settings.site_whatsapp}
-      />
-      <CookieConsent />
-      <OnboardingIntentModal />
-    </div>
+        <main className="flex-1">{children}</main>
+        <SiteFooter
+          categories={categories}
+          siteName={settings.site_name}
+          logoUrl={settings.logo_url}
+          tagline={settings.footer_tagline}
+          contactEmail={settings.contact_email}
+          contactWhatsapp={settings.site_whatsapp}
+        />
+        <CookieConsent />
+        <OnboardingIntentModal />
+      </div>
+    </CitiesProvider>
   );
 }

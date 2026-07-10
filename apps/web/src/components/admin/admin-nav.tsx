@@ -21,6 +21,7 @@ import {
   Store,
   UserCheck,
   LogOut,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
@@ -48,6 +49,7 @@ const items: AdminNavItem[] = [
   { href: "/admin/usuarios", labelKey: "admin.users", icon: Users },
   { href: "/admin/tiendas", labelKey: "admin.stores", icon: Store },
   { href: "/admin/categorias", labelKey: "admin.categories", icon: Tag },
+  { href: "/admin/ubicaciones", labelKey: "admin.locations", icon: MapPin },
   { href: "/admin/resenas", labelKey: "admin.reviews", icon: Star },
   { href: "/admin/reportes", labelKey: "admin.reports", icon: Flag, badgeKey: "pendingReports" },
   { href: "/admin/destacados", labelKey: "admin.featured", icon: Sparkles },

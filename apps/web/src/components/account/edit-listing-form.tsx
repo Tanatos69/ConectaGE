@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateListingAction } from "@/lib/actions/listings";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { GE_CITIES } from "@/lib/cities";
+import { useCities } from "@/lib/store/cities-context";
 import { QUANTITY_CATEGORIES } from "@/lib/categories";
 
 interface EditableListing {
@@ -26,6 +26,7 @@ const inputClass =
 
 export function EditListingForm({ listing }: { listing: EditableListing }) {
   const router = useRouter();
+  const { cities } = useCities();
   const [form, setForm] = useState({
     title: listing.title,
     description: listing.description,
@@ -131,10 +132,10 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
               onChange={(e) => setForm({ ...form, city: e.target.value })}
               className={inputClass}
             >
-              {!GE_CITIES.includes(form.city) && form.city && (
+              {!cities.includes(form.city) && form.city && (
                 <option value={form.city}>{form.city}</option>
               )}
-              {GE_CITIES.map((c) => (
+              {cities.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>

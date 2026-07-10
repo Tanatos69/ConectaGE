@@ -4,9 +4,8 @@ import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { GE_CITIES } from "@/lib/cities";
+import { useCities } from "@/lib/store/cities-context";
 
-const CITIES = ["Todas", ...GE_CITIES];
 const CONDITIONS = [
   { value: "new", label: "Nuevo" },
   { value: "used", label: "Usado" },
@@ -42,6 +41,8 @@ function FilterContent({
   filters: Filters;
   onChange: (f: Filters) => void;
 }) {
+  const { cities } = useCities();
+
   function toggle(val: string) {
     const next = filters.conditions.includes(val)
       ? filters.conditions.filter((c) => c !== val)
@@ -123,7 +124,7 @@ function FilterContent({
           onChange={(e) => onChange({ ...filters, city: e.target.value })}
           className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
-          {CITIES.map((c) => (
+          {["Todas", ...cities].map((c) => (
             <option key={c}>{c}</option>
           ))}
         </select>

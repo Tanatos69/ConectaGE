@@ -14,7 +14,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { QUANTITY_CATEGORIES, iconByName } from "@/lib/categories";
 import { cn } from "@/lib/utils";
-import { EQUATORIAL_GUINEA_CITIES_BY_PROVINCE } from "@/lib/cities";
+import { useCities } from "@/lib/store/cities-context";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createListingAction } from "@/lib/actions/listings";
@@ -78,11 +78,10 @@ const defaultForm: FormData = {
 };
 
 // ── Location data ────────────────────────────────────────────────────────────
+// GE provinces/cities come from the admin-managed locations table (via
+// CitiesProvider); the other countries stay static.
 
-const locationData: Record<string, Record<string, string[]>> = {
-  "Guinea Ecuatorial": Object.fromEntries(
-    EQUATORIAL_GUINEA_CITIES_BY_PROVINCE.map((p) => [p.province, p.cities])
-  ),
+const FOREIGN_LOCATIONS: Record<string, Record<string, string[]>> = {
   España: { "Comunidad de Madrid": ["Madrid"], Cataluña: ["Barcelona", "Girona"] },
   Francia: { "Île-de-France": ["París", "Versalles"] },
   Camerún: { Littoral: ["Douala"], Centre: ["Yaundé"] },
@@ -187,6 +186,11 @@ export function PublicarWizard({
   maxImages?: number;
 }) {
   const { profile } = useAuth();
+  const { byProvince } = useCities();
+  const locationData: Record<string, Record<string, string[]>> = {
+    "Guinea Ecuatorial": Object.fromEntries(byProvince.map((p) => [p.province, p.cities])),
+    ...FOREIGN_LOCATIONS,
+  };
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(defaultForm);
 

@@ -11,7 +11,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { categories } from "@/lib/categories";
-import { GE_CITIES } from "@/lib/cities";
+import { getLocationTree, flatCityNames } from "@/lib/supabase/queries";
 import { getAnalytics, parseFilters, type DayCount, type LabelCount } from "./data";
 
 export const metadata: Metadata = { title: "Analíticas" };
@@ -110,7 +110,8 @@ function toDateInput(d: Date): string {
 export default async function AdminAnaliticasPage({ searchParams }: Props) {
   const params = await searchParams;
   const filters = parseFilters(params);
-  const data = await getAnalytics(filters);
+  const [data, locations] = await Promise.all([getAnalytics(filters), getLocationTree()]);
+  const cityNames = flatCityNames(locations);
 
   if (!data) {
     return (
@@ -193,7 +194,7 @@ export default async function AdminAnaliticasPage({ searchParams }: Props) {
           Ciudad
           <select name="ciudad" defaultValue={params.ciudad ?? ""} className={inputClass}>
             <option value="">Todas</option>
-            {GE_CITIES.map((c) => (
+            {cityNames.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>

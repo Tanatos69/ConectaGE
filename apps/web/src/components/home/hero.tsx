@@ -7,11 +7,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { iconByName, translatedCategoryName } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
-import { GE_CITIES } from "@/lib/cities";
+import { useCities } from "@/lib/store/cities-context";
 import type { CategoryNode } from "@/lib/supabase/queries";
 
 export function Hero({ categories }: { categories: CategoryNode[] }) {
   const { t } = useTranslation();
+  const { cities } = useCities();
 
   return (
     <section className="relative overflow-hidden border-b">
@@ -102,7 +103,7 @@ export function Hero({ categories }: { categories: CategoryNode[] }) {
                 defaultValue=""
               >
                 <option value="">{t("hero.cityAll")}</option>
-                {GE_CITIES.map((city) => (
+                {cities.map((city) => (
                   <option key={city} value={city}>
                     {city}
                   </option>

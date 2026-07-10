@@ -7,7 +7,7 @@ import { updateTiendaAction } from "@/lib/actions/seller";
 import { useAuth } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
-import { GE_CITIES } from "@/lib/cities";
+import { useCities } from "@/lib/store/cities-context";
 import { cn } from "@/lib/utils";
 
 export interface StoreSettings {
@@ -49,6 +49,7 @@ const inputClass =
 
 export function StoreSettingsForm({ store }: { store: StoreSettings }) {
   const { user } = useAuth();
+  const { cities } = useCities();
 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -232,7 +233,7 @@ export function StoreSettingsForm({ store }: { store: StoreSettings }) {
                 className={inputClass}
               >
                 <option value="">Seleccionar…</option>
-                {GE_CITIES.map((c) => <option key={c}>{c}</option>)}
+                {cities.map((c) => <option key={c}>{c}</option>)}
               </select>
             </Field>
             <Field label="Barrio / Zona">

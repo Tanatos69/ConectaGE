@@ -680,6 +680,108 @@ export async function deleteCategoryAction(id: string): Promise<ActionResult> {
   return { success: true };
 }
 
+// ── Location management ──────────────────────────────────────────────────────
+// Provinces/cities live in the locations table (migration 0014), same
+// service-role-only write idiom as categories. Listings/tiendas store the
+// city NAME as text (soft reference), so deactivating a city only hides it
+// from dropdowns — existing content is untouched.
+
+function revalidateLocationPaths() {
+  // City dropdowns exist in the header/hero, filters, publish wizard,
+  // registration and account forms — layout-wide revalidation.
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/ubicaciones");
+}
+
+export async function createLocationAction(
+  name: string,
+  parentId: string | null,
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2) return { error: "El nombre debe tener al menos 2 caracteres." };
+
+  const slug = categorySlugify(trimmedName);
+  if (!slug) return { error: "No se pudo generar un identificador válido para ese nombre." };
+
+  const admin = createAdminClient();
+
+  const dupQuery = admin.from("locations").select("id").eq("slug", slug);
+  const { data: existing } = await (
+    parentId ? dupQuery.eq("parent_id", parentId) : dupQuery.is("parent_id", null)
+  ).maybeSingle();
+  if (existing) return { error: "Ya existe una ubicación con ese nombre en este nivel." };
+
+  const countQuery = admin.from("locations").select("id", { count: "exact", head: true });
+  const { count } = await (
+    parentId ? countQuery.eq("parent_id", parentId) : countQuery.is("parent_id", null)
+  );
+
+  const { error } = await admin.from("locations").insert({
+    slug,
+    parent_id: parentId,
+    name: trimmedName,
+    type: parentId ? "city" : "province",
+    sort_order: count ?? 0,
+  });
+  if (error) return { error: "No se pudo crear la ubicación." };
+
+  revalidateLocationPaths();
+  return { success: true };
+}
+
+export async function updateLocationAction(id: string, name: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2) return { error: "El nombre debe tener al menos 2 caracteres." };
+
+  // Slug untouched on rename, same soft-reference reasoning as categories.
+  const admin = createAdminClient();
+  const { error } = await admin.from("locations").update({ name: trimmedName }).eq("id", id);
+  if (error) return { error: "No se pudo actualizar la ubicación." };
+
+  revalidateLocationPaths();
+  return { success: true };
+}
+
+export async function setLocationActiveAction(id: string, isActive: boolean): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("locations").update({ is_active: isActive }).eq("id", id);
+  if (error) return { error: "No se pudo actualizar la ubicación." };
+
+  revalidateLocationPaths();
+  return { success: true };
+}
+
+/** Deleting a province cascades to its cities (0014 on delete cascade);
+ * existing listings keep their city text (soft reference). */
+export async function deleteLocationAction(id: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("locations").delete().eq("id", id);
+  if (error) return { error: "No se pudo eliminar la ubicación." };
+
+  revalidateLocationPaths();
+  return { success: true };
+}
+
 // ── Featured listings ────────────────────────────────────────────────────────
 // featured_requests is the payment-confirmation queue; listings.is_featured/
 // featured_until is what the public site actually reads (ListingCard etc.),

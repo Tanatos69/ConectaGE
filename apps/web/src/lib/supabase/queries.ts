@@ -13,6 +13,7 @@ import type {
 } from "./types";
 import { categories } from "@/lib/categories";
 import { subcategories } from "@/lib/subcategories";
+import { EQUATORIAL_GUINEA_CITIES_BY_PROVINCE, type CityByProvince } from "@/lib/cities";
 import {
   allListings as demoAllListings,
   featuredListings as demoFeaturedListings,
@@ -40,6 +41,95 @@ export { postedLabel, monthYearLabel };
  */
 
 const FALLBACK_IMAGE = "/demo/sofa-gris.jpg";
+
+// ── Locations ────────────────────────────────────────────────────────────────
+
+export interface LocationNode {
+  id: string;
+  slug: string;
+  parentId: string | null;
+  name: string;
+  type: "province" | "city";
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/**
+ * Real province/city tree (flat list; group by parentId client-side) —
+ * admin-managed in /admin/ubicaciones, cached per request like
+ * getCategoryTree. Only active rows; the static cities.ts list remains the
+ * unconfigured-dev fallback.
+ */
+export const getLocationTree = cache(async function getLocationTree(): Promise<LocationNode[]> {
+  if (!isSupabaseConfigured) {
+    return EQUATORIAL_GUINEA_CITIES_BY_PROVINCE.flatMap((p, pi) => [
+      {
+        id: p.province,
+        slug: p.province,
+        parentId: null,
+        name: p.province,
+        type: "province" as const,
+        sortOrder: pi,
+        isActive: true,
+      },
+      ...p.cities.map((c, ci) => ({
+        id: `${p.province}:${c}`,
+        slug: c,
+        parentId: p.province,
+        name: c,
+        type: "city" as const,
+        sortOrder: ci,
+        isActive: true,
+      })),
+    ]);
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("locations")
+    .select("id, slug, parent_id, name, type, sort_order, is_active")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  return ((data ?? []) as {
+    id: string;
+    slug: string;
+    parent_id: string | null;
+    name: string;
+    type: "province" | "city";
+    sort_order: number;
+    is_active: boolean;
+  }[]).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    parentId: r.parent_id,
+    name: r.name,
+    type: r.type,
+    sortOrder: r.sort_order,
+    isActive: r.is_active,
+  }));
+});
+
+/** Grouped province → cities shape, same as the old static cities.ts. */
+export function locationsByProvince(tree: LocationNode[]): CityByProvince[] {
+  return tree
+    .filter((n) => n.parentId === null)
+    .map((prov) => ({
+      province: prov.name,
+      cities: tree.filter((n) => n.parentId === prov.id).map((n) => n.name),
+    }))
+    .filter((p) => p.cities.length > 0);
+}
+
+/** Flat alphabetical city-name list, same shape as the old GE_CITIES.
+ * A city only counts when its province is also active (hiding a province
+ * hides its cities everywhere). */
+export function flatCityNames(tree: LocationNode[]): string[] {
+  const provinceIds = new Set(tree.filter((n) => n.parentId === null).map((n) => n.id));
+  return tree
+    .filter((n) => n.parentId !== null && provinceIds.has(n.parentId))
+    .map((n) => n.name)
+    .sort((a, b) => a.localeCompare(b, "es"));
+}
 
 export interface CategoryNode {
   id: string;

@@ -577,6 +577,47 @@ export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
   }));
 }
 
+export interface AdminLocationNode {
+  id: string;
+  slug: string;
+  parentId: string | null;
+  name: string;
+  type: "province" | "city";
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/** Unlike the public getLocationTree(), this includes inactive rows too so
+ * an admin can find and re-enable a city they previously hid. */
+export async function getAdminLocationTree(): Promise<AdminLocationNode[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("locations")
+    .select("id, slug, parent_id, name, type, sort_order, is_active")
+    .order("sort_order", { ascending: true });
+
+  return (
+    (data ?? []) as {
+      id: string;
+      slug: string;
+      parent_id: string | null;
+      name: string;
+      type: "province" | "city";
+      sort_order: number;
+      is_active: boolean;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    parentId: r.parent_id,
+    name: r.name,
+    type: r.type,
+    sortOrder: r.sort_order,
+    isActive: r.is_active,
+  }));
+}
+
 export interface AdminFeaturedRequestRow extends FeaturedRequestRow {
   listingSlug: string;
   listingTitle: string;
