@@ -195,7 +195,11 @@ export async function signInWithOAuthAction(
 export async function signOutAction(): Promise<void> {
   if (isSupabaseConfigured) {
     const supabase = await createClient();
-    await supabase.auth.signOut();
+    // Local scope only: clears this session's cookies immediately without
+    // waiting on a network round-trip to revoke the refresh token on
+    // Supabase's server. Global-scope signOut can hang or silently fail on
+    // a slow/flaky connection, which is what made the button feel "stuck".
+    await supabase.auth.signOut({ scope: "local" });
   }
   revalidatePath("/", "layout");
   redirect("/");
@@ -280,6 +284,38 @@ export async function updateProfileAction(input: {
     .eq("id", user.id);
 
   if (error) return { error: "No se pudo guardar el perfil. Intenta de nuevo." };
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * One-time buyer/seller intent, asked after first login (not at signup, to
+ * keep that form short). 'seller' routes into the real seller-request flow
+ * at /mi-cuenta/tienda — this IS how a buyer asks permission to become a
+ * seller, not a separate mechanism. 'skipped' still records that the modal
+ * was shown, so it never nags a user twice.
+ */
+export async function setOnboardingIntentAction(
+  intent: "buyer" | "seller" | "skipped",
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const parsed = z.enum(["buyer", "seller", "skipped"]).safeParse(intent);
+  if (!parsed.success) return { error: "Valor no válido." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Debes iniciar sesión." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarding_intent: parsed.data })
+    .eq("id", user.id);
+
+  if (error) return { error: "No se pudo guardar tu elección." };
 
   revalidatePath("/", "layout");
   return { success: true };

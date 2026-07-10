@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store, LayoutGrid } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -115,8 +115,13 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const explorarRef = useRef<HTMLDivElement>(null);
 
-  async function handleLogout() {
-    await signOutAction();
+  const [loggingOut, startLogout] = useTransition();
+
+  function handleLogout() {
+    if (loggingOut) return; // ignore double-clicks while the first request is in flight
+    startLogout(async () => {
+      await signOutAction();
+    });
   }
 
   useEffect(() => {
@@ -264,10 +269,11 @@ export function SiteHeader() {
                 </Link>
                 <button
                   onClick={handleLogout}
+                  disabled={loggingOut}
                   aria-label="Cerrar sesión"
-                  className="hidden size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary sm:inline-flex"
+                  className="hidden size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-50 sm:inline-flex"
                 >
-                  <LogOut className="size-4" />
+                  <LogOut className={cn("size-4", loggingOut && "animate-pulse")} />
                 </button>
               </>
             ) : (
@@ -339,10 +345,11 @@ export function SiteHeader() {
                 </Link>
                 <button
                   onClick={() => { setMenuOpen(false); handleLogout(); }}
-                  className={cn(buttonVariants({ variant: "ghost" }), "shrink-0")}
+                  disabled={loggingOut}
+                  className={cn(buttonVariants({ variant: "ghost" }), "shrink-0 disabled:opacity-50")}
                   aria-label="Cerrar sesión"
                 >
-                  <LogOut className="size-4" />
+                  <LogOut className={cn("size-4", loggingOut && "animate-pulse")} />
                 </button>
               </div>
             ) : (

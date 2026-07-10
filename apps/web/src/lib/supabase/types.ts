@@ -20,6 +20,7 @@ export interface Profile {
   notify_listings: boolean;
   notify_seller_requests: boolean;
   notify_followed_stores: boolean;
+  onboarding_intent: "buyer" | "seller" | "skipped" | null;
   created_at: string;
 }
 
