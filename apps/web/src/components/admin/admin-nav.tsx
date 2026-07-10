@@ -22,37 +22,51 @@ import {
   UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminStats } from "@/lib/demo-admin";
 import { useTranslation } from "@/lib/i18n/context";
+
+/** Real pending counts, fetched server-side in admin/layout.tsx. */
+export interface AdminNavBadges {
+  pendingSellerRequests: number;
+  pendingReports: number;
+}
 
 interface AdminNavItem {
   href: string;
   labelKey: string;
   icon: React.ElementType;
-  badge?: number;
+  badgeKey?: keyof AdminNavBadges;
   exact?: boolean;
 }
 
 const items: AdminNavItem[] = [
   { href: "/admin", labelKey: "admin.dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/moderacion", labelKey: "admin.moderation", icon: ShieldCheck, badge: adminStats.pendingModeration },
+  { href: "/admin/moderacion", labelKey: "admin.moderation", icon: ShieldCheck },
   { href: "/admin/anuncios", labelKey: "admin.listings", icon: FileText },
-  { href: "/admin/vendedores", labelKey: "admin.sellers", icon: UserCheck },
+  { href: "/admin/vendedores", labelKey: "admin.sellers", icon: UserCheck, badgeKey: "pendingSellerRequests" },
   { href: "/admin/usuarios", labelKey: "admin.users", icon: Users },
-  { href: "/admin/tiendas", labelKey: "admin.stores", icon: Store, badge: adminStats.pendingStoreVerifications },
+  { href: "/admin/tiendas", labelKey: "admin.stores", icon: Store },
   { href: "/admin/categorias", labelKey: "admin.categories", icon: Tag },
-  { href: "/admin/resenas", labelKey: "admin.reviews", icon: Star, badge: adminStats.pendingReviews },
-  { href: "/admin/reportes", labelKey: "admin.reports", icon: Flag, badge: adminStats.totalReports },
-  { href: "/admin/destacados", labelKey: "admin.featured", icon: Sparkles, badge: adminStats.pendingFeatured },
+  { href: "/admin/resenas", labelKey: "admin.reviews", icon: Star },
+  { href: "/admin/reportes", labelKey: "admin.reports", icon: Flag, badgeKey: "pendingReports" },
+  { href: "/admin/destacados", labelKey: "admin.featured", icon: Sparkles },
   { href: "/admin/analiticas", labelKey: "admin.analytics", icon: BarChart3 },
   { href: "/admin/ajustes", labelKey: "admin.settings", icon: Settings },
 ];
 
-function NavLink({ item, onClick }: { item: AdminNavItem; onClick?: () => void }) {
+function NavLink({
+  item,
+  badges,
+  onClick,
+}: {
+  item: AdminNavItem;
+  badges?: AdminNavBadges;
+  onClick?: () => void;
+}) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
   const Icon = item.icon;
+  const badge = item.badgeKey && badges ? badges[item.badgeKey] : 0;
 
   return (
     <Link
@@ -67,20 +81,20 @@ function NavLink({ item, onClick }: { item: AdminNavItem; onClick?: () => void }
     >
       <Icon className="size-4 shrink-0" />
       <span className="flex-1">{t(item.labelKey)}</span>
-      {item.badge != null && item.badge > 0 && (
+      {badge > 0 && (
         <span className="flex size-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
-          {item.badge > 99 ? "99+" : item.badge}
+          {badge > 99 ? "99+" : badge}
         </span>
       )}
     </Link>
   );
 }
 
-export function AdminNav() {
+export function AdminNav({ badges }: { badges?: AdminNavBadges }) {
   return (
     <nav className="space-y-0.5">
       {items.map((item) => (
-        <NavLink key={item.href} item={item} />
+        <NavLink key={item.href} item={item} badges={badges} />
       ))}
     </nav>
   );
@@ -101,7 +115,7 @@ export function AdminSidebarFooter() {
   );
 }
 
-export function AdminMobileHeader() {
+export function AdminMobileHeader({ badges }: { badges?: AdminNavBadges }) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   const pathname = usePathname();
@@ -152,7 +166,7 @@ export function AdminMobileHeader() {
             </div>
             <nav className="space-y-0.5">
               {items.map((item) => (
-                <NavLink key={item.href} item={item} onClick={() => setOpen(false)} />
+                <NavLink key={item.href} item={item} badges={badges} onClick={() => setOpen(false)} />
               ))}
             </nav>
             <div className="mt-4 border-t pt-4">

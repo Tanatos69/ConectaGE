@@ -116,6 +116,9 @@ const listingUpdateSchema = z.object({
   description: z.string().trim().min(10).max(2000),
   price: z.number().min(0).max(999_999_999_999).nullable(),
   priceType: z.enum(["fixed", "negotiable", "free", "on_request"]),
+  city: z.string().trim().min(1, "Indica la ciudad").max(60),
+  condition: z.enum(["new", "used", "refurbished"]).nullable(),
+  whatsapp: phoneSchema,
 });
 
 export async function updateListingAction(
@@ -142,6 +145,9 @@ export async function updateListingAction(
       description: d.description,
       price: d.priceType === "fixed" || d.priceType === "negotiable" ? d.price : null,
       price_type: d.priceType,
+      city: d.city,
+      condition: d.condition,
+      whatsapp: d.whatsapp,
     })
     .eq("id", id)
     .eq("seller_id", user.id);

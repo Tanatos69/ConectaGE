@@ -4,6 +4,7 @@ import { AdminNav, AdminMobileHeader, AdminSidebarFooter } from "@/components/ad
 import { AdminBanner } from "@/components/admin/admin-banner";
 import { getUser } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/queries";
+import { getAdminBadges } from "./data";
 
 export const metadata: Metadata = {
   title: { default: "Admin — ConectaGE", template: "%s | Admin ConectaGE" },
@@ -18,10 +19,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const profile = await getProfile(user.id);
   if (profile?.role !== "admin") redirect("/");
 
+  const badges = await getAdminBadges();
+
   return (
     <div className="min-h-screen">
       <AdminBanner />
-      <AdminMobileHeader />
+      <AdminMobileHeader badges={badges} />
 
       <div className="mx-auto flex max-w-screen-xl">
         {/* Desktop sidebar */}
@@ -33,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </span>
               <span className="text-sm font-semibold text-foreground">ConectaGE</span>
             </div>
-            <AdminNav />
+            <AdminNav badges={badges} />
             <AdminSidebarFooter />
           </div>
         </aside>

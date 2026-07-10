@@ -6,6 +6,7 @@ import { UserCheck } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction } from "@/lib/actions/auth";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { GE_CITIES } from "@/lib/cities";
 
 const cities = [...GE_CITIES, "Otra"];
@@ -13,10 +14,15 @@ const cities = [...GE_CITIES, "Otra"];
 const inputClass =
   "h-11 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30";
 
+// Latest selectable birth date (must be at least 16 years old).
+const MAX_BIRTH_DATE = new Date(Date.now() - 16 * 365.25 * 24 * 3600 * 1000)
+  .toISOString()
+  .slice(0, 10);
+
 /**
- * OAuth signups arrive without a phone number, but posting a listing needs
- * one (it powers the WhatsApp contact button). The middleware redirects
- * phone-less users here before they can reach /publicar.
+ * OAuth signups arrive without a phone number or birth date, but posting a
+ * listing needs both (WhatsApp contact + the 16+ age gate). The middleware
+ * redirects incomplete profiles here before they can reach /publicar.
  */
 function CompletarPerfilForm() {
   const router = useRouter();
@@ -28,6 +34,7 @@ function CompletarPerfilForm() {
     fullName: profile?.full_name ?? "",
     phone: profile?.phone ?? "",
     city: profile?.city ?? "",
+    birthDate: profile?.birth_date ?? "",
   });
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -85,16 +92,30 @@ function CompletarPerfilForm() {
               <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
                 Número de teléfono (WhatsApp) <span className="text-destructive">*</span>
               </label>
-              <input
+              <PhoneInput
                 id="phone"
-                type="tel"
-                autoComplete="tel"
                 required
-                placeholder="+240 222 000 000"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(phone) => setForm({ ...form, phone })}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="birthDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                Fecha de nacimiento <span className="text-destructive">*</span>
+              </label>
+              <input
+                id="birthDate"
+                type="date"
+                required
+                value={form.birthDate}
+                onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+                max={MAX_BIRTH_DATE}
                 className={inputClass}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Debes tener al menos 16 años para usar ConectaGE.
+              </p>
             </div>
 
             <div>

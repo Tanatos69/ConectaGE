@@ -20,6 +20,8 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createListingAction } from "@/lib/actions/listings";
 import { compressImage, LISTING_PHOTO_PRESET } from "@/lib/image-compress";
+import { useAuth } from "@/lib/auth/context";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,9 +48,9 @@ interface FormData {
   region: string;
   city: string;
   photos: PhotoPreview[];
-  whatsapp: string;
-  showPhone: boolean;
-  phone: string;
+  /** Use a different WhatsApp than the account's number for this listing. */
+  useCustomWhatsapp: boolean;
+  customWhatsapp: string;
 }
 
 const defaultForm: FormData = {
@@ -68,9 +70,8 @@ const defaultForm: FormData = {
   region: "",
   city: "",
   photos: [],
-  whatsapp: "",
-  showPhone: false,
-  phone: "",
+  useCustomWhatsapp: false,
+  customWhatsapp: "",
 };
 
 // ── Location data ────────────────────────────────────────────────────────────
@@ -168,8 +169,15 @@ const inputClass =
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PublicarPage() {
+  const { profile } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(defaultForm);
+
+  // The listing's contact number: the account's WhatsApp by default, or a
+  // per-listing override (any country) when the seller opts for one.
+  const effectiveWhatsapp = form.useCustomWhatsapp
+    ? form.customWhatsapp
+    : (profile?.phone ?? "");
   const [submitted, setSubmitted] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -214,7 +222,7 @@ export default function PublicarPage() {
     if (step === 1) return form.category !== "" && form.subcategory !== "";
     if (step === 2) return form.title.trim().length >= 5 && form.description.trim().length >= 10;
     if (step === 4) return form.country !== "" && form.city !== "";
-    if (step === 6) return form.whatsapp.trim().length >= 6;
+    if (step === 6) return effectiveWhatsapp.trim().length >= 6;
     return true;
   }
 
@@ -264,9 +272,9 @@ export default function PublicarPage() {
         city: form.city,
         region: form.region,
         condition: form.listingType === "offer" ? form.condition : null,
-        whatsapp: form.whatsapp,
-        showPhone: form.showPhone,
-        phone: form.phone,
+        whatsapp: effectiveWhatsapp,
+        showPhone: false,
+        phone: "",
         listingType: form.listingType,
         extraFields: form.extraFields,
         images: imageUrls,
@@ -736,47 +744,50 @@ export default function PublicarPage() {
         {step === 6 && (
           <SectionCard title="Datos de contacto">
             <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Número de WhatsApp <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="tel"
-                  value={form.whatsapp}
-                  onChange={(e) => set({ whatsapp: e.target.value })}
-                  placeholder="+240 222 000 000"
-                  className={inputClass}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Los compradores contactarán directamente por WhatsApp.
-                </p>
-              </div>
+              {!form.useCustomWhatsapp ? (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    Número de WhatsApp <span className="text-destructive">*</span>
+                  </label>
+                  <div className="flex h-11 items-center rounded-xl border border-input bg-muted/40 px-4 text-sm text-foreground">
+                    {profile?.phone || "Añade tu número en Mi perfil"}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    El número de tu cuenta. Los compradores te contactarán directamente por
+                    WhatsApp.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    Número de WhatsApp para este anuncio{" "}
+                    <span className="text-destructive">*</span>
+                  </label>
+                  <PhoneInput
+                    value={form.customWhatsapp}
+                    onChange={(customWhatsapp) => set({ customWhatsapp })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Puede ser de cualquier país.
+                  </p>
+                </div>
+              )}
 
               <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
-                  checked={form.showPhone}
-                  onChange={(e) => set({ showPhone: e.target.checked })}
+                  checked={form.useCustomWhatsapp}
+                  onChange={(e) => set({ useCustomWhatsapp: e.target.checked })}
                   className="size-4 accent-primary rounded"
                 />
-                <span className="text-sm text-foreground">Mostrar también teléfono en el anuncio</span>
+                <span className="text-sm text-foreground">
+                  Usar otro número para este anuncio
+                </span>
               </label>
 
-              {form.showPhone && (
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">Teléfono</label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => set({ phone: e.target.value })}
-                    placeholder="+240 222 000 000"
-                    className={inputClass}
-                  />
-                </div>
-              )}
-
               <div className="rounded-xl bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
-                Tu número de teléfono solo es visible en tu anuncio publicado, no en el listado de búsqueda.
+                Solo se muestra un número por anuncio, y únicamente a usuarios con sesión
+                iniciada.
               </div>
             </div>
           </SectionCard>
@@ -821,7 +832,7 @@ export default function PublicarPage() {
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-muted-foreground">WhatsApp</dt>
-                  <dd className="font-medium text-foreground">{form.whatsapp || "—"}</dd>
+                  <dd className="font-medium text-foreground">{effectiveWhatsapp || "—"}</dd>
                 </div>
               </dl>
 

@@ -168,6 +168,90 @@ export async function revokeAdminAction(userId: string): Promise<ActionResult> {
   return { success: true };
 }
 
+// ── Content moderation ───────────────────────────────────────────────────────
+
+export async function adminDeleteListingAction(listingId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("listings").delete().eq("id", listingId);
+  if (error) return { error: "No se pudo eliminar el anuncio." };
+
+  revalidatePath("/admin/anuncios");
+  revalidatePath("/admin/reportes");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function adminDeleteReviewAction(reviewId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("reviews").delete().eq("id", reviewId);
+  if (error) return { error: "No se pudo eliminar la reseña." };
+
+  revalidatePath("/admin/resenas");
+  return { success: true };
+}
+
+export async function resolveReportAction(
+  reportId: string,
+  outcome: "resolved" | "dismissed",
+  options?: { deleteListing?: boolean },
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+
+  const { data: report } = await admin
+    .from("reports")
+    .select("listing_slug")
+    .eq("id", reportId)
+    .maybeSingle();
+  if (!report) return { error: "Reporte no encontrado." };
+
+  if (outcome === "resolved" && options?.deleteListing) {
+    // Cascades: the reports rows for this listing go with it, so mark first.
+    await admin
+      .from("reports")
+      .update({
+        status: "resolved",
+        reviewed_by: gate.adminId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("listing_slug", report.listing_slug)
+      .eq("status", "pending");
+    const { error } = await admin
+      .from("listings")
+      .delete()
+      .eq("slug", report.listing_slug);
+    if (error) return { error: "No se pudo eliminar el anuncio reportado." };
+  } else {
+    const { error } = await admin
+      .from("reports")
+      .update({
+        status: outcome,
+        reviewed_by: gate.adminId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+    if (error) return { error: "No se pudo actualizar el reporte." };
+  }
+
+  revalidatePath("/admin/reportes");
+  revalidatePath("/admin/anuncios");
+  return { success: true };
+}
+
 export async function rejectSellerRequestAction(requestId: string): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 

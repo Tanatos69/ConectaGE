@@ -1,168 +1,77 @@
-"use client";
-
-import { useState } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Star, CheckCircle, XCircle, Trash2 } from "lucide-react";
-import { pendingReviews, type PendingReview } from "@/lib/demo-admin";
-import { UserAvatar } from "@/components/ui/user-avatar";
+import { Star } from "lucide-react";
+import { getAdminReviews } from "../data";
+import { postedLabel } from "@/lib/time";
+import { DeleteReviewButton } from "@/components/admin/admin-row-actions";
 
-function Stars({ rating }: { rating: number }) {
+export const metadata: Metadata = { title: "Reseñas" };
+
+function Stars({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={`size-3.5 ${i <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
+          className={
+            i < value ? "size-3.5 fill-amber-400 text-amber-400" : "size-3.5 fill-muted text-muted"
+          }
         />
       ))}
     </div>
   );
 }
 
-function ReviewCard({
-  review,
-  onAction,
-}: {
-  review: PendingReview;
-  onAction: (id: string, action: "approve" | "reject" | "delete") => void;
-}) {
-  const [confirming, setConfirming] = useState(false);
-
-  return (
-    <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <UserAvatar name={review.reviewerName} size="sm" />
-          <div>
-            <p className="text-sm font-semibold text-foreground">{review.reviewerName}</p>
-            <p className="text-xs text-muted-foreground">{review.date}</p>
-          </div>
-        </div>
-        <Stars rating={review.rating} />
-      </div>
-
-      <div>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Sobre el anuncio</p>
-        <Link
-          href={`/anuncios/${review.listingSlug}`}
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          {review.listingTitle}
-        </Link>
-      </div>
-
-      <blockquote className="rounded-xl bg-muted/50 px-4 py-3 text-sm text-muted-foreground italic">
-        "{review.comment}"
-      </blockquote>
-
-      {!confirming ? (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onAction(review.id, "approve")}
-            className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-          >
-            <CheckCircle className="size-4" />
-            Aprobar
-          </button>
-          <button
-            onClick={() => setConfirming(true)}
-            className="flex items-center gap-2 rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive/90"
-          >
-            <XCircle className="size-4" />
-            Rechazar
-          </button>
-          <button
-            onClick={() => onAction(review.id, "delete")}
-            className="flex items-center gap-2 rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
-          >
-            <Trash2 className="size-4" />
-            Eliminar
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">¿Confirmar rechazo de esta reseña?</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onAction(review.id, "reject")}
-              className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive/90"
-            >
-              Confirmar rechazo
-            </button>
-            <button
-              onClick={() => setConfirming(false)}
-              className="rounded-xl border border-input bg-background px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function AdminResenasPage() {
-  const [reviews, setReviews] = useState(pendingReviews);
-  const [log, setLog] = useState<string[]>([]);
-
-  function handleAction(id: string, action: "approve" | "reject" | "delete") {
-    const review = reviews.find((r) => r.id === id);
-    if (!review) return;
-    setReviews((prev) => prev.filter((r) => r.id !== id));
-    const labels = { approve: "Aprobada", reject: "Rechazada", delete: "Eliminada" };
-    setLog((prev) => [`"${review.reviewerName}": ${labels[action]}`, ...prev]);
-  }
-
-  function approveAll() {
-    reviews.forEach((r) => {
-      setLog((prev) => [`"${r.reviewerName}": Aprobada`, ...prev]);
-    });
-    setReviews([]);
-  }
+export default async function AdminResenasPage() {
+  const reviews = await getAdminReviews();
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Moderación de reseñas</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {reviews.length} reseña{reviews.length !== 1 ? "s" : ""} pendiente{reviews.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        {reviews.length > 0 && (
-          <button
-            onClick={approveAll}
-            className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-          >
-            <CheckCircle className="size-4" />
-            Aprobar todas
-          </button>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Reseñas</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {reviews.length.toLocaleString("es-ES")} reseñas publicadas. Elimina las que incumplan
+          las normas (spam, lenguaje ofensivo, reseñas falsas).
+        </p>
       </div>
 
       {reviews.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border bg-card py-20 text-center shadow-sm">
-          <Star className="mb-3 size-12 text-amber-300" />
-          <p className="text-base font-semibold text-foreground">Sin reseñas pendientes</p>
-          <p className="mt-1 text-sm text-muted-foreground">Todas las reseñas han sido revisadas.</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border bg-card py-16 text-center">
+          <Star className="mb-3 size-10 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground">Todavía no hay reseñas</p>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-3">
           {reviews.map((r) => (
-            <ReviewCard key={r.id} review={r} onAction={handleAction} />
+            <div key={r.id} className="rounded-2xl border bg-card p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">{r.reviewerName}</span>
+                    <Stars value={r.rating} />
+                    <span className="text-xs text-muted-foreground">
+                      {postedLabel(r.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{r.reviewerEmail}</p>
+                  <Link
+                    href={r.targetHref}
+                    className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
+                  >
+                    {r.targetLabel}
+                  </Link>
+                  <p className="mt-2 text-sm text-muted-foreground">{r.comment}</p>
+                  {r.seller_reply && (
+                    <p className="mt-2 rounded-lg bg-secondary px-3 py-2 text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">Respuesta del vendedor: </span>
+                      {r.seller_reply}
+                    </p>
+                  )}
+                </div>
+                <DeleteReviewButton reviewId={r.id} />
+              </div>
+            </div>
           ))}
-        </div>
-      )}
-
-      {log.length > 0 && (
-        <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <p className="mb-3 text-sm font-semibold text-foreground">Acciones realizadas</p>
-          <ul className="space-y-1">
-            {log.map((entry, i) => (
-              <li key={i} className="text-xs text-muted-foreground">· {entry}</li>
-            ))}
-          </ul>
         </div>
       )}
     </div>

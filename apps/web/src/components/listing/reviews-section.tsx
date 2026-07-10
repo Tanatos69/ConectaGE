@@ -4,7 +4,11 @@ import { useState, useTransition } from "react";
 import { Star, MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
-import { submitReviewAction, replyToReviewAction } from "@/lib/actions/reviews";
+import {
+  submitReviewAction,
+  submitStoreReviewAction,
+  replyToReviewAction,
+} from "@/lib/actions/reviews";
 
 export interface ReviewItem {
   id: string;
@@ -55,9 +59,11 @@ function Stars({
 function WriteReviewForm({
   listingId,
   listingSlug,
+  tiendaSlug,
 }: {
-  listingId: string;
-  listingSlug: string;
+  listingId?: string;
+  listingSlug?: string;
+  tiendaSlug?: string;
 }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -73,7 +79,9 @@ function WriteReviewForm({
     }
     setError("");
     startTransition(async () => {
-      const result = await submitReviewAction({ listingId, listingSlug, rating, comment });
+      const result = tiendaSlug
+        ? await submitStoreReviewAction({ tiendaSlug, rating, comment })
+        : await submitReviewAction({ listingId: listingId!, listingSlug: listingSlug!, rating, comment });
       if (result?.error) setError(result.error);
       else setDone(true);
     });
@@ -89,7 +97,9 @@ function WriteReviewForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-xl bg-secondary/50 p-4">
-      <p className="text-sm font-semibold text-foreground">Escribe una reseña</p>
+      <p className="text-sm font-semibold text-foreground">
+        {tiendaSlug ? "Escribe una reseña de esta tienda" : "Escribe una reseña"}
+      </p>
       <Stars value={rating} onChange={setRating} size="lg" />
       <textarea
         value={comment}
@@ -113,10 +123,11 @@ function WriteReviewForm({
 
 function SellerReplyForm({
   reviewId,
-  listingSlug,
+  path,
 }: {
   reviewId: string;
-  listingSlug: string;
+  /** Page to refresh after replying, e.g. /anuncios/x or /tienda/y. */
+  path: string;
 }) {
   const [reply, setReply] = useState("");
   const [open, setOpen] = useState(false);
@@ -138,7 +149,7 @@ function SellerReplyForm({
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const result = await replyToReviewAction({ reviewId, reply, listingSlug });
+      const result = await replyToReviewAction({ reviewId, reply, path });
       if (result?.error) setError(result.error);
     });
   }
@@ -171,21 +182,30 @@ export function ReviewsSection({
   totalCount,
   listingId,
   listingSlug,
+  tiendaSlug,
   isLoggedIn = false,
   isSeller = false,
   alreadyReviewed = false,
+  hasContacted = false,
 }: {
   reviews: ReviewItem[];
   avgRating: number;
   totalCount: number;
-  /** When set (with listingSlug), the write-review form can render. */
+  /** Listing target: set listingId + listingSlug. */
   listingId?: string;
   listingSlug?: string;
+  /** Store target: set tiendaSlug instead. */
+  tiendaSlug?: string;
   isLoggedIn?: boolean;
   isSeller?: boolean;
   alreadyReviewed?: boolean;
+  /** Anti review-bombing: the form only unlocks after a WhatsApp contact. */
+  hasContacted?: boolean;
 }) {
-  const canReview = Boolean(listingId && listingSlug) && isLoggedIn && !isSeller && !alreadyReviewed;
+  const hasTarget = Boolean((listingId && listingSlug) || tiendaSlug);
+  const replyPath = tiendaSlug ? `/tienda/${tiendaSlug}` : `/anuncios/${listingSlug}`;
+  const loginNext = tiendaSlug ? `/tienda/${tiendaSlug}` : `/anuncios/${listingSlug}`;
+  const canReview = hasTarget && isLoggedIn && !isSeller && !alreadyReviewed && hasContacted;
 
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -227,7 +247,7 @@ export function ReviewsSection({
                     </div>
                   ) : (
                     isSeller &&
-                    listingSlug && <SellerReplyForm reviewId={review.id} listingSlug={listingSlug} />
+                    hasTarget && <SellerReplyForm reviewId={review.id} path={replyPath} />
                   )}
                 </div>
               </div>
@@ -238,17 +258,27 @@ export function ReviewsSection({
 
       <div className="mt-5 border-t pt-4">
         {canReview ? (
-          <WriteReviewForm listingId={listingId!} listingSlug={listingSlug!} />
+          <WriteReviewForm
+            listingId={listingId}
+            listingSlug={listingSlug}
+            tiendaSlug={tiendaSlug}
+          />
         ) : alreadyReviewed ? (
-          <p className="text-center text-sm text-muted-foreground">Ya has dejado tu reseña en este anuncio.</p>
-        ) : isSeller ? null : !isLoggedIn && listingId ? (
           <p className="text-center text-sm text-muted-foreground">
-            <a href={`/login?next=/anuncios/${listingSlug}`} className="font-medium text-primary hover:underline">
+            Ya has dejado tu reseña {tiendaSlug ? "en esta tienda" : "en este anuncio"}.
+          </p>
+        ) : isSeller || !hasTarget ? null : !isLoggedIn ? (
+          <p className="text-center text-sm text-muted-foreground">
+            <a href={`/login?next=${loginNext}`} className="font-medium text-primary hover:underline">
               Inicia sesión
             </a>{" "}
             para dejar una reseña
           </p>
-        ) : null}
+        ) : (
+          <p className="text-center text-sm text-muted-foreground">
+            Solo quienes han contactado con el vendedor por WhatsApp pueden dejar una reseña.
+          </p>
+        )}
       </div>
     </div>
   );

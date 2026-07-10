@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MailCheck } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { signUpAction, signInWithOAuthAction } from "@/lib/actions/auth";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { GE_CITIES } from "@/lib/cities";
 
 const cities = [...GE_CITIES, "Otra"];
@@ -164,19 +165,15 @@ export default function RegistroPage() {
               <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
                 Número de teléfono (WhatsApp) <span className="text-destructive">*</span>
               </label>
-              <input
+              <PhoneInput
                 id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
                 required
-                placeholder="+240 222 000 000"
                 value={form.phone}
-                onChange={(e) => set({ phone: e.target.value })}
-                className={inputClass}
+                onChange={(phone) => set({ phone })}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Los compradores te contactarán por WhatsApp a este número.
+                Los compradores te contactarán por WhatsApp a este número. Puede ser de cualquier
+                país.
               </p>
             </div>
 
@@ -257,6 +254,24 @@ export default function RegistroPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
+                <label htmlFor="birthDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Fecha de nacimiento <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="birthDate"
+                  type="date"
+                  required
+                  value={form.birthDate}
+                  onChange={(e) => set({ birthDate: e.target.value })}
+                  max={MAX_BIRTH_DATE}
+                  className={inputClass}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Debes tener al menos 16 años para usar ConectaGE. Tu edad nunca se muestra a
+                  otros usuarios.
+                </p>
+              </div>
+              <div>
                 <label htmlFor="gender" className="mb-1.5 block text-sm font-medium text-foreground">
                   Género{" "}
                   <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
@@ -272,20 +287,6 @@ export default function RegistroPage() {
                   <option value="female">Mujer</option>
                   <option value="other">Otro</option>
                 </select>
-              </div>
-              <div>
-                <label htmlFor="birthDate" className="mb-1.5 block text-sm font-medium text-foreground">
-                  Fecha de nacimiento{" "}
-                  <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
-                </label>
-                <input
-                  id="birthDate"
-                  type="date"
-                  value={form.birthDate}
-                  onChange={(e) => set({ birthDate: e.target.value })}
-                  max={MAX_BIRTH_DATE}
-                  className={inputClass}
-                />
               </div>
             </div>
 

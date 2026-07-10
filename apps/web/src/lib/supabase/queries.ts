@@ -190,17 +190,17 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
 
   const store = mapTiendaRow(row, listingRows.map((r) => r.slug));
 
-  if (listingRows.length > 0) {
-    const { data: reviewRows } = await supabase
-      .from("reviews")
-      .select("rating")
-      .in("listing_id", listingRows.map((r) => r.id));
-    const ratings = (reviewRows ?? []) as { rating: number }[];
-    if (ratings.length > 0) {
-      store.rating =
-        Math.round((ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10) / 10;
-      store.reviewsCount = ratings.length;
-    }
+  // Aggregate rating across direct store reviews + its listings' reviews.
+  const orFilter =
+    listingRows.length > 0
+      ? `tienda_slug.eq.${slug},listing_id.in.(${listingRows.map((r) => r.id).join(",")})`
+      : `tienda_slug.eq.${slug}`;
+  const { data: reviewRows } = await supabase.from("reviews").select("rating").or(orFilter);
+  const ratings = (reviewRows ?? []) as { rating: number }[];
+  if (ratings.length > 0) {
+    store.rating =
+      Math.round((ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10) / 10;
+    store.reviewsCount = ratings.length;
   }
 
   return store;
@@ -360,26 +360,46 @@ export async function getReviewsForListing(listingId: string): Promise<
   return rows.map((r) => ({ ...r, reviewerName: nameById.get(r.reviewer_id) || "Usuario" }));
 }
 
-/** Aggregate, read-only reviews across every listing a store has published. */
-export async function getReviewsForStore(listingSlugs: string[]): Promise<
-  (ReviewRow & { reviewerName: string })[]
-> {
-  if (!isSupabaseConfigured || listingSlugs.length === 0) return [];
+/**
+ * Store reviews: direct reviews of the tienda itself PLUS reviews left on
+ * its published listings, newest first.
+ */
+export async function getReviewsForStore(
+  tiendaSlug: string,
+  listingSlugs: string[],
+): Promise<(ReviewRow & { reviewerName: string })[]> {
+  if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
-  const { data: listingRows } = await supabase
-    .from("listings")
-    .select("id")
-    .in("slug", listingSlugs);
-  const listingIds = (listingRows ?? []).map((r: { id: string }) => r.id);
-  if (listingIds.length === 0) return [];
 
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("*")
-    .in("listing_id", listingIds)
-    .order("created_at", { ascending: false })
-    .limit(50);
-  const rows = (reviews ?? []) as ReviewRow[];
+  let listingIds: string[] = [];
+  if (listingSlugs.length > 0) {
+    const { data: listingRows } = await supabase
+      .from("listings")
+      .select("id")
+      .in("slug", listingSlugs);
+    listingIds = (listingRows ?? []).map((r: { id: string }) => r.id);
+  }
+
+  const [{ data: storeReviews }, { data: listingReviews }] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("*")
+      .eq("tienda_slug", tiendaSlug)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    listingIds.length > 0
+      ? supabase
+          .from("reviews")
+          .select("*")
+          .in("listing_id", listingIds)
+          .order("created_at", { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: [] as ReviewRow[] }),
+  ]);
+
+  const rows = [...((storeReviews ?? []) as ReviewRow[]), ...((listingReviews ?? []) as ReviewRow[])]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 50);
   if (rows.length === 0) return [];
 
   const { data: reviewers } = await supabase
@@ -391,6 +411,24 @@ export async function getReviewsForStore(listingSlugs: string[]): Promise<
   );
 
   return rows.map((r) => ({ ...r, reviewerName: nameById.get(r.reviewer_id) || "Usuario" }));
+}
+
+/** Whether the user has a recorded WhatsApp contact for this listing/store. */
+export async function hasContacted(
+  userId: string,
+  target: { listingSlug?: string; tiendaSlug?: string },
+): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const supabase = await createClient();
+  let query = supabase
+    .from("listing_contacts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (target.tiendaSlug) query = query.eq("tienda_slug", target.tiendaSlug);
+  else if (target.listingSlug) query = query.eq("listing_slug", target.listingSlug);
+  else return false;
+  const { count } = await query;
+  return (count ?? 0) > 0;
 }
 
 // ── Favorites / follows ──────────────────────────────────────────────────────

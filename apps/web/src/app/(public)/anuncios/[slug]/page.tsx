@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eye, Flag, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
+import { Eye, MapPin, Clock, LayoutList, Star, Truck } from "lucide-react";
 import { getListingBySlug as getDemoListingBySlug, type Listing } from "@/lib/listings";
 import { getListingDetail, type SellerProfile } from "@/lib/demo-detail";
 import {
   getListingWithDetail,
   getPublishedListings,
   getReviewsForListing,
+  hasContacted,
   incrementListingViews,
   logEvent,
   monthYearLabel,
@@ -25,6 +26,7 @@ import { ReviewsSection, type ReviewItem } from "@/components/listing/reviews-se
 import { WhatsAppCTA } from "@/components/listing/whatsapp-cta";
 import { PageBreadcrumb } from "@/components/listing/page-breadcrumb";
 import { FavoriteButton } from "@/components/listing/favorite-button";
+import { ReportButton } from "@/components/listing/report-button";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -158,6 +160,9 @@ export default async function ListingDetailPage({ params }: Props) {
   const alreadyReviewed = Boolean(
     currentUser && reviews.some((r) => r.reviewerId === currentUser.id),
   );
+  const contacted = currentUser
+    ? await hasContacted(currentUser.id, { listingSlug: slug })
+    : false;
 
   const all = await getPublishedListings();
   const related = all
@@ -236,13 +241,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
             <div className="mt-4 flex items-center gap-2.5">
               <FavoriteButton slug={slug} />
-              <button
-                type="button"
-                className="flex items-center gap-1.5 rounded-xl border border-input px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Flag className="size-4" />
-                Reportar
-              </button>
+              <ReportButton listingSlug={slug} />
             </div>
           </div>
 
@@ -288,6 +287,7 @@ export default async function ListingDetailPage({ params }: Props) {
             isLoggedIn={Boolean(currentUser)}
             isSeller={isSeller}
             alreadyReviewed={alreadyReviewed}
+            hasContacted={contacted}
           />
         </div>
 

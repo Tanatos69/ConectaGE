@@ -12,14 +12,23 @@ import { useTranslation } from "@/lib/i18n/context";
 import type { Store } from "@/lib/stores";
 import type { Listing } from "@/lib/listings";
 
+export interface StoreReviewContext {
+  isLoggedIn: boolean;
+  isOwner: boolean;
+  alreadyReviewed: boolean;
+  hasContacted: boolean;
+}
+
 export function StoreView({
   store,
   listings,
   reviews,
+  reviewContext,
 }: {
   store: Store;
   listings: Listing[];
   reviews: ReviewItem[];
+  reviewContext?: StoreReviewContext;
 }) {
   const { t } = useTranslation();
   const isVerified = store.verificationStatus === "verified";
@@ -123,6 +132,7 @@ export function StoreView({
             <WhatsAppCTA
               phoneNumber={store.whatsapp}
               listingTitle={store.name}
+              tiendaSlug={store.slug}
               message={`Hola, me interesa tu tienda ${store.name} en ConectaGE.`}
               label={t("stores.contact")}
             />
@@ -184,7 +194,12 @@ export function StoreView({
         <ReviewsSection
           reviews={reviews}
           avgRating={store.rating}
-          totalCount={store.reviewsCount}
+          totalCount={reviews.length}
+          tiendaSlug={store.slug}
+          isLoggedIn={reviewContext?.isLoggedIn ?? false}
+          isSeller={reviewContext?.isOwner ?? false}
+          alreadyReviewed={reviewContext?.alreadyReviewed ?? false}
+          hasContacted={reviewContext?.hasContacted ?? false}
         />
       </section>
     </div>

@@ -46,15 +46,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Complete-your-profile gate: OAuth signups have no phone; posting a
-  // listing requires one (it powers the WhatsApp contact button).
+  // Complete-your-profile gate: OAuth signups have no phone or birth date;
+  // posting a listing requires both (WhatsApp contact + the 16+ age gate).
   if (pathname.startsWith("/publicar") && user && supabase) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("phone")
+      .select("phone, birth_date")
       .eq("id", user.id)
       .maybeSingle();
-    if (!profile?.phone) {
+    if (!profile?.phone || !profile?.birth_date) {
       const complete = new URL("/completar-perfil", request.url);
       complete.searchParams.set("next", pathname);
       return NextResponse.redirect(complete);

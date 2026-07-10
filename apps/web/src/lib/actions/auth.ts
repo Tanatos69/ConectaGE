@@ -37,22 +37,32 @@ const signInSchema = z.object({
   password: z.string().min(1, "Introduce tu contraseña"),
 });
 
-// Optional demographics: empty string means "not provided".
+// Gender stays optional; empty string means "not provided".
 const genderSchema = z.enum(["male", "female", "other", "prefer_not_to_say", ""]).optional();
+
+function isValidAdultBirthDate(v: string): boolean {
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return false;
+  const minAge = new Date();
+  minAge.setFullYear(minAge.getFullYear() - 16);
+  return d > new Date("1900-01-01") && d <= minAge;
+}
+
+// Optional variant (profile edits by pre-existing/OAuth accounts).
 const birthDateSchema = z
   .string()
   .optional()
-  .refine(
-    (v) => {
-      if (!v) return true;
-      const d = new Date(v);
-      if (isNaN(d.getTime())) return false;
-      const minAge = new Date();
-      minAge.setFullYear(minAge.getFullYear() - 16);
-      return d > new Date("1900-01-01") && d <= minAge;
-    },
-    { message: "Debes tener al menos 16 años." },
-  );
+  .refine((v) => !v || isValidAdultBirthDate(v), {
+    message: "Debes tener al menos 16 años.",
+  });
+
+// Required variant: the signup age gate — keeps minors off the platform.
+const requiredBirthDateSchema = z
+  .string()
+  .min(1, "Indica tu fecha de nacimiento.")
+  .refine(isValidAdultBirthDate, {
+    message: "Debes tener al menos 16 años para crear una cuenta.",
+  });
 
 const signUpSchema = z.object({
   email: z.email("Correo electrónico no válido"),
@@ -61,7 +71,7 @@ const signUpSchema = z.object({
   phone: phoneSchema,
   city: z.string().trim().min(1, "Selecciona tu ciudad").max(60),
   gender: genderSchema,
-  birthDate: birthDateSchema,
+  birthDate: requiredBirthDateSchema,
 });
 
 // ── Sign in ──────────────────────────────────────────────────────────────────
@@ -264,7 +274,8 @@ export async function updateProfileAction(input: {
       phone: parsed.data.phone,
       city: parsed.data.city,
       ...(parsed.data.gender !== undefined && { gender: parsed.data.gender || null }),
-      ...(parsed.data.birthDate !== undefined && { birth_date: parsed.data.birthDate || null }),
+      // DOB is the age gate: it can be set/corrected but never cleared.
+      ...(parsed.data.birthDate ? { birth_date: parsed.data.birthDate } : {}),
     })
     .eq("id", user.id);
 

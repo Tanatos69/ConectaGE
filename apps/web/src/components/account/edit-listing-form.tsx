@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateListingAction } from "@/lib/actions/listings";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { GE_CITIES } from "@/lib/cities";
 
 interface EditableListing {
   id: string;
@@ -11,6 +13,9 @@ interface EditableListing {
   description: string;
   price: number | null;
   priceType: "fixed" | "negotiable" | "free" | "on_request";
+  city: string;
+  condition: "new" | "used" | "refurbished" | null;
+  whatsapp: string;
 }
 
 const inputClass =
@@ -23,6 +28,9 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
     description: listing.description,
     price: listing.price != null ? String(listing.price) : "",
     priceType: listing.priceType,
+    city: listing.city,
+    condition: listing.condition ?? "used",
+    whatsapp: listing.whatsapp,
   });
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -36,6 +44,9 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
         description: form.description,
         price: form.price ? Number(form.price) : null,
         priceType: form.priceType,
+        city: form.city,
+        condition: listing.condition === null ? null : form.condition,
+        whatsapp: form.whatsapp,
       });
       if (result?.error) {
         setError(result.error);
@@ -104,6 +115,51 @@ export function EditListingForm({ listing }: { listing: EditableListing }) {
             placeholder="Describe tu artículo con detalle..."
             className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">Ciudad</label>
+            <select
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              className={inputClass}
+            >
+              {!GE_CITIES.includes(form.city) && form.city && (
+                <option value={form.city}>{form.city}</option>
+              )}
+              {GE_CITIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          {listing.condition !== null && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">Estado</label>
+              <select
+                value={form.condition}
+                onChange={(e) =>
+                  setForm({ ...form, condition: e.target.value as typeof form.condition })
+                }
+                className={inputClass}
+              >
+                <option value="new">Nuevo</option>
+                <option value="used">Segunda mano</option>
+                <option value="refurbished">Reacondicionado</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Número de WhatsApp del anuncio
+          </label>
+          <PhoneInput
+            value={form.whatsapp}
+            onChange={(whatsapp) => setForm({ ...form, whatsapp })}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">Puede ser de cualquier país.</p>
         </div>
       </div>
 

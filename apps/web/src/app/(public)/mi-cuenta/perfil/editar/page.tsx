@@ -8,6 +8,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
 import { updateNotificationPreferencesAction } from "@/lib/actions/notifications";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage, AVATAR_PRESET } from "@/lib/image-compress";
 import { cn } from "@/lib/utils";
@@ -332,14 +333,11 @@ export default function EditarPerfilPage() {
         <div className="space-y-4">
           <Field
             label="Teléfono (WhatsApp)"
-            hint="Número que aparecerá en los botones de contacto de tus anuncios. Formato: +240222000000"
+            hint="Número que aparecerá en los botones de contacto de tus anuncios. Puede ser de cualquier país."
           >
-            <input
-              type="tel"
+            <PhoneInput
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="+240 222 000 000"
-              className={inputClass}
+              onChange={(phone) => setForm({ ...form, phone })}
             />
           </Field>
           <Field label="Correo electrónico" hint="El correo de acceso no se puede cambiar desde aquí.">

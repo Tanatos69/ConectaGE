@@ -117,10 +117,32 @@ export interface ListingRow {
 
 export interface ReviewRow {
   id: string;
-  listing_id: string;
+  /** Exactly one of listing_id / tienda_slug is set (review target). */
+  listing_id: string | null;
+  tienda_slug: string | null;
   reviewer_id: string;
   rating: number;
   comment: string;
   seller_reply: string | null;
+  created_at: string;
+}
+
+export type ReportReason =
+  | "fraud"
+  | "prohibited"
+  | "wrong_category"
+  | "duplicate"
+  | "offensive"
+  | "other";
+
+export interface ReportRow {
+  id: string;
+  reporter_id: string;
+  listing_slug: string;
+  reason: ReportReason;
+  details: string;
+  status: "pending" | "resolved" | "dismissed";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
