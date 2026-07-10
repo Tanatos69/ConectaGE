@@ -3,21 +3,11 @@ import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  const maintenance = request.cookies.get("conectage_maintenance")?.value;
   const { pathname } = request.nextUrl;
 
-  // Maintenance mode — redirect all public traffic to /maintenance
-  if (
-    maintenance === "true" &&
-    !pathname.startsWith("/maintenance") &&
-    !pathname.startsWith("/admin") &&
-    !pathname.startsWith("/login") &&
-    !pathname.startsWith("/api") &&
-    !pathname.startsWith("/auth") &&
-    !pathname.startsWith("/_next")
-  ) {
-    return NextResponse.redirect(new URL("/maintenance", request.url));
-  }
+  // Maintenance mode is enforced by the (public) layout from the
+  // site_settings table (the old cookie approach only ever set the cookie in
+  // the admin's own browser, so visitors never saw the maintenance page).
 
   // Refreshes the Supabase session and validates the JWT server-side
   // (supabase.auth.getUser()) — unlike the old raw cookie string check.

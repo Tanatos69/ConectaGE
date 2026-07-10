@@ -27,6 +27,9 @@ const notifIcons: Record<NotificationKind, React.ElementType> = {
   followed_store_listing: Bell,
   welcome: Sparkles,
   listing_removed: AlertTriangle,
+  listing_approved: CheckCircle,
+  featured_confirmed: Sparkles,
+  featured_rejected: AlertTriangle,
 };
 
 const notifColors: Record<NotificationKind, string> = {
@@ -36,6 +39,9 @@ const notifColors: Record<NotificationKind, string> = {
   followed_store_listing: "text-blue-600 bg-blue-50",
   welcome: "text-primary bg-primary/10",
   listing_removed: "text-destructive bg-destructive/10",
+  listing_approved: "text-green-600 bg-green-50",
+  featured_confirmed: "text-amber-600 bg-amber-50",
+  featured_rejected: "text-destructive bg-destructive/10",
 };
 
 const statusLabel: Record<string, string> = {

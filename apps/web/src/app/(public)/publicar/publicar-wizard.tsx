@@ -179,10 +179,12 @@ export function PublicarWizard({
   categories,
   subcategoriesByParent,
   subcategoryCounts,
+  maxImages = 10,
 }: {
   categories: CategoryNode[];
   subcategoriesByParent: Record<string, CategoryNode[]>;
   subcategoryCounts: Map<string, number>;
+  maxImages?: number;
 }) {
   const { profile } = useAuth();
   const [step, setStep] = useState(1);
@@ -194,6 +196,7 @@ export function PublicarWizard({
     ? form.customWhatsapp
     : (profile?.phone ?? "");
   const [submitted, setSubmitted] = useState(false);
+  const [inModeration, setInModeration] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -207,7 +210,7 @@ export function PublicarWizard({
   const addPhotos = useCallback(
     async (files: FileList | File[]) => {
       const arr = Array.from(files);
-      const remaining = 10 - form.photos.length;
+      const remaining = maxImages - form.photos.length;
       // Compress before previewing so the preview is exactly what gets
       // uploaded (WebP ~380KB max side 1600px).
       const compressed = await Promise.all(
@@ -301,6 +304,7 @@ export function PublicarWizard({
         return;
       }
       setPublishedSlug(result?.slug ?? null);
+      setInModeration(Boolean(result?.pending));
       setSubmitted(true);
     } catch {
       setSubmitError("No se pudieron subir las fotos. Revisa tu conexión e intenta de nuevo.");
@@ -316,13 +320,24 @@ export function PublicarWizard({
           <div className="flex size-16 items-center justify-center rounded-2xl bg-green-50 mx-auto">
             <CheckCircle className="size-8 text-green-600" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">¡Anuncio publicado!</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            {inModeration ? "¡Anuncio enviado a revisión!" : "¡Anuncio publicado!"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Tu anuncio <strong>&ldquo;{form.title}&rdquo;</strong> ya está publicado y visible
-            para todos los compradores.
+            {inModeration ? (
+              <>
+                Tu anuncio <strong>&ldquo;{form.title}&rdquo;</strong> está en revisión. Será
+                visible para los compradores en cuanto nuestro equipo lo apruebe.
+              </>
+            ) : (
+              <>
+                Tu anuncio <strong>&ldquo;{form.title}&rdquo;</strong> ya está publicado y visible
+                para todos los compradores.
+              </>
+            )}
           </p>
           <div className="flex flex-col gap-2">
-            {publishedSlug && (
+            {publishedSlug && !inModeration && (
               <Link
                 href={`/anuncios/${publishedSlug}`}
                 className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90"
@@ -710,7 +725,7 @@ export function PublicarWizard({
         {/* ── Step 5: Photos ────────────────────────────────────────────── */}
         {step === 5 && (
           <div className="space-y-4">
-            <SectionCard title={`Fotos (${form.photos.length}/10)`}>
+            <SectionCard title={`Fotos (${form.photos.length}/${maxImages})`}>
               {/* Drop zone */}
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -724,7 +739,7 @@ export function PublicarWizard({
                 className={cn(
                   "cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
                   dragging ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30",
-                  form.photos.length >= 10 && "pointer-events-none opacity-50",
+                  form.photos.length >= maxImages && "pointer-events-none opacity-50",
                 )}
               >
                 <ImagePlus className="mx-auto mb-3 size-8 text-muted-foreground" />
@@ -732,7 +747,7 @@ export function PublicarWizard({
                   Arrastra tus fotos aquí o haz clic para seleccionar
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  JPG, PNG o WebP · Máx. 5 MB por foto · Hasta 10 fotos
+                  JPG, PNG o WebP · Máx. 5 MB por foto · Hasta {maxImages} fotos
                 </p>
                 <button
                   type="button"

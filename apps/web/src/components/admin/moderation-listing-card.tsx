@@ -3,8 +3,12 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle, Flag, Clock, Ban, Trash2 } from "lucide-react";
-import { unpublishListingAction, adminDeleteListingAction } from "@/lib/actions/admin";
+import { AlertTriangle, Flag, Clock, Ban, Trash2, CheckCircle } from "lucide-react";
+import {
+  unpublishListingAction,
+  adminDeleteListingAction,
+  approveListingAction,
+} from "@/lib/actions/admin";
 import type { AdminModerationListing } from "@/app/admin/data";
 import { categories } from "@/lib/categories";
 import { formatNumber } from "@/lib/format";
@@ -26,6 +30,14 @@ export function ModerationListingCard({ listing }: { listing: AdminModerationLis
       const result = await unpublishListingAction(listing.id, reason);
       if (result?.error) setError(result.error);
       else setUnpublishing(false);
+    });
+  }
+
+  function runApprove() {
+    setError("");
+    startTransition(async () => {
+      const result = await approveListingAction(listing.id);
+      if (result?.error) setError(result.error);
     });
   }
 
@@ -67,6 +79,11 @@ export function ModerationListingCard({ listing }: { listing: AdminModerationLis
             <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
               {categoryName(listing.category_slug)}
             </span>
+            {listing.status === "pending" && (
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                Pendiente de aprobación
+              </span>
+            )}
           </div>
           <p className="line-clamp-2 text-sm text-muted-foreground">{listing.description}</p>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -114,6 +131,16 @@ export function ModerationListingCard({ listing }: { listing: AdminModerationLis
       <div className="border-t px-5 py-3">
         {!unpublishing ? (
           <div className="flex flex-wrap gap-2">
+            {listing.status === "pending" && (
+              <button
+                onClick={runApprove}
+                disabled={pending}
+                className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-60"
+              >
+                <CheckCircle className="size-4" />
+                Aprobar y publicar
+              </button>
+            )}
             <button
               onClick={() => setUnpublishing(true)}
               className="flex items-center gap-2 rounded-xl border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100"

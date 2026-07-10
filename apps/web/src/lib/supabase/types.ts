@@ -81,7 +81,10 @@ export type NotificationKind =
   | "seller_request_rejected"
   | "followed_store_listing"
   | "welcome"
-  | "listing_removed";
+  | "listing_removed"
+  | "listing_approved"
+  | "featured_confirmed"
+  | "featured_rejected";
 
 export interface NotificationRow {
   id: string;

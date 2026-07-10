@@ -252,6 +252,8 @@ export interface AdminModerationListing {
   category_slug: string;
   images: string[];
   created_at: string;
+  /** 'pending' rows are the pre-publish queue and sort first. */
+  status: string;
   sellerId: string;
   sellerName: string;
   sellerEmail: string;
@@ -262,18 +264,24 @@ export interface AdminModerationListing {
 }
 
 /**
- * Real post-publish review queue (item 8): listings already auto-publish,
- * so this is a spot-check tool, not a pre-publish gate. Duplicate detection
- * is a simple normalized-title match across a seller's own published
- * listings — no ML/scoring, just a signal for the admin to look twice.
+ * Moderation queue: pending listings (pre-publish gate, when the
+ * moderation settings route them here) sort first, followed by the 100 most
+ * recent published listings as a post-publish spot-check. Duplicate
+ * detection is a simple normalized-title match across a seller's own
+ * published listings — no ML/scoring, just a signal to look twice.
  */
 export async function getAdminModerationListings(): Promise<AdminModerationListing[]> {
   if (!ready()) return [];
   const admin = createAdminClient();
-  const [{ data: listings }, { data: allTitles }, { data: pendingReports }] = await Promise.all([
+  const [{ data: pendingListings }, { data: publishedListings }, { data: allTitles }, { data: pendingReports }] = await Promise.all([
     admin
       .from("listings")
-      .select("id, slug, title, description, price, city, category_slug, images, created_at, seller_id")
+      .select("id, slug, title, description, price, city, category_slug, images, created_at, seller_id, status")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }), // oldest waiting first
+    admin
+      .from("listings")
+      .select("id, slug, title, description, price, city, category_slug, images, created_at, seller_id, status")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(100),
@@ -283,7 +291,7 @@ export async function getAdminModerationListings(): Promise<AdminModerationListi
     admin.from("reports").select("listing_slug").eq("status", "pending"),
   ]);
 
-  const rows = (listings ?? []) as {
+  const rows = [...(pendingListings ?? []), ...(publishedListings ?? [])] as {
     id: string;
     slug: string;
     title: string;
@@ -294,6 +302,7 @@ export async function getAdminModerationListings(): Promise<AdminModerationListi
     images: string[];
     created_at: string;
     seller_id: string;
+    status: string;
   }[];
   if (rows.length === 0) return [];
 
@@ -335,6 +344,7 @@ export async function getAdminModerationListings(): Promise<AdminModerationListi
       category_slug: r.category_slug,
       images: r.images,
       created_at: r.created_at,
+      status: r.status,
       sellerId: r.seller_id,
       sellerName: seller?.full_name || "—",
       sellerEmail: seller?.email || "—",

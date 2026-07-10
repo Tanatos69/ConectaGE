@@ -107,7 +107,15 @@ function LanguageSwitcher() {
   );
 }
 
-export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
+export function SiteHeader({
+  categories,
+  siteName = "ConectaGE",
+  logoUrl = "",
+}: {
+  categories: CategoryNode[];
+  siteName?: string;
+  logoUrl?: string;
+}) {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
   const role = profile?.role ?? (user ? "buyer" : null);
@@ -176,7 +184,7 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
             <Menu className="size-6" />
           </button>
 
-          <Logo />
+          <Logo siteName={siteName} logoUrl={logoUrl} />
 
           {/* Desktop search + Publicar compound bar */}
           <div className="mx-2 hidden flex-1 md:flex">
@@ -326,7 +334,7 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
         />
         <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-hidden bg-background shadow-2xl">
           <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
-            <Logo />
+            <Logo siteName={siteName} logoUrl={logoUrl} />
             <button
               type="button"
               aria-label={t("header.closeMenu")}

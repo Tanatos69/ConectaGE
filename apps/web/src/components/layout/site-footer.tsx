@@ -8,7 +8,21 @@ import { paymentMethods } from "@/lib/payments-logistics";
 import { useTranslation } from "@/lib/i18n/context";
 import type { CategoryNode } from "@/lib/supabase/queries";
 
-export function SiteFooter({ categories }: { categories: CategoryNode[] }) {
+export function SiteFooter({
+  categories,
+  siteName = "ConectaGE",
+  logoUrl = "",
+  tagline = "",
+  contactEmail = "",
+  contactWhatsapp = "",
+}: {
+  categories: CategoryNode[];
+  siteName?: string;
+  logoUrl?: string;
+  tagline?: string;
+  contactEmail?: string;
+  contactWhatsapp?: string;
+}) {
   const { t } = useTranslation();
 
   const navColumns = [
@@ -47,9 +61,9 @@ export function SiteFooter({ categories }: { categories: CategoryNode[] }) {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           {/* Brand + contact */}
           <div className="col-span-2 md:col-span-2">
-            <Logo />
+            <Logo siteName={siteName} logoUrl={logoUrl} />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              {t("footer.tagline")}
+              {tagline || t("footer.tagline")}
             </p>
             <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground">
               <li className="flex items-center gap-2.5">
@@ -58,11 +72,11 @@ export function SiteFooter({ categories }: { categories: CategoryNode[] }) {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-primary" />
-                +240 555 000 000
+                {contactWhatsapp || "+240 222 000 000"}
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-primary" />
-                hola@conectage.com
+                {contactEmail || "info@conectage.com"}
               </li>
             </ul>
           </div>

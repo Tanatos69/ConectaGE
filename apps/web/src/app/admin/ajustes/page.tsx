@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/supabase/server";
 import { monthYearLabel } from "@/lib/time";
+import { getSiteSettings } from "@/lib/supabase/settings";
 import { AdminManagers, type AdminEntry } from "@/components/admin/admin-managers";
 import { SiteSettingsForm } from "@/components/admin/site-settings-form";
 
@@ -25,17 +26,17 @@ async function getAdmins(): Promise<AdminEntry[]> {
 }
 
 export default async function AdminAjustesPage() {
-  const [user, admins] = await Promise.all([getUser(), getAdmins()]);
+  const [user, admins, settings] = await Promise.all([getUser(), getAdmins(), getSiteSettings()]);
 
   return (
     <div className="space-y-6">
-      {/* Real: admin role management */}
+      {/* Admin role management */}
       {user && admins.length > 0 && (
         <AdminManagers admins={admins} currentAdminId={user.id} />
       )}
 
-      {/* Demo/mocked site settings (except the maintenance toggle) */}
-      <SiteSettingsForm />
+      {/* Site settings, persisted in site_settings (migration 0013) */}
+      <SiteSettingsForm initialValues={settings} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured, NOT_CONFIGURED_ERROR } from "@/lib/supabase/config";
 import { DEFAULT_ICON_NAME } from "@/lib/categories";
+import { DEFAULT_SETTINGS, type SiteSettingKey } from "@/lib/supabase/settings";
 import type { ActionResult } from "./auth";
 
 /**
@@ -411,6 +412,42 @@ export async function unpublishListingAction(listingId: string, reason: string):
   return { success: true };
 }
 
+/** Publishes a listing waiting in the pre-publish moderation queue. */
+export async function approveListingAction(listingId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { data: listing } = await admin
+    .from("listings")
+    .select("seller_id, title, status")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (!listing) return { error: "Anuncio no encontrado." };
+  if (listing.status !== "pending") return { error: "Este anuncio no está pendiente de revisión." };
+
+  const { error } = await admin
+    .from("listings")
+    .update({ status: "published", rejection_reason: null })
+    .eq("id", listingId);
+  if (error) return { error: "No se pudo aprobar el anuncio." };
+
+  await admin.from("notifications").insert({
+    user_id: listing.seller_id,
+    type: "listing_approved",
+    title: listing.title,
+    message: `Tu anuncio "${listing.title}" ha sido aprobado y ya está visible.`,
+  });
+
+  revalidatePath("/admin/moderacion");
+  revalidatePath("/admin/anuncios");
+  revalidatePath("/");
+  revalidatePath("/buscar");
+  return { success: true };
+}
+
 export async function adminDeleteReviewAction(reviewId: string): Promise<ActionResult> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
@@ -784,4 +821,90 @@ export async function manuallyFeatureListingAction(
 
   revalidateFeaturedPaths();
   return { success: true };
+}
+
+// ── Site settings ────────────────────────────────────────────────────────────
+// Key-value rows in site_settings (0013). DEFAULT_SETTINGS is the whitelist:
+// unknown keys and values whose type doesn't match the default are rejected,
+// so the world-readable table can only ever hold the shapes the app expects.
+
+export async function saveSiteSettingsAction(
+  values: Record<string, unknown>,
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const rows: { key: string; value: unknown; updated_at: string; updated_by: string }[] = [];
+  const now = new Date().toISOString();
+  for (const [key, value] of Object.entries(values)) {
+    if (!(key in DEFAULT_SETTINGS)) continue;
+    if (typeof value !== typeof DEFAULT_SETTINGS[key as SiteSettingKey]) {
+      return { error: `Valor inválido para "${key}".` };
+    }
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      return { error: `Valor inválido para "${key}".` };
+    }
+    // The color is injected into a <style> tag — restrict to a hex literal.
+    if (key === "primary_color" && value !== "" && !/^#[0-9a-fA-F]{6}$/.test(String(value))) {
+      return { error: "El color debe ser un valor hex (#RRGGBB)." };
+    }
+    rows.push({ key, value, updated_at: now, updated_by: gate.adminId });
+  }
+  if (rows.length === 0) return { error: "Nada que guardar." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("site_settings").upsert(rows);
+  if (error) return { error: "No se pudieron guardar los ajustes." };
+
+  // Settings feed the root/(public) layouts (color, logo, banner,
+  // maintenance) — layout-scope revalidation or headers go stale.
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+const SITE_ASSET_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+};
+const SITE_ASSET_MAX_BYTES = 512 * 1024;
+
+/** Uploads a logo to the public site-assets bucket and points logo_url at it. */
+export async function uploadSiteAssetAction(
+  formData: FormData,
+): Promise<ActionResult & { url?: string }> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Selecciona una imagen." };
+  const ext = SITE_ASSET_TYPES[file.type];
+  if (!ext) return { error: "Formato no soportado (PNG, JPG, WebP o SVG)." };
+  if (file.size > SITE_ASSET_MAX_BYTES) return { error: "La imagen no puede superar 512 KB." };
+
+  const admin = createAdminClient();
+  const path = `logo-${Date.now()}.${ext}`;
+  const { error: uploadError } = await admin.storage
+    .from("site-assets")
+    .upload(path, file, { contentType: file.type });
+  if (uploadError) return { error: "No se pudo subir la imagen." };
+
+  const { data } = admin.storage.from("site-assets").getPublicUrl(path);
+  const url = data.publicUrl;
+
+  const { error } = await admin.from("site_settings").upsert({
+    key: "logo_url",
+    value: url,
+    updated_at: new Date().toISOString(),
+    updated_by: gate.adminId,
+  });
+  if (error) return { error: "No se pudo guardar el logo." };
+
+  revalidatePath("/", "layout");
+  return { success: true, url };
 }

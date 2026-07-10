@@ -5,6 +5,7 @@ import "@/lib/fontawesome";
 import { Providers } from "@/components/providers";
 import { getUser } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/queries";
+import { getSiteSettings } from "@/lib/supabase/settings";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -61,10 +62,25 @@ export default async function RootLayout({
 }>) {
   const user = await getUser();
   const profile = user ? await getProfile(user.id) : null;
+  const settings = await getSiteSettings();
+
+  // Admin-configured brand color (site settings). globals.css maps every
+  // bg-primary/text-primary utility to var(--primary), so overriding the one
+  // variable retints the whole site. The value is validated as #RRGGBB by
+  // saveSiteSettingsAction, and re-checked here before being inlined.
+  const primaryColor = /^#[0-9a-fA-F]{6}$/.test(settings.primary_color)
+    ? settings.primary_color
+    : null;
 
   return (
     <html lang="es" className={`${inter.variable} ${plusJakarta.variable} h-full antialiased`}>
       <body className="h-full">
+        {primaryColor && (
+          // Dark mode normally pairs --primary with near-black foreground
+          // text; an arbitrary admin color can't guarantee that contrast, so
+          // the override standardizes on white text in both themes.
+          <style>{`:root, .dark { --primary: ${primaryColor}; --ring: ${primaryColor}; --primary-foreground: #ffffff; }`}</style>
+        )}
         <Providers initialUser={user} initialProfile={profile}>
           {children}
         </Providers>

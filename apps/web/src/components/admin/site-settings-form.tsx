@@ -1,23 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { Save, CheckCircle, AlertTriangle } from "lucide-react";
-import { siteSettings, type SiteSettingKey } from "@/lib/demo-admin";
+import { useRef, useState, useTransition } from "react";
+import { Save, CheckCircle, AlertTriangle, Upload, X, Loader2 } from "lucide-react";
+import {
+  DEFAULT_SETTINGS,
+  type SiteSettings,
+  type SiteSettingKey,
+} from "@/lib/site-settings";
+import { saveSiteSettingsAction, uploadSiteAssetAction } from "@/lib/actions/admin";
 
 interface SettingDefinition {
   key: SiteSettingKey;
   label: string;
   description: string;
-  type: "text" | "number" | "toggle" | "select";
-  options?: string[];
+  type: "text" | "number" | "toggle" | "color" | "textarea";
   group: string;
 }
 
 const settingDefs: SettingDefinition[] = [
   {
+    key: "site_name",
+    label: "Nombre del sitio",
+    description: "Se muestra en la cabecera, el pie y los títulos de página.",
+    type: "text",
+    group: "Identidad y apariencia",
+  },
+  {
+    key: "primary_color",
+    label: "Color principal",
+    description: "Color de marca de botones y enlaces. Déjalo vacío para usar el azul ConectaGE.",
+    type: "color",
+    group: "Identidad y apariencia",
+  },
+  {
+    key: "footer_tagline",
+    label: "Lema del pie de página",
+    description: "Frase corta bajo el logo en el pie del sitio.",
+    type: "text",
+    group: "Identidad y apariencia",
+  },
+  {
+    key: "announcement_enabled",
+    label: "Mostrar barra de anuncio",
+    description: "Barra destacada en la parte superior del sitio público.",
+    type: "toggle",
+    group: "Barra de anuncio",
+  },
+  {
+    key: "announcement_text",
+    label: "Texto del anuncio",
+    description: "Mensaje que se muestra en la barra (ej.: promoción, aviso de la plataforma).",
+    type: "text",
+    group: "Barra de anuncio",
+  },
+  {
+    key: "announcement_href",
+    label: "Enlace del anuncio (opcional)",
+    description: "URL a la que lleva la barra al hacer clic. Vacío = sin enlace.",
+    type: "text",
+    group: "Barra de anuncio",
+  },
+  {
+    key: "home_show_categories",
+    label: "Mostrar categorías en portada",
+    description: "Sección de rejilla de categorías en la página de inicio.",
+    type: "toggle",
+    group: "Portada",
+  },
+  {
+    key: "home_show_featured",
+    label: "Mostrar destacados en portada",
+    description: "Sección de anuncios destacados en la página de inicio.",
+    type: "toggle",
+    group: "Portada",
+  },
+  {
+    key: "home_show_stores",
+    label: "Mostrar tiendas en portada",
+    description: "Franja de tiendas profesionales en la página de inicio.",
+    type: "toggle",
+    group: "Portada",
+  },
+  {
     key: "site_whatsapp",
     label: "WhatsApp del sitio",
-    description: "Número que aparece en el botón flotante de WhatsApp global.",
+    description: "Número de contacto oficial de la plataforma.",
     type: "text",
     group: "Contacto",
   },
@@ -59,104 +126,148 @@ const settingDefs: SettingDefinition[] = [
   {
     key: "auto_approve_verified",
     label: "Auto-aprobar vendedores verificados",
-    description: "Los Vendedores Verificados bypasean la cola de moderación.",
+    description: "Los vendedores verificados publican sin pasar por la cola.",
     type: "toggle",
     group: "Moderación",
   },
   {
-    key: "maintenance_mode",
-    label: "Modo mantenimiento",
-    description: "Muestra una página de mantenimiento al público. El admin sigue accediendo.",
-    type: "toggle",
-    group: "Sistema",
-  },
-  {
-    key: "featured_price_7d",
-    label: "Precio destacado 7 días (FCFA)",
-    description: "Precio del plan de anuncio destacado de 7 días.",
-    type: "number",
-    group: "Planes",
-  },
-  {
-    key: "featured_price_15d",
-    label: "Precio destacado 15 días (FCFA)",
-    description: "Precio del plan de anuncio destacado de 15 días.",
-    type: "number",
-    group: "Planes",
-  },
-  {
-    key: "featured_price_30d",
-    label: "Precio destacado 30 días (FCFA)",
-    description: "Precio del plan de anuncio destacado de 30 días.",
-    type: "number",
-    group: "Planes",
-  },
-  {
-    key: "default_language",
-    label: "Idioma por defecto",
-    description: "Idioma predeterminado del sitio para nuevos visitantes.",
-    type: "select",
-    options: ["es", "fr", "en", "pt", "fa", "bube"],
-    group: "Sistema",
-  },
-  {
     key: "keyword_blacklist",
     label: "Lista negra de palabras clave",
-    description: "Palabras separadas por espacios. Los anuncios que las contengan se marcan automáticamente para revisión.",
+    description:
+      "Palabras separadas por espacios. Los anuncios que las contengan se marcan automáticamente para revisión.",
     type: "text",
     group: "Moderación automática",
   },
   {
     key: "max_reports_before_auto_remove",
     label: "Reportes para retirada automática",
-    description: "Número de reportes recibidos antes de retirar el anuncio automáticamente y notificar al moderador.",
+    description: "Número de reportes recibidos antes de retirar el anuncio automáticamente.",
     type: "number",
     group: "Moderación automática",
   },
   {
     key: "min_account_age_days_to_skip_queue",
     label: "Antigüedad mínima para omitir cola (días)",
-    description: "Cuentas verificadas más antiguas que este número de días pueden publicar sin pasar por la cola.",
+    description: "Cuentas más antiguas que este número de días pueden publicar sin cola.",
     type: "number",
     group: "Moderación automática",
   },
   {
     key: "auto_flag_price_above",
     label: "Precio máximo sin revisión (FCFA)",
-    description: "Los anuncios con precio superior a este valor se marcan automáticamente para revisión manual.",
+    description: "Anuncios con precio superior se marcan para revisión manual.",
     type: "number",
     group: "Moderación automática",
+  },
+  {
+    key: "featured_price_7d",
+    label: "Precio destacado 7 días (FCFA)",
+    description: "Precio del plan de anuncio destacado de 7 días.",
+    type: "number",
+    group: "Planes destacados",
+  },
+  {
+    key: "featured_price_15d",
+    label: "Precio destacado 15 días (FCFA)",
+    description: "Precio del plan de anuncio destacado de 15 días.",
+    type: "number",
+    group: "Planes destacados",
+  },
+  {
+    key: "featured_price_30d",
+    label: "Precio destacado 30 días (FCFA)",
+    description: "Precio del plan de anuncio destacado de 30 días.",
+    type: "number",
+    group: "Planes destacados",
+  },
+  {
+    key: "payment_instructions",
+    label: "Instrucciones de pago",
+    description:
+      "Se muestran al vendedor al solicitar un destacado (transferencia, dinero móvil, comprobante).",
+    type: "textarea",
+    group: "Planes destacados",
+  },
+  {
+    key: "maintenance_mode",
+    label: "Modo mantenimiento",
+    description: "Muestra una página de mantenimiento al público. Los admins siguen accediendo.",
+    type: "toggle",
+    group: "Sistema",
   },
 ];
 
 const groups = [...new Set(settingDefs.map((s) => s.group))];
 
-/** Site-wide settings form — still demo/mocked except the maintenance toggle. */
-export function SiteSettingsForm() {
-  const [values, setValues] = useState<Record<SiteSettingKey, string>>(
-    siteSettings as Record<SiteSettingKey, string>,
-  );
+/** String form-state → typed payload, driven by each default's type. */
+function toPayload(values: Record<SiteSettingKey, string>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const [key, raw] of Object.entries(values)) {
+    const def = DEFAULT_SETTINGS[key as SiteSettingKey];
+    if (typeof def === "boolean") payload[key] = raw === "true";
+    else if (typeof def === "number") payload[key] = Number(raw);
+    else payload[key] = raw;
+  }
+  return payload;
+}
+
+export function SiteSettingsForm({ initialValues }: { initialValues: SiteSettings }) {
+  const [values, setValues] = useState<Record<SiteSettingKey, string>>(() => {
+    const out = {} as Record<SiteSettingKey, string>;
+    for (const key of Object.keys(DEFAULT_SETTINGS) as SiteSettingKey[]) {
+      out[key] = String(initialValues[key]);
+    }
+    return out;
+  });
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, startSaving] = useTransition();
+  const [uploading, startUploading] = useTransition();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function handleChange(key: SiteSettingKey, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
+    setError(null);
   }
 
   function handleToggle(key: SiteSettingKey) {
-    setValues((prev) => ({ ...prev, [key]: prev[key] === "true" ? "false" : "true" }));
-    setSaved(false);
+    handleChange(key, values[key] === "true" ? "false" : "true");
   }
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (values.maintenance_mode === "true") {
-      document.cookie = "conectage_maintenance=true;path=/;max-age=86400";
-    } else {
-      document.cookie = "conectage_maintenance=;path=/;max-age=0";
+    if (saving) return;
+    const payload = toPayload(values);
+    for (const [key, v] of Object.entries(payload)) {
+      if (typeof v === "number" && !Number.isFinite(v)) {
+        setError(`Revisa el campo numérico "${key}": no es un número válido.`);
+        return;
+      }
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    startSaving(async () => {
+      const result = await saveSiteSettingsAction(payload);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    });
+  }
+
+  function handleLogoUpload(file: File | null) {
+    if (!file || uploading) return;
+    startUploading(async () => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await uploadSiteAssetAction(formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      if (result.url) handleChange("logo_url", result.url);
+    });
   }
 
   const inputClass =
@@ -167,24 +278,41 @@ export function SiteSettingsForm() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Ajustes del sitio</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Configuración global de la plataforma</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Configuración global de la plataforma
+          </p>
         </div>
         <button
           type="submit"
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+          disabled={saving}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60 ${
             saved ? "bg-green-600 text-white" : "bg-primary text-white hover:bg-primary/90"
           }`}
         >
-          {saved ? <CheckCircle className="size-4" /> : <Save className="size-4" />}
-          {saved ? "¡Guardado!" : "Guardar cambios"}
+          {saving ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : saved ? (
+            <CheckCircle className="size-4" />
+          ) : (
+            <Save className="size-4" />
+          )}
+          {saving ? "Guardando…" : saved ? "¡Guardado!" : "Guardar cambios"}
         </button>
       </div>
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+          <AlertTriangle className="size-4 mt-0.5 shrink-0 text-destructive" />
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      )}
 
       {values.maintenance_mode === "true" && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <AlertTriangle className="size-4 mt-0.5 shrink-0 text-amber-600" />
           <p className="text-sm text-amber-800">
-            <strong>Modo mantenimiento activo.</strong> Los visitantes están viendo la página de mantenimiento ahora mismo.
+            <strong>Modo mantenimiento activo.</strong> Al guardar, los visitantes verán la página
+            de mantenimiento.
           </p>
         </div>
       )}
@@ -193,6 +321,59 @@ export function SiteSettingsForm() {
         <div key={group} className="rounded-2xl border bg-card p-5 shadow-sm space-y-5">
           <h2 className="text-sm font-semibold text-foreground">{group}</h2>
           <div className="space-y-5">
+            {group === "Identidad y apariencia" && (
+              <div>
+                <p className="text-sm font-medium text-foreground">Logo del sitio</p>
+                <p className="mt-0.5 mb-2 text-xs text-muted-foreground">
+                  PNG, JPG, WebP o SVG, máx. 512 KB. Sustituye al logo por defecto en la cabecera.
+                  El cambio de logo se aplica al subirlo, sin necesidad de guardar.
+                </p>
+                <div className="flex items-center gap-3">
+                  {values.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={values.logo_url}
+                      alt="Logo actual"
+                      className="h-10 max-w-40 rounded-lg border bg-background object-contain px-2"
+                    />
+                  ) : (
+                    <span className="flex h-10 items-center rounded-lg border border-dashed px-3 text-xs text-muted-foreground">
+                      Logo por defecto
+                    </span>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="hidden"
+                    onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
+                  />
+                  <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => fileRef.current?.click()}
+                    className="flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
+                  >
+                    {uploading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                    Subir logo
+                  </button>
+                  {values.logo_url && (
+                    <button
+                      type="button"
+                      onClick={() => handleChange("logo_url", "")}
+                      className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    >
+                      <X className="size-4" />
+                      Quitar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             {settingDefs
               .filter((s) => s.group === group)
               .map((def) => (
@@ -219,16 +400,38 @@ export function SiteSettingsForm() {
                     </label>
                   ) : (
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-foreground">{def.label}</label>
+                      <label className="mb-1.5 block text-sm font-medium text-foreground">
+                        {def.label}
+                      </label>
                       <p className="mb-2 text-xs text-muted-foreground">{def.description}</p>
-                      {def.type === "select" ? (
-                        <select
+                      {def.type === "color" ? (
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={values[def.key] || "#2563EB"}
+                            onChange={(e) => handleChange(def.key, e.target.value)}
+                            className="h-10 w-14 cursor-pointer rounded-lg border border-input bg-background p-1"
+                          />
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {values[def.key] || "por defecto"}
+                          </span>
+                          {values[def.key] && (
+                            <button
+                              type="button"
+                              onClick={() => handleChange(def.key, "")}
+                              className="rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            >
+                              Restablecer
+                            </button>
+                          )}
+                        </div>
+                      ) : def.type === "textarea" ? (
+                        <textarea
                           value={values[def.key]}
                           onChange={(e) => handleChange(def.key, e.target.value)}
-                          className={inputClass}
-                        >
-                          {def.options?.map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
+                          rows={3}
+                          className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                        />
                       ) : (
                         <input
                           type={def.type}
