@@ -14,8 +14,22 @@ export async function GET(request: Request) {
 
   if (code && isSupabaseConfigured) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // OAuth providers (Google) never hand over phone/birth date — force
+      // those through /completar-perfil right here, at the one moment every
+      // OAuth user is guaranteed to pass through, rather than relying on
+      // them navigating to a page that happens to check for it.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone, birth_date")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (!profile?.phone || !profile?.birth_date) {
+        const complete = new URL("/completar-perfil", origin);
+        complete.searchParams.set("next", next);
+        return NextResponse.redirect(complete);
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

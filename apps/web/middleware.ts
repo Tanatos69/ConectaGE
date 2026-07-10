@@ -46,9 +46,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Complete-your-profile gate: OAuth signups have no phone or birth date;
-  // posting a listing requires both (WhatsApp contact + the 16+ age gate).
-  if (pathname.startsWith("/publicar") && user && supabase) {
+  // Complete-your-profile gate: OAuth signups have no phone or birth date
+  // (Google never hands those over). The auth callback already catches this
+  // on first login; this is defense-in-depth for anyone who reaches a
+  // gated page another way (bookmark, shared link) with an incomplete
+  // profile. /mi-cuenta covers browsing/managing the account; /publicar
+  // covers posting — both require a real WhatsApp number and the 16+ check.
+  if (
+    (pathname.startsWith("/publicar") || pathname.startsWith("/mi-cuenta")) &&
+    user &&
+    supabase
+  ) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("phone, birth_date")
