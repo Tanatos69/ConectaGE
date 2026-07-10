@@ -2,9 +2,15 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Search, Eye, CheckCircle, XCircle, ShieldCheck, Store } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, ShieldCheck, Store, Ban, Unlock, Pencil } from "lucide-react";
 import type { AdminTiendaRow } from "@/app/admin/data";
-import { verifyTiendaAction, unverifyTiendaAction } from "@/lib/actions/admin";
+import {
+  verifyTiendaAction,
+  unverifyTiendaAction,
+  suspendTiendaAction,
+  unsuspendTiendaAction,
+  adminUpdateTiendaAction,
+} from "@/lib/actions/admin";
 import { categories } from "@/lib/categories";
 import { monthYearLabel } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -13,7 +19,7 @@ function categoryName(slug: string): string {
   return categories.find((c) => c.slug === slug)?.name ?? slug;
 }
 
-type StatusFilter = "all" | "verified" | "unverified";
+type StatusFilter = "all" | "verified" | "unverified" | "suspended";
 
 function VerifyActions({ tiendaId, verified }: { tiendaId: string; verified: boolean }) {
   const [error, setError] = useState("");
@@ -63,6 +69,141 @@ function VerifyActions({ tiendaId, verified }: { tiendaId: string; verified: boo
   );
 }
 
+function RowActions({ tienda }: { tienda: AdminTiendaRow }) {
+  const [mode, setMode] = useState<"none" | "suspend" | "edit">("none");
+  const [reason, setReason] = useState("");
+  const [form, setForm] = useState({
+    name: tienda.name,
+    city: tienda.city,
+    whatsapp: tienda.whatsapp,
+  });
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  function run(fn: () => Promise<{ error?: string }>) {
+    setError("");
+    startTransition(async () => {
+      const result = await fn();
+      if (result?.error) setError(result.error);
+      else {
+        setMode("none");
+        setReason("");
+      }
+    });
+  }
+
+  if (mode === "suspend") {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <input
+          type="text"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Motivo…"
+          autoFocus
+          className="h-8 w-40 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none"
+        />
+        <button
+          onClick={() => run(() => suspendTiendaAction(tienda.id, reason))}
+          disabled={pending || !reason.trim()}
+          className="rounded-lg bg-destructive px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+        >
+          Suspender
+        </button>
+        <button
+          onClick={() => setMode("none")}
+          className="rounded-lg border px-2 py-1.5 text-xs text-muted-foreground"
+        >
+          ×
+        </button>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+    );
+  }
+
+  if (mode === "edit") {
+    return (
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
+        <input
+          type="text"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="Nombre"
+          className="h-8 w-32 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none"
+        />
+        <input
+          type="text"
+          value={form.city}
+          onChange={(e) => setForm({ ...form, city: e.target.value })}
+          placeholder="Ciudad"
+          className="h-8 w-24 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none"
+        />
+        <input
+          type="text"
+          value={form.whatsapp}
+          onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+          placeholder="WhatsApp"
+          className="h-8 w-28 rounded-lg border border-input bg-background px-2 text-xs focus:outline-none"
+        />
+        <button
+          onClick={() => run(() => adminUpdateTiendaAction(tienda.id, form))}
+          disabled={pending}
+          className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+        >
+          Guardar
+        </button>
+        <button
+          onClick={() => setMode("none")}
+          className="rounded-lg border px-2 py-1.5 text-xs text-muted-foreground"
+        >
+          ×
+        </button>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Link
+        href={`/tienda/${tienda.slug}`}
+        target="_blank"
+        title="Ver tienda"
+        className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+      >
+        <Eye className="size-3.5" />
+      </Link>
+      <button
+        onClick={() => setMode("edit")}
+        title="Editar tienda"
+        className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+      >
+        <Pencil className="size-3.5" />
+      </button>
+      {tienda.suspended_at ? (
+        <button
+          onClick={() => run(() => unsuspendTiendaAction(tienda.id))}
+          disabled={pending}
+          title="Levantar suspensión"
+          className="flex size-7 items-center justify-center rounded-lg text-green-600 hover:bg-green-50 disabled:opacity-50"
+        >
+          <Unlock className="size-3.5" />
+        </button>
+      ) : (
+        <button
+          onClick={() => setMode("suspend")}
+          title="Suspender tienda"
+          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-destructive"
+        >
+          <Ban className="size-3.5" />
+        </button>
+      )}
+      <VerifyActions tiendaId={tienda.id} verified={tienda.verified} />
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -72,6 +213,7 @@ export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
     return tiendas.filter((t) => {
       if (statusFilter === "verified" && !t.verified) return false;
       if (statusFilter === "unverified" && t.verified) return false;
+      if (statusFilter === "suspended" && !t.suspended_at) return false;
       if (!q) return true;
       return (
         t.name.toLowerCase().includes(q) ||
@@ -95,7 +237,7 @@ export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
           />
         </div>
         <div className="flex gap-1.5">
-          {(["all", "verified", "unverified"] as const).map((f) => (
+          {(["all", "verified", "unverified", "suspended"] as const).map((f) => (
             <button
               key={f}
               type="button"
@@ -107,7 +249,13 @@ export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
                   : "border border-input bg-background text-muted-foreground hover:bg-secondary",
               )}
             >
-              {f === "all" ? "Todas" : f === "verified" ? "Verificadas" : "No verificadas"}
+              {f === "all"
+                ? "Todas"
+                : f === "verified"
+                  ? "Verificadas"
+                  : f === "unverified"
+                    ? "No verificadas"
+                    : "Suspendidas"}
             </button>
           ))}
         </div>
@@ -142,6 +290,14 @@ export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
                     <td className="px-4 py-3">
                       <p className="truncate font-medium text-foreground">{t.name}</p>
                       <p className="truncate text-xs text-muted-foreground">/{t.slug}</p>
+                      {t.suspended_at && (
+                        <span
+                          className="mt-1 inline-block rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive"
+                          title={t.suspended_reason ?? undefined}
+                        >
+                          Suspendida
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       <Link
@@ -161,17 +317,7 @@ export function AdminTiendasTable({ tiendas }: { tiendas: AdminTiendaRow[] }) {
                       {monthYearLabel(t.created_at)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/tienda/${t.slug}`}
-                          target="_blank"
-                          title="Ver tienda"
-                          className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        >
-                          <Eye className="size-3.5" />
-                        </Link>
-                        <VerifyActions tiendaId={t.id} verified={t.verified} />
-                      </div>
+                      <RowActions tienda={t} />
                     </td>
                   </tr>
                 ))}

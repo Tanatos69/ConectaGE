@@ -29,6 +29,32 @@ async function requireAdmin(): Promise<{ adminId: string } | { error: string }> 
   return { adminId: user.id };
 }
 
+/**
+ * Best-effort audit trail (admin_audit_log, migration 0015): records who did
+ * what to what at the success point of every admin action. Fire-and-forget —
+ * a logging failure must never fail the action itself.
+ */
+async function auditLog(
+  admin: ReturnType<typeof createAdminClient>,
+  adminId: string,
+  action: string,
+  targetType: string,
+  targetId?: string | null,
+  meta?: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await admin.from("admin_audit_log").insert({
+      admin_id: adminId,
+      action,
+      target_type: targetType,
+      target_id: targetId ?? null,
+      meta: meta ?? null,
+    });
+  } catch {
+    // Never let audit logging break the action.
+  }
+}
+
 function storeSlugify(name: string): string {
   const base = name
     .toLowerCase()
@@ -114,6 +140,9 @@ export async function approveSellerRequestAction(requestId: string): Promise<Act
     .update({ status: "approved", reviewed_by: gate.adminId, reviewed_at: new Date().toISOString() })
     .eq("id", requestId);
 
+  await auditLog(admin, gate.adminId, "seller_request_approved", "user", request.user_id, {
+    store: request.store_name,
+  });
   revalidatePath("/admin/vendedores");
   return { success: true };
 }
@@ -133,6 +162,7 @@ export async function rejectSellerRequestAction(requestId: string): Promise<Acti
 
   if (error) return { error: "No se pudo rechazar la solicitud." };
 
+  await auditLog(admin, gate.adminId, "seller_request_rejected", "seller_request", requestId);
   revalidatePath("/admin/vendedores");
   return { success: true };
 }
@@ -182,6 +212,7 @@ export async function promoteToSellerAction(userId: string, storeName: string): 
   const { error: roleError } = await admin.from("profiles").update({ role: "seller" }).eq("id", userId);
   if (roleError) return { error: "No se pudo actualizar el rol del usuario." };
 
+  await auditLog(admin, gate.adminId, "promote_to_seller", "user", userId, { store: name });
   revalidatePath(`/admin/usuarios/${userId}`);
   revalidatePath("/admin/usuarios");
   return { success: true };
@@ -221,6 +252,7 @@ export async function grantAdminAction(email: string): Promise<ActionResult> {
     .eq("id", profile.id);
   if (error) return { error: "No se pudo conceder el acceso. Intenta de nuevo." };
 
+  await auditLog(admin, gate.adminId, "grant_admin", "user", profile.id, { email: normalized });
   revalidatePath("/admin/ajustes");
   return { success: true };
 }
@@ -259,6 +291,7 @@ export async function revokeAdminAction(userId: string): Promise<ActionResult> {
     .eq("id", userId);
   if (error) return { error: "No se pudo revocar el acceso. Intenta de nuevo." };
 
+  await auditLog(admin, gate.adminId, "revoke_admin", "user", userId);
   revalidatePath("/admin/ajustes");
   return { success: true };
 }
@@ -295,6 +328,7 @@ export async function blockUserAction(userId: string, reason: string): Promise<A
     .eq("id", userId);
   if (error) return { error: "No se pudo bloquear la cuenta." };
 
+  await auditLog(admin, gate.adminId, "block_user", "user", userId, { reason: trimmedReason });
   revalidatePath(`/admin/usuarios/${userId}`);
   revalidatePath("/admin/usuarios");
   revalidatePath("/");
@@ -314,9 +348,131 @@ export async function unblockUserAction(userId: string): Promise<ActionResult> {
     .eq("id", userId);
   if (error) return { error: "No se pudo desbloquear la cuenta." };
 
+  await auditLog(admin, gate.adminId, "unblock_user", "user", userId);
   revalidatePath(`/admin/usuarios/${userId}`);
   revalidatePath("/admin/usuarios");
   revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * Bulk block: same guards as the single version (never self, never an
+ * admin), applied per user; users that fail a guard are skipped, not fatal.
+ */
+export async function bulkBlockUsersAction(userIds: string[], reason: string): Promise<ActionResult & { blocked?: number }> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) return { error: "Indica un motivo para el bloqueo." };
+  const ids = [...new Set(userIds)].filter(Boolean);
+  if (ids.length === 0) return { error: "Selecciona al menos un usuario." };
+  if (ids.length > 100) return { error: "Máximo 100 usuarios por operación." };
+
+  const admin = createAdminClient();
+  const { data: targets } = await admin.from("profiles").select("id, role").in("id", ids);
+
+  const blockable = ((targets ?? []) as { id: string; role: string }[])
+    .filter((t) => t.id !== gate.adminId && t.role !== "admin")
+    .map((t) => t.id);
+  if (blockable.length === 0) {
+    return { error: "Ninguno de los usuarios seleccionados se puede bloquear." };
+  }
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ blocked_at: new Date().toISOString(), blocked_reason: trimmedReason, blocked_by: gate.adminId })
+    .in("id", blockable);
+  if (error) return { error: "No se pudieron bloquear las cuentas." };
+
+  await auditLog(admin, gate.adminId, "bulk_block_users", "user", null, {
+    ids: blockable,
+    reason: trimmedReason,
+  });
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/");
+  return { success: true, blocked: blockable.length };
+}
+
+export async function bulkUnblockUsersAction(userIds: string[]): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const ids = [...new Set(userIds)].filter(Boolean);
+  if (ids.length === 0) return { error: "Selecciona al menos un usuario." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ blocked_at: null, blocked_reason: null, blocked_by: null })
+    .in("id", ids);
+  if (error) return { error: "No se pudieron desbloquear las cuentas." };
+
+  await auditLog(admin, gate.adminId, "bulk_unblock_users", "user", null, { ids });
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/** Admin-side edit of a user's basic profile fields (support corrections). */
+export async function adminUpdateUserProfileAction(
+  userId: string,
+  input: { fullName: string; phone: string; city: string },
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const fullName = input.fullName.trim();
+  if (fullName.length < 2) return { error: "El nombre debe tener al menos 2 caracteres." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ full_name: fullName, phone: input.phone.trim(), city: input.city.trim() })
+    .eq("id", userId);
+  if (error) return { error: "No se pudo actualizar el perfil." };
+
+  await auditLog(admin, gate.adminId, "update_user_profile", "user", userId, {
+    fullName,
+    phone: input.phone.trim(),
+    city: input.city.trim(),
+  });
+  revalidatePath(`/admin/usuarios/${userId}`);
+  revalidatePath("/admin/usuarios");
+  return { success: true };
+}
+
+/**
+ * Internal admin note about a user, stored as an audit-log row (never on
+ * profiles — that table is world-readable, see migration 0015 notes).
+ */
+export async function addUserNoteAction(userId: string, note: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmed = note.trim();
+  if (!trimmed) return { error: "Escribe una nota." };
+  if (trimmed.length > 1000) return { error: "La nota no puede superar 1000 caracteres." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("admin_audit_log").insert({
+    admin_id: gate.adminId,
+    action: "note",
+    target_type: "user",
+    target_id: userId,
+    meta: { note: trimmed },
+  });
+  if (error) return { error: "No se pudo guardar la nota." };
+
+  revalidatePath(`/admin/usuarios/${userId}`);
   return { success: true };
 }
 
@@ -348,6 +504,7 @@ export async function deleteUserAction(userId: string): Promise<ActionResult> {
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) return { error: "No se pudo eliminar la cuenta." };
 
+  await auditLog(admin, gate.adminId, "delete_user", "user", userId);
   revalidatePath("/admin/usuarios");
   revalidatePath("/");
   return { success: true };
@@ -374,6 +531,9 @@ export async function adminDeleteListingAction(listingId: string): Promise<Actio
 
   if (listing) await notifyListingRemoved(admin, listing);
 
+  await auditLog(admin, gate.adminId, "delete_listing", "listing", listingId, {
+    title: listing?.title,
+  });
   revalidatePath("/admin/anuncios");
   revalidatePath("/admin/moderacion");
   revalidatePath("/admin/reportes");
@@ -405,6 +565,9 @@ export async function unpublishListingAction(listingId: string, reason: string):
     .eq("id", listingId);
   if (error) return { error: "No se pudo despublicar el anuncio." };
 
+  await auditLog(admin, gate.adminId, "unpublish_listing", "listing", listingId, {
+    reason: trimmedReason,
+  });
   revalidatePath("/admin/moderacion");
   revalidatePath("/admin/reportes");
   revalidatePath("/admin/anuncios");
@@ -441,6 +604,9 @@ export async function approveListingAction(listingId: string): Promise<ActionRes
     message: `Tu anuncio "${listing.title}" ha sido aprobado y ya está visible.`,
   });
 
+  await auditLog(admin, gate.adminId, "approve_listing", "listing", listingId, {
+    title: listing.title,
+  });
   revalidatePath("/admin/moderacion");
   revalidatePath("/admin/anuncios");
   revalidatePath("/");
@@ -458,6 +624,7 @@ export async function adminDeleteReviewAction(reviewId: string): Promise<ActionR
   const { error } = await admin.from("reviews").delete().eq("id", reviewId);
   if (error) return { error: "No se pudo eliminar la reseña." };
 
+  await auditLog(admin, gate.adminId, "delete_review", "review", reviewId);
   revalidatePath("/admin/resenas");
   return { success: true };
 }
@@ -517,6 +684,10 @@ export async function resolveReportAction(
     if (error) return { error: "No se pudo actualizar el reporte." };
   }
 
+  await auditLog(admin, gate.adminId, `report_${outcome}`, "report", reportId, {
+    listing: report.listing_slug,
+    deletedListing: Boolean(outcome === "resolved" && options?.deleteListing),
+  });
   revalidatePath("/admin/reportes");
   revalidatePath("/admin/anuncios");
   return { success: true };
@@ -536,6 +707,7 @@ export async function verifyTiendaAction(tiendaId: string): Promise<ActionResult
   const { error } = await admin.from("tiendas").update({ verified: true }).eq("id", tiendaId);
   if (error) return { error: "No se pudo verificar la tienda." };
 
+  await auditLog(admin, gate.adminId, "verify_tienda", "tienda", tiendaId);
   revalidatePath("/admin/tiendas");
   return { success: true };
 }
@@ -550,7 +722,83 @@ export async function unverifyTiendaAction(tiendaId: string): Promise<ActionResu
   const { error } = await admin.from("tiendas").update({ verified: false }).eq("id", tiendaId);
   if (error) return { error: "No se pudo actualizar la tienda." };
 
+  await auditLog(admin, gate.adminId, "unverify_tienda", "tienda", tiendaId);
   revalidatePath("/admin/tiendas");
+  return { success: true };
+}
+
+// ── Store suspension & editing ───────────────────────────────────────────────
+// Suspension (0015) hides a tienda from every public surface without touching
+// its data; the owner keeps their dashboard. Reversible, with stored reason.
+
+export async function suspendTiendaAction(tiendaId: string, reason: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) return { error: "Indica un motivo para la suspensión." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("tiendas")
+    .update({ suspended_at: new Date().toISOString(), suspended_reason: trimmedReason })
+    .eq("id", tiendaId);
+  if (error) return { error: "No se pudo suspender la tienda." };
+
+  await auditLog(admin, gate.adminId, "suspend_tienda", "tienda", tiendaId, {
+    reason: trimmedReason,
+  });
+  revalidatePath("/admin/tiendas");
+  revalidatePath("/tiendas");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function unsuspendTiendaAction(tiendaId: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("tiendas")
+    .update({ suspended_at: null, suspended_reason: null })
+    .eq("id", tiendaId);
+  if (error) return { error: "No se pudo levantar la suspensión." };
+
+  await auditLog(admin, gate.adminId, "unsuspend_tienda", "tienda", tiendaId);
+  revalidatePath("/admin/tiendas");
+  revalidatePath("/tiendas");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/** Admin-side edit of a tienda's public fields (support corrections). */
+export async function adminUpdateTiendaAction(
+  tiendaId: string,
+  input: { name: string; city: string; whatsapp: string },
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const name = input.name.trim();
+  if (name.length < 3) return { error: "El nombre debe tener al menos 3 caracteres." };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("tiendas")
+    .update({ name, city: input.city.trim(), whatsapp: input.whatsapp.trim() })
+    .eq("id", tiendaId);
+  if (error) return { error: "No se pudo actualizar la tienda." };
+
+  await auditLog(admin, gate.adminId, "update_tienda", "tienda", tiendaId, { name });
+  revalidatePath("/admin/tiendas");
+  revalidatePath("/tiendas");
   return { success: true };
 }
 
@@ -620,6 +868,7 @@ export async function createCategoryAction(
   });
   if (error) return { error: "No se pudo crear la categoría." };
 
+  await auditLog(admin, gate.adminId, "create_category", "category", slug, { name: trimmedName });
   revalidateCategoryPaths();
   return { success: true };
 }
@@ -645,6 +894,7 @@ export async function updateCategoryAction(
   const { error } = await admin.from("categories").update(update).eq("id", id);
   if (error) return { error: "No se pudo actualizar la categoría." };
 
+  await auditLog(admin, gate.adminId, "update_category", "category", id, { name: trimmedName });
   revalidateCategoryPaths();
   return { success: true };
 }
@@ -659,6 +909,7 @@ export async function setCategoryActiveAction(id: string, isActive: boolean): Pr
   const { error } = await admin.from("categories").update({ is_active: isActive }).eq("id", id);
   if (error) return { error: "No se pudo actualizar la categoría." };
 
+  await auditLog(admin, gate.adminId, isActive ? "show_category" : "hide_category", "category", id);
   revalidateCategoryPaths();
   return { success: true };
 }
@@ -676,6 +927,7 @@ export async function deleteCategoryAction(id: string): Promise<ActionResult> {
   const { error } = await admin.from("categories").delete().eq("id", id);
   if (error) return { error: "No se pudo eliminar la categoría." };
 
+  await auditLog(admin, gate.adminId, "delete_category", "category", id);
   revalidateCategoryPaths();
   return { success: true };
 }
@@ -730,6 +982,7 @@ export async function createLocationAction(
   });
   if (error) return { error: "No se pudo crear la ubicación." };
 
+  await auditLog(admin, gate.adminId, "create_location", "location", slug, { name: trimmedName });
   revalidateLocationPaths();
   return { success: true };
 }
@@ -748,6 +1001,7 @@ export async function updateLocationAction(id: string, name: string): Promise<Ac
   const { error } = await admin.from("locations").update({ name: trimmedName }).eq("id", id);
   if (error) return { error: "No se pudo actualizar la ubicación." };
 
+  await auditLog(admin, gate.adminId, "update_location", "location", id, { name: trimmedName });
   revalidateLocationPaths();
   return { success: true };
 }
@@ -762,6 +1016,7 @@ export async function setLocationActiveAction(id: string, isActive: boolean): Pr
   const { error } = await admin.from("locations").update({ is_active: isActive }).eq("id", id);
   if (error) return { error: "No se pudo actualizar la ubicación." };
 
+  await auditLog(admin, gate.adminId, isActive ? "show_location" : "hide_location", "location", id);
   revalidateLocationPaths();
   return { success: true };
 }
@@ -778,6 +1033,7 @@ export async function deleteLocationAction(id: string): Promise<ActionResult> {
   const { error } = await admin.from("locations").delete().eq("id", id);
   if (error) return { error: "No se pudo eliminar la ubicación." };
 
+  await auditLog(admin, gate.adminId, "delete_location", "location", id);
   revalidateLocationPaths();
   return { success: true };
 }
@@ -828,6 +1084,9 @@ export async function confirmFeaturedRequestAction(requestId: string): Promise<A
     .eq("id", request.listing_id);
   if (listingError) return { error: "No se pudo destacar el anuncio." };
 
+  await auditLog(admin, gate.adminId, "confirm_featured", "listing", request.listing_id, {
+    planDays: request.plan_days,
+  });
   revalidateFeaturedPaths();
   return { success: true };
 }
@@ -845,6 +1104,7 @@ export async function rejectFeaturedRequestAction(requestId: string): Promise<Ac
     .eq("id", requestId);
   if (error) return { error: "No se pudo rechazar la solicitud." };
 
+  await auditLog(admin, gate.adminId, "reject_featured", "featured_request", requestId);
   revalidateFeaturedPaths();
   return { success: true };
 }
@@ -875,6 +1135,7 @@ export async function expireFeaturedListingAction(requestId: string): Promise<Ac
     .eq("id", request.listing_id);
   if (listingError) return { error: "No se pudo actualizar el anuncio." };
 
+  await auditLog(admin, gate.adminId, "expire_featured", "listing", request.listing_id);
   revalidateFeaturedPaths();
   return { success: true };
 }
@@ -921,6 +1182,10 @@ export async function manuallyFeatureListingAction(
     .eq("id", listing.id);
   if (listingError) return { error: "No se pudo destacar el anuncio." };
 
+  await auditLog(admin, gate.adminId, "manual_feature", "listing", listing.id, {
+    slug: listingSlug.trim(),
+    planDays,
+  });
   revalidateFeaturedPaths();
   return { success: true };
 }
@@ -960,6 +1225,9 @@ export async function saveSiteSettingsAction(
   const { error } = await admin.from("site_settings").upsert(rows);
   if (error) return { error: "No se pudieron guardar los ajustes." };
 
+  await auditLog(admin, gate.adminId, "save_settings", "settings", null, {
+    keys: rows.map((r) => r.key),
+  });
   // Settings feed the root/(public) layouts (color, logo, banner,
   // maintenance) — layout-scope revalidation or headers go stale.
   revalidatePath("/", "layout");
@@ -1007,6 +1275,7 @@ export async function uploadSiteAssetAction(
   });
   if (error) return { error: "No se pudo guardar el logo." };
 
+  await auditLog(admin, gate.adminId, "upload_logo", "settings", null, { url });
   revalidatePath("/", "layout");
   return { success: true, url };
 }

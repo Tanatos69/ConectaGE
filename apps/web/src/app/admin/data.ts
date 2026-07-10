@@ -478,6 +478,9 @@ export interface AdminTiendaRow {
   verified: boolean;
   followers_count: number;
   created_at: string;
+  suspended_at: string | null;
+  suspended_reason: string | null;
+  whatsapp: string;
   ownerId: string;
   ownerName: string;
   ownerEmail: string;
@@ -490,7 +493,9 @@ export async function getAdminTiendas(): Promise<AdminTiendaRow[]> {
   const [{ data: tiendas }, { data: listings }] = await Promise.all([
     admin
       .from("tiendas")
-      .select("id, slug, name, city, category_slug, verified, followers_count, created_at, owner_id")
+      .select(
+        "id, slug, name, city, category_slug, verified, followers_count, created_at, owner_id, suspended_at, suspended_reason, whatsapp",
+      )
       .order("created_at", { ascending: false }),
     admin.from("listings").select("seller_id"),
   ]);
@@ -504,6 +509,9 @@ export async function getAdminTiendas(): Promise<AdminTiendaRow[]> {
     followers_count: number;
     created_at: string;
     owner_id: string;
+    suspended_at: string | null;
+    suspended_reason: string | null;
+    whatsapp: string;
   }[];
   if (rows.length === 0) return [];
 
@@ -529,6 +537,9 @@ export async function getAdminTiendas(): Promise<AdminTiendaRow[]> {
     verified: r.verified,
     followers_count: r.followers_count,
     created_at: r.created_at,
+    suspended_at: r.suspended_at,
+    suspended_reason: r.suspended_reason,
+    whatsapp: r.whatsapp,
     ownerId: r.owner_id,
     ownerName: ownerById.get(r.owner_id)?.full_name || "—",
     ownerEmail: ownerById.get(r.owner_id)?.email || "—",
@@ -574,6 +585,49 @@ export async function getAdminCategoryTree(): Promise<AdminCategoryNode[]> {
     icon: r.icon,
     sortOrder: r.sort_order,
     isActive: r.is_active,
+  }));
+}
+
+export interface AdminAuditEntry {
+  id: string;
+  action: string;
+  meta: Record<string, unknown> | null;
+  createdAt: string;
+  adminName: string;
+}
+
+/** Audit trail for one user (blocks, role changes, notes…), newest first. */
+export async function getUserAuditEntries(userId: string): Promise<AdminAuditEntry[]> {
+  if (!ready()) return [];
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("admin_audit_log")
+    .select("id, admin_id, action, meta, created_at")
+    .eq("target_type", "user")
+    .eq("target_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const rows = (data ?? []) as {
+    id: string;
+    admin_id: string;
+    action: string;
+    meta: Record<string, unknown> | null;
+    created_at: string;
+  }[];
+  if (rows.length === 0) return [];
+
+  const adminIds = [...new Set(rows.map((r) => r.admin_id))];
+  const { data: admins } = await admin.from("profiles").select("id, full_name").in("id", adminIds);
+  const nameById = new Map(
+    ((admins ?? []) as { id: string; full_name: string }[]).map((a) => [a.id, a.full_name]),
+  );
+
+  return rows.map((r) => ({
+    id: r.id,
+    action: r.action,
+    meta: r.meta,
+    createdAt: r.created_at,
+    adminName: nameById.get(r.admin_id) || "—",
   }));
 }
 

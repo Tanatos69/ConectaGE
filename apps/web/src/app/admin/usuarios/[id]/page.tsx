@@ -1,11 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, Store as StoreIcon } from "lucide-react";
-import { getAdminUserDetail } from "../../data";
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, FileText, Store as StoreIcon, History } from "lucide-react";
+import { getAdminUserDetail, getUserAuditEntries } from "../../data";
 import { getUser } from "@/lib/supabase/server";
 import { monthYearLabel, postedLabel } from "@/lib/supabase/queries";
 import { UserDetailActions } from "@/components/admin/user-detail-actions";
+import { UserEditPanel } from "@/components/admin/user-edit-panel";
+
+const auditActionLabel: Record<string, string> = {
+  note: "Nota",
+  block_user: "Bloqueo",
+  unblock_user: "Desbloqueo",
+  bulk_block_users: "Bloqueo masivo",
+  bulk_unblock_users: "Desbloqueo masivo",
+  grant_admin: "Acceso admin concedido",
+  revoke_admin: "Acceso admin revocado",
+  promote_to_seller: "Convertido en vendedor",
+  seller_request_approved: "Solicitud de vendedor aprobada",
+  update_user_profile: "Perfil editado",
+  delete_user: "Cuenta eliminada",
+};
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -32,7 +47,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AdminUsuarioDetailPage({ params }: Props) {
   const { id } = await params;
-  const [detail, currentUser] = await Promise.all([getAdminUserDetail(id), getUser()]);
+  const [detail, currentUser, auditEntries] = await Promise.all([
+    getAdminUserDetail(id),
+    getUser(),
+    getUserAuditEntries(id),
+  ]);
   if (!detail) notFound();
 
   const { profile, listings, tienda } = detail;
@@ -112,6 +131,13 @@ export default async function AdminUsuarioDetailPage({ params }: Props) {
         isSelf={currentUser?.id === profile.id}
       />
 
+      <UserEditPanel
+        userId={profile.id}
+        fullName={profile.full_name}
+        phone={profile.phone}
+        city={profile.city}
+      />
+
       {tienda && (
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
@@ -161,6 +187,38 @@ export default async function AdminUsuarioDetailPage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {auditEntries.length > 0 && (
+        <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+          <div className="border-b px-5 py-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <History className="size-4 text-primary" />
+              Historial de administración ({auditEntries.length})
+            </h2>
+          </div>
+          <div className="divide-y">
+            {auditEntries.map((e) => (
+              <div key={e.id} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">
+                    {auditActionLabel[e.action] ?? e.action}
+                  </p>
+                  {e.meta?.note ? (
+                    <p className="mt-0.5 text-muted-foreground">{String(e.meta.note)}</p>
+                  ) : e.meta?.reason ? (
+                    <p className="mt-0.5 text-muted-foreground">Motivo: {String(e.meta.reason)}</p>
+                  ) : null}
+                </div>
+                <span className="shrink-0 text-right text-xs text-muted-foreground">
+                  {e.adminName}
+                  <br />
+                  {postedLabel(e.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

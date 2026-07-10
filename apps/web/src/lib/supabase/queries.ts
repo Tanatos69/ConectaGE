@@ -407,6 +407,7 @@ export async function getStores(limit?: number): Promise<Store[]> {
   let query = supabase
     .from("tiendas")
     .select("*")
+    .is("suspended_at", null)
     .order("verified", { ascending: false })
     .order("followers_count", { ascending: false })
     .order("created_at", { ascending: false });
@@ -438,6 +439,9 @@ export async function getStoreBySlug(slug: string): Promise<Store | null> {
   const supabase = await createClient();
   const { data } = await supabase.from("tiendas").select("*").eq("slug", slug).maybeSingle();
   if (!data) return null;
+  // Suspended stores are hidden from the public (owner still sees their
+  // dashboard via getTiendaByOwner, which doesn't filter).
+  if ((data as { suspended_at?: string | null }).suspended_at) return null;
   const row = data as TiendaRow;
 
   const { data: owner } = await supabase
@@ -793,7 +797,7 @@ export async function getFollowedStores(userId: string): Promise<Store[]> {
   if (slugs.length === 0) return [];
 
   const [{ data }, blockedIds] = await Promise.all([
-    supabase.from("tiendas").select("*").in("slug", slugs),
+    supabase.from("tiendas").select("*").in("slug", slugs).is("suspended_at", null),
     getBlockedSellerIds(supabase),
   ]);
   const tiendas = ((data ?? []) as TiendaRow[]).filter((t) => !blockedIds.has(t.owner_id));
