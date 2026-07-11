@@ -31,6 +31,8 @@ import { signOutAction } from "@/lib/actions/auth";
 export interface AdminNavBadges {
   pendingSellerRequests: number;
   pendingReports: number;
+  newUsers: number;
+  newListings: number;
 }
 
 interface AdminNavItem {
@@ -44,9 +46,9 @@ interface AdminNavItem {
 const items: AdminNavItem[] = [
   { href: "/admin", labelKey: "admin.dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/moderacion", labelKey: "admin.moderation", icon: ShieldCheck },
-  { href: "/admin/anuncios", labelKey: "admin.listings", icon: FileText },
+  { href: "/admin/anuncios", labelKey: "admin.listings", icon: FileText, badgeKey: "newListings" },
   { href: "/admin/vendedores", labelKey: "admin.sellers", icon: UserCheck, badgeKey: "pendingSellerRequests" },
-  { href: "/admin/usuarios", labelKey: "admin.users", icon: Users },
+  { href: "/admin/usuarios", labelKey: "admin.users", icon: Users, badgeKey: "newUsers" },
   { href: "/admin/tiendas", labelKey: "admin.stores", icon: Store },
   { href: "/admin/categorias", labelKey: "admin.categories", icon: Tag },
   { href: "/admin/ubicaciones", labelKey: "admin.locations", icon: MapPin },

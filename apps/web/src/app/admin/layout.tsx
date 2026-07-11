@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const profile = await getProfile(user.id);
   if (profile?.role !== "admin") redirect("/");
 
-  const badges = await getAdminBadges();
+  const badges = await getAdminBadges(user.id);
 
   return (
     <div className="min-h-screen">

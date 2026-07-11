@@ -1190,6 +1190,33 @@ export async function manuallyFeatureListingAction(
   return { success: true };
 }
 
+// ── Admin activity badges ────────────────────────────────────────────────────
+// admin_view_state (0017) tracks, per admin and per section, when they last
+// opened that section — the sidebar badge is "rows created since then".
+// Called once on mount by the Usuarios/Anuncios pages (see
+// components/admin/mark-section-seen.tsx); errors are swallowed since a
+// badge that's slightly stale is harmless, unlike blocking the page render.
+
+export async function markAdminSectionSeenAction(
+  section: "users" | "listings",
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
+
+  const gate = await requireAdmin();
+  if ("error" in gate) return { error: gate.error };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("admin_view_state").upsert({
+    admin_id: gate.adminId,
+    section,
+    last_seen_at: new Date().toISOString(),
+  });
+  if (error) return { error: "No se pudo actualizar." };
+
+  revalidatePath("/admin", "layout");
+  return { success: true };
+}
+
 // ── Site settings ────────────────────────────────────────────────────────────
 // Key-value rows in site_settings (0013). DEFAULT_SETTINGS is the whitelist:
 // unknown keys and values whose type doesn't match the default are rejected,

@@ -23,21 +23,64 @@ function ready(): boolean {
 export interface AdminBadges {
   pendingSellerRequests: number;
   pendingReports: number;
+  /** Users registered since this admin last opened /admin/usuarios. */
+  newUsers: number;
+  /** Listings created since this admin last opened /admin/anuncios. */
+  newListings: number;
 }
 
-export async function getAdminBadges(): Promise<AdminBadges> {
-  if (!ready()) return { pendingSellerRequests: 0, pendingReports: 0 };
+const EMPTY_BADGES: AdminBadges = {
+  pendingSellerRequests: 0,
+  pendingReports: 0,
+  newUsers: 0,
+  newListings: 0,
+};
+
+/**
+ * "New since last visit" counts for sections with no pending/status field to
+ * key off (see admin_view_state, migration 0017). Never having visited a
+ * section yet reads as 0, not "every row ever" — the badge only starts
+ * counting once the admin has actually looked at the page for the first
+ * time, which markAdminSectionSeenAction records on mount.
+ */
+async function countNewSince(
+  admin: ReturnType<typeof createAdminClient>,
+  adminId: string,
+  section: "users" | "listings",
+  table: "profiles" | "listings",
+): Promise<number> {
+  const { data: state } = await admin
+    .from("admin_view_state")
+    .select("last_seen_at")
+    .eq("admin_id", adminId)
+    .eq("section", section)
+    .maybeSingle();
+  if (!state) return 0;
+
+  const { count } = await admin
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .gt("created_at", state.last_seen_at);
+  return count ?? 0;
+}
+
+export async function getAdminBadges(adminId: string): Promise<AdminBadges> {
+  if (!ready()) return EMPTY_BADGES;
   const admin = createAdminClient();
-  const [requests, reports] = await Promise.all([
+  const [requests, reports, newUsers, newListings] = await Promise.all([
     admin
       .from("seller_requests")
       .select("id", { count: "exact", head: true })
       .eq("status", "pending"),
     admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    countNewSince(admin, adminId, "users", "profiles"),
+    countNewSince(admin, adminId, "listings", "listings"),
   ]);
   return {
     pendingSellerRequests: requests.count ?? 0,
     pendingReports: reports.count ?? 0,
+    newUsers,
+    newListings,
   };
 }
 
