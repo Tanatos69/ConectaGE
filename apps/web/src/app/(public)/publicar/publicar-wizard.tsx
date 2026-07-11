@@ -227,7 +227,7 @@ export function PublicarWizard({
       }));
       setForm((prev) => ({ ...prev, photos: [...prev.photos, ...toAdd] }));
     },
-    [form.photos.length],
+    [form.photos.length, maxImages],
   );
 
   function removePhoto(id: string) {

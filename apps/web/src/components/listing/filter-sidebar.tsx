@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useCities } from "@/lib/store/cities-context";
 
 const CONDITIONS = [

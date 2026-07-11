@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Bookmark, BookmarkCheck } from "lucide-react";
@@ -26,14 +26,14 @@ export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
+  // Saved/error state is keyed to the criteria it belongs to, so changing
+  // the search resets both without needing an effect.
+  const criteriaKey = JSON.stringify(criteria);
+  const [savedFor, setSavedFor] = useState<string | null>(null);
+  const [errorFor, setErrorFor] = useState<{ key: string; msg: string } | null>(null);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setSaved(false);
-    setError("");
-  }, [criteria]);
+  const saved = savedFor === criteriaKey;
+  const error = errorFor?.key === criteriaKey ? errorFor.msg : "";
 
   function buildLabel() {
     const parts: string[] = [];
@@ -49,11 +49,11 @@ export function SearchToolbar({ criteria, leading }: { criteria: SearchCriteria;
       router.push(`/login?next=${encodeURIComponent(qs ? `${pathname}?${qs}` : pathname)}`);
       return;
     }
-    setError("");
+    setErrorFor(null);
     startTransition(async () => {
       const result = await addSavedSearchAction(buildLabel(), criteria);
-      if (result?.error) setError(result.error);
-      else setSaved(true);
+      if (result?.error) setErrorFor({ key: criteriaKey, msg: result.error });
+      else setSavedFor(criteriaKey);
     });
   }
 
