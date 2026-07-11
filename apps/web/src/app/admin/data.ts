@@ -8,6 +8,7 @@ import type {
   ReviewRow,
   TiendaRow,
   FeaturedRequestRow,
+  Gender,
 } from "@/lib/supabase/types";
 
 /**
@@ -136,6 +137,9 @@ export interface AdminUserRow {
   phone: string | null;
   city: string | null;
   role: Profile["role"];
+  gender: Gender | null;
+  /** ISO date (yyyy-mm-dd); age is derived at read time, never stored. */
+  birth_date: string | null;
   blocked_at: string | null;
   blocked_reason: string | null;
   created_at: string;
@@ -148,7 +152,9 @@ export async function getAdminUsers(): Promise<AdminUserRow[]> {
   const [{ data: profiles }, { data: listings }] = await Promise.all([
     admin
       .from("profiles")
-      .select("id, full_name, email, phone, city, role, blocked_at, blocked_reason, created_at")
+      .select(
+        "id, full_name, email, phone, city, role, gender, birth_date, blocked_at, blocked_reason, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(500),
     admin.from("listings").select("seller_id"),

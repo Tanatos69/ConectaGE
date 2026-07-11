@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Search, Users, Download, Ban, Unlock, X } from "lucide-react";
 import { bulkBlockUsersAction, bulkUnblockUsersAction } from "@/lib/actions/admin";
 import type { AdminUserRow } from "@/app/admin/data";
-import { monthYearLabel } from "@/lib/time";
+import { monthYearLabel, ageFromBirthDate } from "@/lib/time";
+import type { Gender } from "@/lib/supabase/types";
 
 const roleLabel: Record<string, string> = {
   buyer: "Comprador",
@@ -19,6 +20,27 @@ const roleStyle: Record<string, string> = {
   admin: "bg-amber-50 text-amber-700",
 };
 
+const genderLabel: Record<Gender, string> = {
+  male: "Hombre",
+  female: "Mujer",
+  other: "Otro",
+  prefer_not_to_say: "Prefiere no decirlo",
+};
+
+/** Same buckets as /admin/analiticas, so the two pages agree on what "25-34" means. */
+const AGE_BUCKETS = ["16-17", "18-24", "25-34", "35-44", "45-54", "55+"] as const;
+type AgeBucket = (typeof AGE_BUCKETS)[number];
+
+function ageBucket(age: number | null): AgeBucket | null {
+  if (age == null) return null;
+  if (age < 18) return "16-17";
+  if (age <= 24) return "18-24";
+  if (age <= 34) return "25-34";
+  if (age <= 44) return "35-44";
+  if (age <= 54) return "45-54";
+  return "55+";
+}
+
 const selectClass =
   "h-10 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
 
@@ -26,7 +48,18 @@ type SortKey = "newest" | "oldest" | "most_listings" | "name";
 
 function exportCsv(rows: AdminUserRow[]) {
   const esc = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const header = ["Nombre", "Email", "Teléfono", "Ciudad", "Rol", "Estado", "Anuncios", "Registro"];
+  const header = [
+    "Nombre",
+    "Email",
+    "Teléfono",
+    "Ciudad",
+    "Rol",
+    "Género",
+    "Edad",
+    "Estado",
+    "Anuncios",
+    "Registro",
+  ];
   const lines = rows.map((u) =>
     [
       esc(u.full_name),
@@ -34,6 +67,8 @@ function exportCsv(rows: AdminUserRow[]) {
       esc(u.phone),
       esc(u.city),
       esc(roleLabel[u.role] ?? u.role),
+      esc(u.gender ? genderLabel[u.gender] : ""),
+      esc(ageFromBirthDate(u.birth_date)),
       esc(u.blocked_at ? "Bloqueada" : "Activa"),
       esc(u.listingsCount),
       esc(u.created_at.slice(0, 10)),
@@ -55,6 +90,8 @@ export function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
   const [roleFilter, setRoleFilter] = useState<"all" | "buyer" | "seller" | "admin">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "blocked">("all");
   const [cityFilter, setCityFilter] = useState("all");
+  const [genderFilter, setGenderFilter] = useState<"all" | Gender>("all");
+  const [ageFilter, setAgeFilter] = useState<"all" | AgeBucket>("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [withListings, setWithListings] = useState(false);
@@ -81,6 +118,8 @@ export function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
       if (statusFilter === "blocked" && !u.blocked_at) return false;
       if (statusFilter === "active" && u.blocked_at) return false;
       if (cityFilter !== "all" && u.city !== cityFilter) return false;
+      if (genderFilter !== "all" && u.gender !== genderFilter) return false;
+      if (ageFilter !== "all" && ageBucket(ageFromBirthDate(u.birth_date)) !== ageFilter) return false;
       if (withListings && u.listingsCount === 0) return false;
       if (fromDate && u.created_at.slice(0, 10) < fromDate) return false;
       if (toDate && u.created_at.slice(0, 10) > toDate) return false;
@@ -103,7 +142,19 @@ export function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
           return b.created_at.localeCompare(a.created_at);
       }
     });
-  }, [users, query, roleFilter, statusFilter, cityFilter, withListings, fromDate, toDate, sort]);
+  }, [
+    users,
+    query,
+    roleFilter,
+    statusFilter,
+    cityFilter,
+    genderFilter,
+    ageFilter,
+    withListings,
+    fromDate,
+    toDate,
+    sort,
+  ]);
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -188,6 +239,30 @@ export function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
           {cityOptions.map((c) => (
             <option key={c} value={c}>
               {c}
+            </option>
+          ))}
+        </select>
+        <select
+          value={genderFilter}
+          onChange={(e) => setGenderFilter(e.target.value as typeof genderFilter)}
+          className={selectClass}
+        >
+          <option value="all">Todos los géneros</option>
+          {(Object.keys(genderLabel) as Gender[]).map((g) => (
+            <option key={g} value={g}>
+              {genderLabel[g]}
+            </option>
+          ))}
+        </select>
+        <select
+          value={ageFilter}
+          onChange={(e) => setAgeFilter(e.target.value as typeof ageFilter)}
+          className={selectClass}
+        >
+          <option value="all">Todas las edades</option>
+          {AGE_BUCKETS.map((b) => (
+            <option key={b} value={b}>
+              {b} años
             </option>
           ))}
         </select>
@@ -349,7 +424,21 @@ export function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                       <p>{u.email}</p>
                       {u.phone && <p className="text-xs">{u.phone}</p>}
                     </td>
-                    <td className="px-5 py-3 text-muted-foreground">{u.city || "—"}</td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      <p>{u.city || "—"}</p>
+                      {(u.gender || u.birth_date) && (
+                        <p className="text-xs">
+                          {[
+                            u.gender ? genderLabel[u.gender] : null,
+                            ageFromBirthDate(u.birth_date) != null
+                              ? `${ageFromBirthDate(u.birth_date)} años`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${roleStyle[u.role]}`}
