@@ -12,6 +12,7 @@ import { iconByName, translatedCategoryName } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth/context";
+import { useStandalone } from "@/lib/pwa/standalone";
 import { signOutAction } from "@/lib/actions/auth";
 import type { CategoryNode } from "@/lib/supabase/queries";
 
@@ -118,6 +119,7 @@ export function SiteHeader({
 }) {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
+  const standalone = useStandalone();
   const role = profile?.role ?? (user ? "buyer" : null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [explorarOpen, setExplorarOpen] = useState(false);
@@ -175,14 +177,16 @@ export function SiteHeader({
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Main row */}
         <div className="flex h-16 items-center gap-3">
-          <button
-            type="button"
-            aria-label={t("header.openMenu")}
-            onClick={() => setMenuOpen(true)}
-            className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary md:hidden"
-          >
-            <Menu className="size-6" />
-          </button>
+          {!standalone && (
+            <button
+              type="button"
+              aria-label={t("header.openMenu")}
+              onClick={() => setMenuOpen(true)}
+              className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary md:hidden"
+            >
+              <Menu className="size-6" />
+            </button>
+          )}
 
           <Logo siteName={siteName} logoUrl={logoUrl} />
 
@@ -302,14 +306,17 @@ export function SiteHeader({
               </Link>
             )}
 
-            {/* Mobile Publicar button */}
-            <Link
-              href="/publicar"
-              className={cn(buttonVariants({ variant: "default", size: "icon" }), "sm:hidden")}
-              aria-label={t("header.publish")}
-            >
-              <Plus className="size-5" />
-            </Link>
+            {/* Mobile Publicar button — hidden in standalone since the
+                bottom tab bar's FAB already covers this action */}
+            {!standalone && (
+              <Link
+                href="/publicar"
+                className={cn(buttonVariants({ variant: "default", size: "icon" }), "sm:hidden")}
+                aria-label={t("header.publish")}
+              >
+                <Plus className="size-5" />
+              </Link>
+            )}
           </div>
         </div>
 

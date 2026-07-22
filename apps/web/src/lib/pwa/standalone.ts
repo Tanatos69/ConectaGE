@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 /**
  * Shared install-state detection, used by both the iOS install banner and
  * the push-subscription context (iOS only allows PushManager.subscribe()
@@ -25,4 +27,11 @@ export function isIOSSafari(): boolean {
   const isIOS = /iP(hone|od|ad)/.test(ua);
   const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
   return isIOS && isSafari;
+}
+
+/** Reactive `isStandalone()` — false on the server/first paint, flips after mount. */
+export function useStandalone(): boolean {
+  const [standalone, setStandalone] = useState(false);
+  useEffect(() => setStandalone(isStandalone()), []);
+  return standalone;
 }

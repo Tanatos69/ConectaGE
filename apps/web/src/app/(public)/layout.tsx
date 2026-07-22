@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { AppShell } from "@/components/layout/app-shell";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { OnboardingIntentModal } from "@/components/layout/onboarding-intent-modal";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
@@ -50,15 +50,16 @@ export default async function PublicLayout({ children }: { children: React.React
           siteName={settings.site_name}
           logoUrl={settings.logo_url}
         />
-        <main className="flex-1">{children}</main>
-        <SiteFooter
+        <AppShell
           categories={categories}
           siteName={settings.site_name}
           logoUrl={settings.logo_url}
           tagline={settings.footer_tagline}
           contactEmail={settings.contact_email}
           contactWhatsapp={settings.site_whatsapp}
-        />
+        >
+          {children}
+        </AppShell>
         <CookieConsent />
         <OnboardingIntentModal />
         <IosInstallBanner />
