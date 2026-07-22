@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Share, X } from "lucide-react";
+import Image from "next/image";
+import { ArrowUpSquare, SquarePlus, X } from "lucide-react";
 import { isIOSSafari, isStandalone } from "@/lib/pwa/standalone";
 import { readConsent } from "@/lib/consent";
 
@@ -31,23 +32,43 @@ export function IosInstallBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4">
-      <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl border bg-card p-4 shadow-2xl">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-          <Share className="size-5 text-primary" />
+    <div className="fixed inset-x-0 bottom-0 z-50 animate-fade-in-up px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto max-w-md overflow-hidden rounded-2xl border bg-card shadow-2xl">
+        <div className="flex items-center gap-3 p-4 pb-3.5">
+          <Image
+            src="/icon-192.png"
+            alt=""
+            width={48}
+            height={48}
+            className="size-12 shrink-0 rounded-[22%] shadow-sm"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">ConectaGE</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Añade la app a tu pantalla de inicio
+            </p>
+          </div>
+          <button
+            onClick={dismiss}
+            aria-label="Cerrar"
+            className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
         </div>
-        <p className="min-w-0 flex-1 text-sm text-foreground">
-          Instala <span className="font-semibold">ConectaGE</span>: toca{" "}
-          <Share className="inline size-3.5 align-text-bottom" /> Compartir y luego{" "}
-          <span className="font-medium">&quot;Añadir a pantalla de inicio&quot;</span>.
-        </p>
-        <button
-          onClick={dismiss}
-          aria-label="Cerrar"
-          className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
+        <div className="flex items-center gap-2 border-t bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
+          <span>1. Toca</span>
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-sm">
+            <ArrowUpSquare className="size-3" />
+          </span>
+          <span>Compartir</span>
+          <span className="mx-0.5 text-border">·</span>
+          <span>2. Toca</span>
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-sm">
+            <SquarePlus className="size-3" />
+          </span>
+          <span>&quot;Añadir a inicio&quot;</span>
+        </div>
       </div>
     </div>
   );

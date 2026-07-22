@@ -66,6 +66,13 @@ export const viewport: Viewport = {
   themeColor: "#2563EB",
   width: "device-width",
   initialScale: 1,
+  // Lets standalone-mode content draw under the notch/home-indicator
+  // instead of iOS boxing it in behind a flat system bar — paired with the
+  // safe-area-inset padding in globals.css and on the fixed bottom sheets,
+  // which reserve exactly that same space back so nothing sits under the
+  // hardware cutouts. No visual change for regular (non-installed) browser
+  // tabs, since the compensating padding cancels it out there too.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

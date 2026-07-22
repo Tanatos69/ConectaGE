@@ -91,7 +91,7 @@ export function CookieConsent() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4">
+    <div className="fixed inset-x-0 bottom-0 z-50 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-2xl rounded-2xl border bg-card p-4 shadow-2xl sm:p-5">
         <div className="flex items-start gap-3">
           <div className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 sm:flex">
