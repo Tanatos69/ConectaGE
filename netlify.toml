@@ -15,11 +15,13 @@
   NPM_FLAGS = "--version"
   # These are NEXT_PUBLIC_ vars — Next.js intentionally bakes them into the
   # browser bundle, so Netlify's secret scanner flags them as false
-  # positives. SUPABASE_SERVICE_ROLE_KEY, VAPID_PRIVATE_KEY and
-  # SUPABASE_WEBHOOK_SECRET are deliberately NOT in this list: they must
-  # never appear in client-side output, so the scanner should keep checking
-  # for them.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_VAPID_PUBLIC_KEY"
+  # positives (NEXT_PUBLIC_OAUTH_PROVIDERS's value, e.g. "google", is a
+  # single common word that also matches all over templates/ and
+  # node_modules, which is what actually trips the scanner).
+  # SUPABASE_SERVICE_ROLE_KEY, VAPID_PRIVATE_KEY and SUPABASE_WEBHOOK_SECRET
+  # are deliberately NOT in this list: they must never appear in
+  # client-side output, so the scanner should keep checking for them.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_VAPID_PUBLIC_KEY,NEXT_PUBLIC_OAUTH_PROVIDERS"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
