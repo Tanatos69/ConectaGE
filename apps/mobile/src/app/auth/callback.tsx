@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { colors } from "@/theme";
 
 /**
  * Lands here after either an OAuth redirect or an email-confirmation link
@@ -50,18 +53,16 @@ export default function AuthCallbackScreen() {
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white p-6">
-        <Text className="text-center text-neutral-700">{error}</Text>
-        <Text className="text-primary font-semibold" onPress={() => router.replace("/login")}>
-          Volver a intentar
-        </Text>
+      <View className="flex-1 justify-between bg-white px-6 pb-8">
+        <EmptyState icon="alert-circle-outline" title="Inicio de sesión" subtitle={error} />
+        <Button label="Volver a intentar" onPress={() => router.replace("/login")} />
       </View>
     );
   }
 
   return (
     <View className="flex-1 items-center justify-center bg-white">
-      <ActivityIndicator color="#216FD1" />
+      <ActivityIndicator color={colors.primary} />
     </View>
   );
 }

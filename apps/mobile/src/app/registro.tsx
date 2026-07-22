@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { signUp } from "@/lib/auth";
+import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { colors } from "@/theme";
 
 export default function RegistroScreen() {
   const router = useRouter();
@@ -29,68 +33,67 @@ export default function RegistroScreen() {
 
   if (success) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-white p-6">
-        <Text className="text-center text-lg font-semibold text-neutral-900">¡Revisa tu correo!</Text>
-        <Text className="text-center text-neutral-500">
-          Te enviamos un enlace de confirmación para activar tu cuenta.
-        </Text>
-        <Pressable onPress={() => router.replace("/login")} className="mt-2">
-          <Text className="text-primary font-semibold">Ir a iniciar sesión</Text>
-        </Pressable>
+      <View className="flex-1 items-center justify-center gap-4 bg-white px-8">
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-primary-soft">
+          <Icon name="mail-open-outline" size={34} color={colors.primary} />
+        </View>
+        <View className="gap-1.5">
+          <Text className="text-center font-display text-xl text-neutral-900">¡Revisa tu correo!</Text>
+          <Text className="text-center font-sans text-sm leading-5 text-neutral-500">
+            Te enviamos un enlace de confirmación para activar tu cuenta.
+          </Text>
+        </View>
+        <Button label="Ir a iniciar sesión" onPress={() => router.replace("/login")} />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24, gap: 16 }}>
-      <TextInput
-        value={fullName}
-        onChangeText={setFullName}
-        placeholder="Nombre completo"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Correo electrónico"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Contraseña (mínimo 8 caracteres)"
-        secureTextEntry
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="Teléfono, ej. +240222000000"
-        keyboardType="phone-pad"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={city}
-        onChangeText={setCity}
-        placeholder="Ciudad"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={birthDate}
-        onChangeText={setBirthDate}
-        placeholder="Fecha de nacimiento (AAAA-MM-DD)"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      {error && <Text className="text-featured text-sm">{error}</Text>}
-      <Pressable
-        onPress={handleSubmit}
-        disabled={busy}
-        className="bg-primary h-12 items-center justify-center rounded-xl active:opacity-90"
-      >
-        {busy ? <ActivityIndicator color="white" /> : <Text className="text-primary-foreground font-semibold">Crear cuenta</Text>}
-      </Pressable>
-    </ScrollView>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#FFFFFF" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} keyboardShouldPersistTaps="handled">
+        <View className="gap-1 pb-2">
+          <Text className="font-display text-2xl text-neutral-900">Crea tu cuenta</Text>
+          <Text className="font-sans text-sm text-neutral-500">Únete a ConectaGE en un minuto.</Text>
+        </View>
+
+        <TextField label="Nombre completo" icon="person-outline" value={fullName} onChangeText={setFullName} placeholder="Tu nombre" />
+        <TextField
+          label="Correo electrónico"
+          icon="mail-outline"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="tucorreo@ejemplo.com"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <TextField label="Contraseña" icon="lock-closed-outline" value={password} onChangeText={setPassword} placeholder="Mínimo 8 caracteres" secure />
+        <TextField
+          label="Teléfono"
+          icon="call-outline"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="+240 222 000 000"
+          keyboardType="phone-pad"
+        />
+        <TextField label="Ciudad" icon="location-outline" value={city} onChangeText={setCity} placeholder="Malabo" />
+        <TextField
+          label="Fecha de nacimiento"
+          icon="calendar-outline"
+          value={birthDate}
+          onChangeText={setBirthDate}
+          placeholder="AAAA-MM-DD"
+          keyboardType="numbers-and-punctuation"
+        />
+
+        {error && (
+          <View className="flex-row items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5">
+            <Icon name="alert-circle" size={16} color={colors.featured} />
+            <Text className="flex-1 font-sans text-sm text-featured">{error}</Text>
+          </View>
+        )}
+
+        <Button label="Crear cuenta" loading={busy} onPress={handleSubmit} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

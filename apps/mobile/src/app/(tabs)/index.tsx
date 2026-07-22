@@ -1,20 +1,38 @@
-import { useCallback, useEffect, useState } from "react";
-import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import type { ListingRow } from "@conectage/shared";
 import { getPublishedListings } from "@/lib/queries";
-import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { useTranslation } from "@/i18n/context";
-import { languages } from "@/i18n/languages";
+import { Screen } from "@/components/ui/screen";
+import { Icon } from "@/components/ui/icon";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LanguagePicker } from "@/components/language-picker";
+import { ListingCard } from "@/components/listing/listing-card";
+import { colors } from "@/theme";
+
+const GAP = 12;
+const PADDING = 16;
 
 export default function BrowseScreen() {
   const router = useRouter();
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const cardWidth = (width - PADDING * 2 - GAP) / 2;
+
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     const data = await getPublishedListings();
@@ -32,58 +50,80 @@ export default function BrowseScreen() {
     setRefreshing(false);
   }
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return listings;
+    return listings.filter(
+      (l) => l.title.toLowerCase().includes(q) || l.city?.toLowerCase().includes(q),
+    );
+  }, [listings, query]);
+
   if (!isSupabaseConfigured) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <Text className="text-center text-base text-neutral-500">
-          Supabase no está configurado (faltan variables de entorno EXPO_PUBLIC_SUPABASE_*).
-        </Text>
-      </SafeAreaView>
+      <Screen>
+        <EmptyState icon="cloud-offline-outline" title="ConectaGE" subtitle={t("browse.notConfigured")} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <View className="flex-row items-center justify-between border-b border-neutral-100 px-4 py-3">
-        <Text className="font-display text-xl font-bold text-neutral-900">{t("browse.title")}</Text>
-        <View className="flex-row gap-1">
-          {languages.map((lang) => (
-            <Pressable key={lang.code} onPress={() => setLanguage(lang)} hitSlop={6}>
-              <Text style={{ opacity: lang.code === language.code ? 1 : 0.35, fontSize: 16 }}>
-                {lang.flag}
-              </Text>
-            </Pressable>
-          ))}
+    <Screen>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 pb-3 pt-1">
+        <Text className="font-display text-2xl text-primary">{t("browse.title")}</Text>
+        <LanguagePicker />
+      </View>
+
+      {/* Search */}
+      <View className="px-4 pb-2">
+        <View className="h-12 flex-row items-center gap-2.5 rounded-2xl border border-neutral-200 bg-white px-4">
+          <Icon name="search-outline" size={18} color={colors.faint} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t("browse.searchPlaceholder")}
+            placeholderTextColor={colors.faint}
+            returnKeyType="search"
+            className="flex-1 font-sans text-base text-neutral-900"
+          />
+          {query.length > 0 && (
+            <Icon name="close-circle" size={18} color={colors.faint} />
+          )}
         </View>
       </View>
-      <FlatList
-        data={listings}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 12, gap: 12 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          !loading ? <Text className="mt-12 text-center text-neutral-500">{t("browse.empty")}</Text> : null
-        }
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push(`/listing/${item.slug}`)}
-            className="flex-row gap-3 rounded-2xl border border-neutral-100 bg-white p-2 active:opacity-90"
-          >
-            <Image
-              source={{ uri: item.images[0] }}
-              className="h-20 w-20 rounded-xl bg-neutral-100"
-              resizeMode="cover"
-            />
-            <View className="flex-1 justify-center gap-1">
-              <Text numberOfLines={1} className="font-semibold text-neutral-900">
-                {item.title}
+
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={{ gap: GAP, paddingHorizontal: PADDING }}
+          contentContainerStyle={{ paddingBottom: 24, gap: GAP }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          ListHeaderComponent={
+            filtered.length > 0 ? (
+              <Text className="px-4 pb-2 pt-1 font-sans-bold text-base text-neutral-900">
+                {t("browse.resultsNearby")}
               </Text>
-              <Text className="text-primary font-semibold">{formatPrice(item)}</Text>
-              <Text className="text-xs text-neutral-500">{item.city}</Text>
+            ) : null
+          }
+          ListEmptyComponent={
+            <EmptyState icon="pricetags-outline" title={t("browse.empty")} />
+          }
+          renderItem={({ item }) => (
+            <View style={{ width: cardWidth }}>
+              <ListingCard listing={item} onPress={() => router.push(`/listing/${item.slug}`)} />
             </View>
-          </Pressable>
-        )}
-      />
-    </SafeAreaView>
+          )}
+        />
+      )}
+    </Screen>
   );
 }

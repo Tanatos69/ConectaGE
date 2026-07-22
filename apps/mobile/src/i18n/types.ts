@@ -1,10 +1,8 @@
 /**
- * Minimal key set for what mobile v1 actually renders (tab labels + the
- * browse screen). Unlike apps/web's dictionary — which covers header/footer
- * nav for routes mobile doesn't have yet — this stays small on purpose;
- * grow it alongside the screens that need translation. Login/registro/
- * account/completar-perfil stay Spanish-only, matching apps/web's
- * dashboard convention.
+ * Key set for what mobile renders in its public-facing screens (tabs + browse
+ * + listing/store detail chrome). Login/registro/account/completar-perfil stay
+ * Spanish-only, matching apps/web's dashboard convention, so they're not keyed
+ * here. Grow this alongside the screens that need translation.
  */
 export interface Translations {
   tabs: {
@@ -14,5 +12,27 @@ export interface Translations {
   browse: {
     title: string;
     empty: string;
+    searchPlaceholder: string;
+    featured: string;
+    wanted: string;
+    notConfigured: string;
+    resultsNearby: string;
+    condition: {
+      new: string;
+      used: string;
+      refurbished: string;
+    };
+  };
+  listing: {
+    notFound: string;
+    description: string;
+    seller: string;
+    contact: string;
+  };
+  store: {
+    notFound: string;
+    listings: string;
+    followers: string;
+    verified: string;
   };
 }

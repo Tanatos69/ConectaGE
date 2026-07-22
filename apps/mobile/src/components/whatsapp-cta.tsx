@@ -1,5 +1,6 @@
-import { Pressable, Text, Linking } from "react-native";
+import { Pressable, Text, Linking, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth-context";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -55,9 +56,12 @@ export function WhatsAppCTA({
   return (
     <Pressable
       onPress={handlePress}
-      className="h-12 flex-row items-center justify-center gap-2.5 rounded-2xl bg-whatsapp px-5 active:opacity-90"
+      className="h-14 flex-row items-center justify-center gap-2.5 rounded-2xl bg-whatsapp px-5 active:opacity-90"
     >
-      <Text className="text-sm font-semibold text-whatsapp-foreground">{label}</Text>
+      <View className="flex-row items-center gap-2.5">
+        <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+        <Text className="font-sans-bold text-base text-whatsapp-foreground">{label}</Text>
+      </View>
     </Pressable>
   );
 }

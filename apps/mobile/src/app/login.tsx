@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
-import { useRouter, Link } from "expo-router";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { signIn, signInWithOAuth } from "@/lib/auth";
 import { isOAuthProviderEnabled } from "@/lib/oauth-providers";
+import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { colors } from "@/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -32,44 +36,56 @@ export default function LoginScreen() {
   }
 
   return (
-    <View className="flex-1 gap-4 bg-white p-6">
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Correo electrónico"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Contraseña"
-        secureTextEntry
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-base"
-      />
-      {error && <Text className="text-featured text-sm">{error}</Text>}
-      <Pressable
-        onPress={handleSubmit}
-        disabled={busy}
-        className="bg-primary h-12 items-center justify-center rounded-xl active:opacity-90"
-      >
-        {busy ? <ActivityIndicator color="white" /> : <Text className="text-primary-foreground font-semibold">Entrar</Text>}
-      </Pressable>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#FFFFFF" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} keyboardShouldPersistTaps="handled">
+        <View className="gap-1 pb-2">
+          <Text className="font-display text-2xl text-neutral-900">Bienvenido de nuevo</Text>
+          <Text className="font-sans text-sm text-neutral-500">Inicia sesión para continuar en ConectaGE.</Text>
+        </View>
 
-      {isOAuthProviderEnabled("google") && (
-        <Pressable
-          onPress={handleGoogle}
-          disabled={busy}
-          className="h-12 items-center justify-center rounded-xl border border-neutral-200 active:opacity-90"
-        >
-          <Text className="font-semibold text-neutral-700">Continuar con Google</Text>
+        <TextField
+          label="Correo electrónico"
+          icon="mail-outline"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="tucorreo@ejemplo.com"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <TextField
+          label="Contraseña"
+          icon="lock-closed-outline"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="••••••••"
+          secure
+        />
+
+        {error && (
+          <View className="flex-row items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5">
+            <Icon name="alert-circle" size={16} color={colors.featured} />
+            <Text className="flex-1 font-sans text-sm text-featured">{error}</Text>
+          </View>
+        )}
+
+        <Button label="Entrar" loading={busy} onPress={handleSubmit} />
+
+        {isOAuthProviderEnabled("google") && (
+          <>
+            <View className="flex-row items-center gap-3 py-1">
+              <View className="h-px flex-1 bg-neutral-200" />
+              <Text className="font-sans text-xs text-neutral-400">o</Text>
+              <View className="h-px flex-1 bg-neutral-200" />
+            </View>
+            <Button label="Continuar con Google" variant="outline" icon="logo-google" onPress={handleGoogle} disabled={busy} />
+          </>
+        )}
+
+        <Pressable onPress={() => router.push("/registro")} className="mt-2 flex-row justify-center">
+          <Text className="font-sans text-sm text-neutral-500">¿No tienes cuenta? </Text>
+          <Text className="font-sans-bold text-sm text-primary">Regístrate</Text>
         </Pressable>
-      )}
-
-      <Link href="/registro" className="mt-2 text-center text-sm text-neutral-500">
-        ¿No tienes cuenta? Regístrate
-      </Link>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

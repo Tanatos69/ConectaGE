@@ -1,23 +1,24 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 /**
- * Stub — the real "complete your profile" form (matching
- * apps/web's /completar-perfil) is dashboard-parity scope, deferred per
- * the mobile app plan. This exists so the auth callback always has a
- * valid screen to land on when phone/birth_date are missing.
+ * Stub — the real "complete your profile" form (matching apps/web's
+ * /completar-perfil) is dashboard-parity scope, deferred per the mobile app
+ * plan. This exists so the auth callback always has a valid screen to land on
+ * when phone/birth_date are missing.
  */
 export default function CompletarPerfilScreen() {
   const router = useRouter();
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-white p-6">
-      <Text className="text-center text-lg font-semibold text-neutral-900">Completa tu perfil</Text>
-      <Text className="text-center text-neutral-500">
-        Esta pantalla estará disponible próximamente. Por ahora puedes seguir explorando anuncios.
-      </Text>
-      <Text className="text-primary mt-2 font-semibold" onPress={() => router.replace("/(tabs)")}>
-        Volver al inicio
-      </Text>
+    <View className="flex-1 justify-between bg-white px-6 pb-8">
+      <EmptyState
+        icon="person-add-outline"
+        title="Completa tu perfil"
+        subtitle="Esta sección estará disponible próximamente. Por ahora puedes seguir explorando anuncios."
+      />
+      <Button label="Volver al inicio" onPress={() => router.replace("/(tabs)")} />
     </View>
   );
 }

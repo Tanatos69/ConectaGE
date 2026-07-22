@@ -10,6 +10,7 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(213, 82%, 46%)",
           foreground: "hsl(0, 0%, 100%)",
+          soft: "hsl(213, 82%, 96%)",
         },
         whatsapp: {
           DEFAULT: "hsl(142, 70%, 49%)",
@@ -33,10 +34,18 @@ module.exports = {
         lg: 12,
         xl: 16,
         "2xl": 20,
+        "3xl": 24,
       },
+      // Weight-specific family names matching the exact @expo-google-fonts
+      // families loaded in app/_layout.tsx. Named so they don't collide with
+      // Tailwind's fontWeight scale (avoid `font-bold`/`font-semibold`, which
+      // set font-weight); use these to set the actual loaded font file.
       fontFamily: {
-        sans: ["Inter"],
-        display: ["PlusJakartaSans"],
+        sans: ["Inter_400Regular"],
+        "sans-medium": ["Inter_600SemiBold"],
+        "sans-bold": ["Inter_700Bold"],
+        display: ["PlusJakartaSans_700Bold"],
+        "display-medium": ["PlusJakartaSans_600SemiBold"],
       },
     },
   },
