@@ -1,0 +1,147 @@
+/**
+ * Row shapes for the tables created in apps/web/supabase/migrations/0001_init.sql.
+ * Mirrors apps/web/src/lib/supabase/types.ts — kept in sync by hand (no
+ * generated types exist yet for either app). This is the one copy mobile
+ * imports from; web's own copy is left untouched to avoid touching its
+ * working auth/query code.
+ */
+
+export type UserRole = "buyer" | "seller" | "admin";
+export type RequestStatus = "pending" | "approved" | "rejected";
+
+export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
+
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  city: string | null;
+  avatar_url: string | null;
+  role: UserRole;
+  verified: boolean;
+  gender: Gender | null;
+  /** ISO date (yyyy-mm-dd); age is always derived from this, never stored. */
+  birth_date: string | null;
+  notify_listings: boolean;
+  notify_seller_requests: boolean;
+  notify_followed_stores: boolean;
+  onboarding_intent: "buyer" | "seller" | "skipped" | null;
+  blocked_at: string | null;
+  blocked_reason: string | null;
+  blocked_by: string | null;
+  created_at: string;
+}
+
+export type AnalyticsEventType = "search" | "view_listing" | "whatsapp_click";
+
+export interface EventRow {
+  id: string;
+  user_id: string | null;
+  event_type: AnalyticsEventType;
+  query: string | null;
+  category_slug: string | null;
+  city: string | null;
+  listing_type: string | null;
+  listing_slug: string | null;
+  device: "mobile" | "desktop" | null;
+  created_at: string;
+}
+
+export interface TiendaRow {
+  id: string;
+  owner_id: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  banner: string | null;
+  logo: string | null;
+  city: string;
+  address: string;
+  neighborhood: string;
+  business_hours: string;
+  instagram: string;
+  facebook: string;
+  category_slug: string;
+  whatsapp: string;
+  description: string;
+  verified: boolean;
+  followers_count: number;
+  suspended_at: string | null;
+  created_at: string;
+}
+
+export type NotificationKind =
+  | "listing_published"
+  | "seller_request_approved"
+  | "seller_request_rejected"
+  | "followed_store_listing"
+  | "welcome"
+  | "listing_removed"
+  | "listing_approved"
+  | "featured_confirmed"
+  | "featured_rejected"
+  | "saved_search_match";
+
+export interface NotificationRow {
+  id: string;
+  user_id: string;
+  type: NotificationKind;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface ListingRow {
+  id: string;
+  seller_id: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number | null;
+  price_type: "fixed" | "negotiable" | "free" | "on_request";
+  currency: "XAF" | "USD" | "EUR";
+  category_slug: string;
+  subcategory_slug: string;
+  city: string;
+  region: string;
+  condition: "new" | "used" | "refurbished" | null;
+  images: string[];
+  whatsapp: string;
+  show_phone: boolean;
+  phone: string;
+  listing_type: "offer" | "wanted";
+  status: "published" | "pending" | "rejected" | "expired";
+  rejection_reason: string | null;
+  /** Only meaningful for stock-style categories; null = not tracked. */
+  quantity: number | null;
+  extra_fields: Record<string, string>;
+  views_count: number;
+  favorites_count: number;
+  is_featured: boolean;
+  featured_until: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReviewRow {
+  id: string;
+  /** Exactly one of listing_id / tienda_slug is set (review target). */
+  listing_id: string | null;
+  tienda_slug: string | null;
+  reviewer_id: string;
+  rating: number;
+  comment: string;
+  seller_reply: string | null;
+  created_at: string;
+}
+
+export interface ListingContactRow {
+  id: string;
+  user_id: string;
+  /** Exactly one of listing_slug / tienda_slug is set (contact target). */
+  listing_slug: string | null;
+  tienda_slug: string | null;
+  created_at: string;
+}

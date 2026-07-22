@@ -1,5 +1,6 @@
 packages:
   - 'apps/*'
+  - 'packages/*'
 
 # pnpm 11 build-script approvals (true = run native build, false = skip).
 # unrs-resolver ships a JS fallback, so skipping its build is safe and keeps
