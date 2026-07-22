@@ -23,9 +23,6 @@ export default function BrowseScreen() {
   }, []);
 
   useEffect(() => {
-    // Standard fetch-on-mount — the lint rule's "no setState in effect" heuristic
-    // flags any useCallback that eventually sets state, including this one.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isSupabaseConfigured) load();
   }, [load]);
 
