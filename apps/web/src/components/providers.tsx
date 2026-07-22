@@ -4,6 +4,7 @@ import { LanguageProvider } from "@/lib/i18n/context";
 import { AuthProvider } from "@/lib/auth/context";
 import { FollowsProvider } from "@/lib/store/follows-context";
 import { FavoritesProvider } from "@/lib/store/favorites-context";
+import { PushProvider } from "@/lib/store/push-context";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/supabase/types";
 import type { ReactNode } from "react";
@@ -21,7 +22,9 @@ export function Providers({
     <AuthProvider initialUser={initialUser} initialProfile={initialProfile}>
       <FollowsProvider>
         <FavoritesProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <PushProvider>
+            <LanguageProvider>{children}</LanguageProvider>
+          </PushProvider>
         </FavoritesProvider>
       </FollowsProvider>
     </AuthProvider>

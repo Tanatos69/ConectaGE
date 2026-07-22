@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle, Bell, Sparkles, Circle, Camera, Building2 } from "lucide-react";
+import { Plus, FileText, User, Eye, Store, CheckCircle, AlertTriangle, Bell, Sparkles, Circle, Camera, Building2, Search } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { getUser } from "@/lib/supabase/server";
 import {
@@ -30,6 +30,7 @@ const notifIcons: Record<NotificationKind, React.ElementType> = {
   listing_approved: CheckCircle,
   featured_confirmed: Sparkles,
   featured_rejected: AlertTriangle,
+  saved_search_match: Search,
 };
 
 const notifColors: Record<NotificationKind, string> = {
@@ -42,6 +43,7 @@ const notifColors: Record<NotificationKind, string> = {
   listing_approved: "text-green-600 bg-green-50",
   featured_confirmed: "text-amber-600 bg-amber-50",
   featured_rejected: "text-destructive bg-destructive/10",
+  saved_search_match: "text-blue-600 bg-blue-50",
 };
 
 const statusLabel: Record<string, string> = {

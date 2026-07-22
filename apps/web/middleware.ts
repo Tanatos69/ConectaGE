@@ -85,6 +85,8 @@ export const config = {
   matcher: [
     "/mi-cuenta/:path*",
     "/admin/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|demo/).*)",
+    // api/push/dispatch is a webhook-authenticated system route (no
+    // Supabase session cookies ever present) — skip the session refresh.
+    "/((?!_next/static|_next/image|favicon.ico|demo/|api/push/).*)",
   ],
 };

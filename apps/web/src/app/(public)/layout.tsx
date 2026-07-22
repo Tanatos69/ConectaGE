@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { OnboardingIntentModal } from "@/components/layout/onboarding-intent-modal";
+import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 import {
   getCategoryTree,
@@ -60,6 +61,7 @@ export default async function PublicLayout({ children }: { children: React.React
         />
         <CookieConsent />
         <OnboardingIntentModal />
+        <IosInstallBanner />
       </div>
     </CitiesProvider>
   );

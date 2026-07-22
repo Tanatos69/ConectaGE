@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle, AlertTriangle, Store, Bell, Check, Sparkles } from "lucide-react";
+import { CheckCircle, AlertTriangle, Store, Bell, Check, Sparkles, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NotificationRow, NotificationKind } from "@/lib/supabase/types";
 import {
@@ -20,6 +20,7 @@ const iconMap: Record<NotificationKind, React.ElementType> = {
   listing_approved: CheckCircle,
   featured_confirmed: Sparkles,
   featured_rejected: AlertTriangle,
+  saved_search_match: Search,
 };
 
 const colorMap: Record<NotificationKind, string> = {
@@ -32,6 +33,7 @@ const colorMap: Record<NotificationKind, string> = {
   listing_approved: "bg-green-50 text-green-600",
   featured_confirmed: "bg-amber-50 text-amber-600",
   featured_rejected: "bg-red-50 text-destructive",
+  saved_search_match: "bg-blue-50 text-blue-600",
 };
 
 export function NotificationsList({ items }: { items: NotificationRow[] }) {

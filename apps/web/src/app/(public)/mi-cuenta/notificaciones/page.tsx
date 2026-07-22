@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
 import { getNotifications } from "@/lib/supabase/queries";
 import { NotificationsList } from "@/components/account/notifications-list";
+import { PushToggle } from "@/components/account/push-toggle";
 
 export const metadata: Metadata = { title: "Notificaciones" };
 
@@ -12,5 +13,10 @@ export default async function NotificacionesPage() {
 
   const items = await getNotifications(user.id);
 
-  return <NotificationsList items={items} />;
+  return (
+    <>
+      <PushToggle />
+      <NotificationsList items={items} />
+    </>
+  );
 }

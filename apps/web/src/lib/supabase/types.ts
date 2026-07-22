@@ -84,7 +84,8 @@ export type NotificationKind =
   | "listing_removed"
   | "listing_approved"
   | "featured_confirmed"
-  | "featured_rejected";
+  | "featured_rejected"
+  | "saved_search_match";
 
 export interface NotificationRow {
   id: string;

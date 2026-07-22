@@ -10,7 +10,16 @@ const eslintConfig = defineConfig([
   // bundle at build time; this rule catches it earlier, at lint time.)
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/lib/actions/admin.ts", "src/lib/supabase/admin.ts", "src/app/admin/**"],
+    ignores: [
+      "src/lib/actions/admin.ts",
+      "src/lib/supabase/admin.ts",
+      "src/app/admin/**",
+      // Webhook-authenticated system route (Supabase Database Webhook →
+      // this route): no user session exists on that request, so RLS would
+      // block everything anyway — service-role access is required, not
+      // just convenient.
+      "src/app/api/push/dispatch/route.ts",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",
