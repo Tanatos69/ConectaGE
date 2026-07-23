@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useStandalone } from "@/lib/pwa/standalone";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -10,9 +9,9 @@ import type { CategoryNode } from "@/lib/supabase/queries";
 /**
  * Owns the standalone-aware chrome around page content: reserves space for
  * (and renders) the bottom tab bar when installed as a home-screen app, and
- * hides the marketing footer in that same mode. /mi-cuenta already has its
- * own dedicated mobile nav (DashboardNav), so it keeps the regular footer
- * and never gets the bottom bar.
+ * hides the marketing footer in that same mode. The bar covers every public
+ * route, /mi-cuenta included — DashboardLayout retires its own mobile nav
+ * whenever standalone, so there's always exactly one bottom bar on screen.
  */
 export function AppShell({
   children,
@@ -32,13 +31,10 @@ export function AppShell({
   contactWhatsapp?: string;
 }) {
   const standalone = useStandalone();
-  const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/mi-cuenta");
-  const showBottomNav = standalone && !isDashboard;
 
   return (
     <>
-      <main className={cn("flex-1", showBottomNav && "pb-20 lg:pb-0")}>{children}</main>
+      <main className={cn("flex-1", standalone && "pb-20 lg:pb-0")}>{children}</main>
 
       {!standalone && (
         // Also hidden via a pure-CSS display-mode query so Android/desktop
@@ -58,7 +54,7 @@ export function AppShell({
         </div>
       )}
 
-      {showBottomNav && <AppBottomNav />}
+      {standalone && <AppBottomNav />}
     </>
   );
 }
