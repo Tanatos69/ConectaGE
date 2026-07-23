@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   // Live deployment domain — makes relative og:image URLs resolve to a
   // working address so WhatsApp/social link previews render. Update when a
   // custom domain goes live.
-  metadataBase: new URL("https://conectage.netlify.app"),
+  metadataBase: new URL("https://conectge.netlify.app"),
   title: {
     default: "ConectaGE — Compra y vende en Guinea Ecuatorial",
     template: "%s · ConectaGE",
