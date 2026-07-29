@@ -1,7 +1,7 @@
 import type { Translations } from "../types";
 
 export const ar: Translations = {
-  tabs: { home: "الإعلانات", account: "الحساب" },
+  tabs: { home: "الرئيسية", search: "بحث", favorites: "المفضلة", stores: "المتاجر", account: "الحساب" },
   browse: {
     title: "ConectaGE",
     empty: "لا توجد إعلانات منشورة بعد.",

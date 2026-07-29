@@ -1,7 +1,7 @@
 import type { Translations } from "../types";
 
 export const zh: Translations = {
-  tabs: { home: "列表", account: "账户" },
+  tabs: { home: "首页", search: "搜索", favorites: "收藏", stores: "店铺", account: "账户" },
   browse: {
     title: "ConectaGE",
     empty: "暂无发布的列表。",

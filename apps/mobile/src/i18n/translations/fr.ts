@@ -1,7 +1,7 @@
 import type { Translations } from "../types";
 
 export const fr: Translations = {
-  tabs: { home: "Annonces", account: "Compte" },
+  tabs: { home: "Accueil", search: "Rechercher", favorites: "Favoris", stores: "Boutiques", account: "Compte" },
   browse: {
     title: "ConectaGE",
     empty: "Aucune annonce publiée pour le moment.",

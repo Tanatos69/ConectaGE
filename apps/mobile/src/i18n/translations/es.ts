@@ -1,7 +1,7 @@
 import type { Translations } from "../types";
 
 export const es: Translations = {
-  tabs: { home: "Anuncios", account: "Cuenta" },
+  tabs: { home: "Inicio", search: "Buscar", favorites: "Favoritos", stores: "Tiendas", account: "Cuenta" },
   browse: {
     title: "ConectaGE",
     empty: "No hay anuncios publicados todavía.",
@@ -23,5 +23,46 @@ export const es: Translations = {
     listings: "Anuncios",
     followers: "seguidores",
     verified: "Verificada",
+  },
+  home: {
+    categories: "Categorías",
+    featured: "Destacados",
+    recent: "Recién publicados",
+    seeAll: "Ver todo",
+    publish: "Publicar",
+    near: "Cerca de",
+  },
+  search: {
+    title: "Buscar",
+    placeholder: "¿Qué estás buscando?",
+    filters: "Filtros",
+    apply: "Aplicar filtros",
+    clear: "Limpiar",
+    results: "resultados",
+    noResults: "No se encontraron anuncios con estos filtros.",
+    save: "Guardar búsqueda",
+    saved: "Búsqueda guardada",
+    category: "Categoría",
+    location: "Ubicación",
+    price: "Precio",
+    condition: "Estado",
+    type: "Tipo",
+    offer: "Ofertas",
+    wanted: "Se busca",
+    all: "Todas",
+    min: "Mín.",
+    max: "Máx.",
+    sortRecent: "Más recientes",
+    sortPriceAsc: "Precio: menor",
+    sortPriceDesc: "Precio: mayor",
+  },
+  categories: {
+    title: "Categorías",
+    all: "Todas las categorías",
+  },
+  common: {
+    retry: "Reintentar",
+    loginRequired: "Inicia sesión para continuar",
+    loginCta: "Iniciar sesión",
   },
 };

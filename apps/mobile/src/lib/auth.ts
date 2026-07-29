@@ -155,6 +155,17 @@ export async function signInWithOAuth(provider: "google" | "facebook"): Promise<
   return { success: true };
 }
 
+export async function resetPassword(email: string): Promise<ActionResult> {
+  const parsed = z.email("Correo electrónico no válido").safeParse(email.trim());
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.toLowerCase(), {
+    redirectTo: AUTH_CALLBACK_URL,
+  });
+  if (error) return { error: "No se pudo enviar el correo. Intenta de nuevo." };
+  return { success: true };
+}
+
 export async function signOut(): Promise<void> {
   const supabase = getSupabaseClient();
   await supabase.auth.signOut({ scope: "local" });

@@ -1,8 +1,8 @@
 import { Text, View } from "react-native";
 import { Icon, type IconName } from "./icon";
-import { colors } from "@/theme";
+import { useThemeColors } from "@/theme";
 
-type Tone = "featured" | "neutral" | "primary" | "solid-dark";
+type Tone = "featured" | "neutral" | "primary" | "solid-dark" | "success" | "warning";
 
 interface BadgeProps {
   label: string;
@@ -10,20 +10,39 @@ interface BadgeProps {
   icon?: IconName;
 }
 
-const toneStyles: Record<Tone, { container: string; text: string; icon: string }> = {
-  featured: { container: "bg-featured", text: "text-featured-foreground", icon: colors.featuredForeground },
-  primary: { container: "bg-primary-soft", text: "text-primary", icon: colors.primary },
-  neutral: { container: "bg-neutral-100", text: "text-neutral-700", icon: colors.body },
-  "solid-dark": { container: "bg-black/70", text: "text-white", icon: "#FFFFFF" },
+const container: Record<Tone, string> = {
+  featured: "bg-featured",
+  primary: "bg-primary-soft",
+  neutral: "bg-fill",
+  "solid-dark": "bg-black/70",
+  success: "bg-whatsapp/15",
+  warning: "bg-amber-500/15",
 };
 
-/** Small pill for featured/condition/type labels — matches web badge conventions. */
+const textColor: Record<Tone, string> = {
+  featured: "text-featured-foreground",
+  primary: "text-primary",
+  neutral: "text-body",
+  "solid-dark": "text-white",
+  success: "text-whatsapp",
+  warning: "text-amber-600",
+};
+
+/** Small pill for featured/condition/type/status labels. */
 export function Badge({ label, tone = "neutral", icon }: BadgeProps) {
-  const s = toneStyles[tone];
+  const theme = useThemeColors();
+  const iconColor: Record<Tone, string> = {
+    featured: theme.featuredForeground,
+    primary: theme.primary,
+    neutral: theme.body,
+    "solid-dark": "#FFFFFF",
+    success: theme.whatsapp,
+    warning: "#D97706",
+  };
   return (
-    <View className={`flex-row items-center gap-1 self-start rounded-full px-2.5 py-1 ${s.container}`}>
-      {icon && <Icon name={icon} size={12} color={s.icon} />}
-      <Text className={`font-sans-medium text-[11px] ${s.text}`}>{label}</Text>
+    <View className={`flex-row items-center gap-1 self-start rounded-full px-2.5 py-1 ${container[tone]}`}>
+      {icon && <Icon name={icon} size={12} color={iconColor[tone]} />}
+      <Text className={`font-sans-medium text-[11px] ${textColor[tone]}`}>{label}</Text>
     </View>
   );
 }

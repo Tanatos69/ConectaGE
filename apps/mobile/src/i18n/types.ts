@@ -1,12 +1,16 @@
 /**
- * Key set for what mobile renders in its public-facing screens (tabs + browse
- * + listing/store detail chrome). Login/registro/account/completar-perfil stay
- * Spanish-only, matching apps/web's dashboard convention, so they're not keyed
- * here. Grow this alongside the screens that need translation.
+ * Key set for mobile's public-facing screens (tabs + browse + search +
+ * categories + listing/store chrome). Login/registro/account/publish/settings
+ * stay Spanish-only, matching apps/web's dashboard convention, so they're not
+ * keyed here. New optional sections let non-Spanish files omit keys and fall
+ * back to `es` (full translation is a separate human task, see web's note).
  */
 export interface Translations {
   tabs: {
     home: string;
+    search: string;
+    favorites: string;
+    stores: string;
     account: string;
   };
   browse: {
@@ -34,5 +38,46 @@ export interface Translations {
     listings: string;
     followers: string;
     verified: string;
+  };
+  home?: {
+    categories: string;
+    featured: string;
+    recent: string;
+    seeAll: string;
+    publish: string;
+    near: string;
+  };
+  search?: {
+    title: string;
+    placeholder: string;
+    filters: string;
+    apply: string;
+    clear: string;
+    results: string;
+    noResults: string;
+    save: string;
+    saved: string;
+    category: string;
+    location: string;
+    price: string;
+    condition: string;
+    type: string;
+    offer: string;
+    wanted: string;
+    all: string;
+    min: string;
+    max: string;
+    sortRecent: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+  };
+  categories?: {
+    title: string;
+    all: string;
+  };
+  common?: {
+    retry: string;
+    loginRequired: string;
+    loginCta: string;
   };
 }

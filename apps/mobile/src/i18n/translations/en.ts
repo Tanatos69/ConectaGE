@@ -1,7 +1,7 @@
 import type { Translations } from "../types";
 
 export const en: Translations = {
-  tabs: { home: "Listings", account: "Account" },
+  tabs: { home: "Home", search: "Search", favorites: "Saved", stores: "Stores", account: "Account" },
   browse: {
     title: "ConectaGE",
     empty: "No listings published yet.",

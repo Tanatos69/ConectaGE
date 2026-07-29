@@ -1,32 +1,41 @@
 /** @type {import('tailwindcss').Config} */
+const rgb = (v) => `rgb(var(${v}) / <alpha-value>)`;
+
 module.exports = {
   content: ["./src/app/**/*.{js,jsx,ts,tsx}", "./src/components/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
+  darkMode: "media",
   theme: {
     extend: {
-      // Ported from apps/web/src/app/globals.css (light-mode values only for v1 —
-      // dark mode isn't wired up yet on mobile).
+      // Semantic tokens back the light/dark theme (vars in src/global.css).
+      // Brand accents keep their fixed identity; neutrals/surfaces switch.
       colors: {
         primary: {
-          DEFAULT: "hsl(213, 82%, 46%)",
+          DEFAULT: rgb("--color-primary"),
           foreground: "hsl(0, 0%, 100%)",
-          soft: "hsl(213, 82%, 96%)",
+          soft: rgb("--color-primary-soft"),
         },
         whatsapp: {
-          DEFAULT: "hsl(142, 70%, 49%)",
+          DEFAULT: rgb("--color-whatsapp"),
           hover: "hsl(142, 71%, 42%)",
           foreground: "hsl(0, 0%, 100%)",
         },
         featured: {
-          DEFAULT: "hsl(4, 78%, 50%)",
+          DEFAULT: rgb("--color-featured"),
           foreground: "hsl(0, 0%, 100%)",
         },
-        patriot: {
-          blue: "hsl(213, 82%, 46%)",
-          green: "hsl(142, 68%, 34%)",
-          red: "hsl(4, 78%, 50%)",
-          white: "hsl(0, 0%, 100%)",
-        },
+        // Surfaces + text (theme-aware).
+        bg: rgb("--color-bg"),
+        card: rgb("--color-card"),
+        elevated: rgb("--color-elevated"),
+        ink: rgb("--color-ink"),
+        body: rgb("--color-body"),
+        subtle: rgb("--color-muted"),
+        faint: rgb("--color-faint"),
+        line: rgb("--color-line"),
+        hairline: rgb("--color-hairline"),
+        fill: rgb("--color-fill"),
+        star: rgb("--color-star"),
       },
       borderRadius: {
         sm: 8,
@@ -36,10 +45,6 @@ module.exports = {
         "2xl": 20,
         "3xl": 24,
       },
-      // Weight-specific family names matching the exact @expo-google-fonts
-      // families loaded in app/_layout.tsx. Named so they don't collide with
-      // Tailwind's fontWeight scale (avoid `font-bold`/`font-semibold`, which
-      // set font-weight); use these to set the actual loaded font file.
       fontFamily: {
         sans: ["Inter_400Regular"],
         "sans-medium": ["Inter_600SemiBold"],

@@ -8,7 +8,12 @@
     "scheme": "conectage",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.conectage.app"
+      "bundleIdentifier": "com.conectage.app",
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.conectage.app",
@@ -29,18 +34,38 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#156CD5",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 220,
+          "dark": {
+            "backgroundColor": "#0B0B0D",
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 220
+          }
         }
       ],
       "expo-localization",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ConectaGE necesita acceso a tus fotos para añadir imágenes a tus anuncios.",
+          "cameraPermission": "ConectaGE necesita acceso a la cámara para tomar fotos de tus anuncios."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#156CD5"
+        }
+      ],
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
     }
   }
 }

@@ -23,7 +23,7 @@ export function Avatar({ uri, name, size = 44 }: AvatarProps) {
       <Image
         source={{ uri }}
         style={{ width: size, height: size, borderRadius: size / 2 }}
-        className="bg-neutral-100"
+        className="bg-fill"
       />
     );
   }
