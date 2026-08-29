@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { BRAND } from "@gemarket/shared";
 import { StoresDirectory } from "@/components/store/stores-directory";
 import { getStores } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: "Tiendas",
-  description:
-    "Descubre las tiendas verificadas de GEMarket en Guinea Ecuatorial: electrónica, vehículos, inmobiliaria, hogar y moda. Compra directamente por WhatsApp.",
+  description: `Descubre las tiendas verificadas de ${BRAND.name} en Guinea Ecuatorial: electrónica, vehículos, inmobiliaria, hogar y moda. Compra directamente por WhatsApp.`,
 };
 
 export default async function TiendasPage() {

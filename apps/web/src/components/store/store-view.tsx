@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Star, CheckCircle, MapPin, Calendar, Users, Store as StoreIcon, Clock, ExternalLink, AtSign, Share2 } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { FollowButton } from "@/components/store/follow-button";
@@ -133,7 +134,7 @@ export function StoreView({
               phoneNumber={store.whatsapp}
               listingTitle={store.name}
               tiendaSlug={store.slug}
-              message={`Hola, me interesa tu tienda ${store.name} en GEMarket.`}
+              message={`Hola, me interesa tu tienda ${store.name} en ${BRAND.name}.`}
               label={t("stores.contact")}
             />
           </div>

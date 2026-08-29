@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — exact age (birth date), demographics at signup, welcome message
+-- GEMarket — exact age (birth date), demographics at signup, welcome message
 -- Run manually in Supabase Studio → SQL Editor, after 0005.
 -- ============================================================================
 
@@ -74,7 +74,7 @@ begin
   values (
     new.id,
     'welcome',
-    '¡Bienvenido a ConectaGE!',
+    '¡Bienvenido a GEMarket!',
     'Primeros pasos: añade tu foto de perfil para generar confianza, publica tu primer anuncio gratis y sigue tiendas para enterarte de sus novedades. Recuerda: compradores y vendedores tratan directamente por WhatsApp — queda en lugares públicos y no pagues por adelantado.'
   );
   return new;

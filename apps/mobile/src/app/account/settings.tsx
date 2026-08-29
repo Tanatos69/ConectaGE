@@ -2,6 +2,7 @@ import { ScrollView, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import { useColorScheme } from "nativewind";
+import { BRAND } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { signOut } from "@/lib/auth";
 import { useProfile, useUpdateProfile } from "@/lib/hooks";
@@ -114,7 +115,7 @@ export default function SettingsScreen() {
         <View className="mt-6 flex-row items-center justify-center gap-1.5">
           <Icon name="pricetags" size={14} color={theme.faint} />
           <Text className="font-sans text-xs text-subtle">
-            GEMarket v{Constants.expoConfig?.version ?? "1.0.0"}
+            {BRAND.name} v{Constants.expoConfig?.version ?? "1.0.0"}
           </Text>
         </View>
       </ScrollView>

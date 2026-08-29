@@ -3,6 +3,7 @@
 import { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserCheck } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction } from "@/lib/actions/auth";
@@ -113,7 +114,7 @@ function CompletarPerfilForm() {
                 className={inputClass}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Debes tener al menos 16 años para usar GEMarket.
+                Debes tener al menos 16 años para usar {BRAND.name}.
               </p>
             </div>
 

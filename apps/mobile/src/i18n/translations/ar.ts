@@ -1,11 +1,12 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const ar: Translations = {
   tabs: { home: "الرئيسية", search: "بحث", favorites: "المفضلة", stores: "المتاجر", account: "الحساب" },
   browse: {
-    title: "GEMarket",
+    title: BRAND.name,
     empty: "لا توجد إعلانات منشورة بعد.",
-    searchPlaceholder: "ابحث في GEMarket",
+    searchPlaceholder: `ابحث في ${BRAND.name}`,
     featured: "مميز",
     wanted: "مطلوب",
     notConfigured: "لم يتم إعداد Supabase (متغيرات EXPO_PUBLIC_SUPABASE_* مفقودة).",

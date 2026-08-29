@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MapPin, Mail, CheckCircle } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
 
 const subjects = [
@@ -125,15 +126,15 @@ export default function ContactoPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="size-4 shrink-0 text-primary" />
-                <a href="mailto:info@conectage.com" className="hover:text-foreground hover:underline">
-                  info@conectage.com
+                <a href={`mailto:${BRAND.emails.info}`} className="hover:text-foreground hover:underline">
+                  {BRAND.emails.info}
                 </a>
               </div>
             </div>
           </div>
 
           <a
-            href="https://wa.me/240222000000?text=Hola%2C+tengo+una+consulta+sobre+GEMarket."
+            href={`https://wa.me/240222000000?text=${encodeURIComponent(`Hola, tengo una consulta sobre ${BRAND.name}.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-2xl bg-[#25D366] p-5 text-white shadow-sm transition-colors hover:bg-[#1aab4f]"

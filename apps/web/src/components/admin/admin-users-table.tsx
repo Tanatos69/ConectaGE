@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { Search, Users, Download, Ban, Unlock, X } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { bulkBlockUsersAction, bulkUnblockUsersAction } from "@/lib/actions/admin";
 import type { AdminUserRow } from "@/app/admin/data";
 import { monthYearLabel, ageFromBirthDate } from "@/lib/time";
@@ -80,7 +81,7 @@ function exportCsv(rows: AdminUserRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `usuarios-gemarket-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `usuarios-${BRAND.slug}-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

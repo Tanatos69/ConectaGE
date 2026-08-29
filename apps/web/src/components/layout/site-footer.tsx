@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { Logo } from "@/components/brand/logo";
 import { translatedCategoryName } from "@/lib/categories";
 import { paymentMethods } from "@/lib/payments-logistics";
@@ -10,7 +11,7 @@ import type { CategoryNode } from "@/lib/supabase/queries";
 
 export function SiteFooter({
   categories,
-  siteName = "GEMarket",
+  siteName = BRAND.name,
   logoUrl = "",
   tagline = "",
   contactEmail = "",
@@ -72,11 +73,11 @@ export function SiteFooter({
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-primary" />
-                {contactWhatsapp || "+240 222 000 000"}
+                {contactWhatsapp || BRAND.whatsapp}
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-primary" />
-                {contactEmail || "info@conectage.com"}
+                {contactEmail || BRAND.emails.info}
               </li>
             </ul>
           </div>

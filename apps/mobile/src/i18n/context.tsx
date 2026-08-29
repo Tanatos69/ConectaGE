@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Localization from "expo-localization";
 import { I18nManager } from "react-native";
+import { brandStorageKey, legacyStorageKey } from "@gemarket/shared";
 import { languages, defaultLanguage, type Language } from "./languages";
 import { es } from "./translations/es";
 import { en } from "./translations/en";
@@ -12,7 +13,21 @@ import { zh } from "./translations/zh";
 import type { Translations } from "./types";
 
 const allTranslations: Record<string, Translations> = { es, en, fr, pt, ar, zh };
-const STORAGE_KEY = "gemarket-lang";
+const STORAGE_KEY = brandStorageKey("lang");
+const LEGACY_STORAGE_KEY = legacyStorageKey("lang");
+
+/** Read the saved language code, migrating the pre-rename key once. */
+async function readSavedLang(): Promise<string | null> {
+  const current = await AsyncStorage.getItem(STORAGE_KEY);
+  if (current) return current;
+  const legacy = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
+  if (legacy) {
+    await AsyncStorage.setItem(STORAGE_KEY, legacy);
+    await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
+    return legacy;
+  }
+  return null;
+}
 
 interface I18nContextType {
   language: Language;
@@ -40,7 +55,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
+    readSavedLang().then((saved) => {
       const lang = saved ? languages.find((l) => l.code === saved) : detectDeviceLanguage();
       if (lang) {
         setLanguageState(lang);

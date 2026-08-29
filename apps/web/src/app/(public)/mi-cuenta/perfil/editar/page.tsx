@@ -4,6 +4,7 @@ import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Save, AlertTriangle, Trash2, ArrowLeft } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@/lib/auth/context";
 import { updateProfileAction, updatePasswordAction, updateAvatarAction } from "@/lib/actions/auth";
@@ -299,7 +300,7 @@ export default function EditarPerfilPage() {
       {/* Optional demographics */}
       <SectionCard title="Información demográfica (opcional)">
         <p className="mb-4 text-xs text-muted-foreground">
-          Estos datos son opcionales y nos ayudan a mejorar GEMarket. Se usan solo de forma
+          Estos datos son opcionales y nos ayudan a mejorar {BRAND.name}. Se usan solo de forma
           agregada y nunca se venden a terceros.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">

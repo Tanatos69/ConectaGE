@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — categories move from hardcoded TypeScript into a real table.
+-- GEMarket — categories move from hardcoded TypeScript into a real table.
 -- Run manually in Supabase Studio → SQL Editor, after 0010.
 --
 -- Self-referencing tree (top-level categories have parent_id null,

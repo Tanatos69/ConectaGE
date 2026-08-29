@@ -1,3 +1,4 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const ar: Translations = {
@@ -33,7 +34,7 @@ export const ar: Translations = {
     cookies: "سياسة ملفات تعريف الارتباط",
     popular: "الأكثر شعبية",
     location: "مالابو · باتا، غينيا الاستوائية",
-    copyright: "GEMarket. جميع الحقوق محفوظة.",
+    copyright: `${BRAND.name}. جميع الحقوق محفوظة.`,
     designedBy: "تصميم",
     stores: "المتاجر",
     payments: "الدفع والتوصيل",
@@ -147,7 +148,7 @@ export const ar: Translations = {
   whatsappFloat: {
     help: "هل تحتاج مساعدة؟",
     contactLabel: "التواصل مع الدعم عبر واتساب",
-    message: "مرحباً، أودّ الحصول على مزيد من المعلومات حول GEMarket.",
+    message: `مرحباً، أودّ الحصول على مزيد من المعلومات حول ${BRAND.name}.`,
   },
   whatsappCta: {
     contact: "التواصل عبر واتساب",

@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — contact tracking (anti-review-bombing), direct store reviews,
+-- GEMarket — contact tracking (anti-review-bombing), direct store reviews,
 --             and listing reports
 -- Run manually in Supabase Studio → SQL Editor, after 0006_profile_v2.sql.
 -- ============================================================================

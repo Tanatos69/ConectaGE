@@ -3,10 +3,14 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 import "@/lib/fontawesome";
+import { BRAND } from "@gemarket/shared";
 import { Providers } from "@/components/providers";
 import { getUser } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/queries";
 import { getSiteSettings } from "@/lib/supabase/settings";
+import { SITE_URL } from "@/lib/site-url";
+
+const SITE_TITLE = `${BRAND.name} — Compra y vende en Guinea Ecuatorial`;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,13 +26,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  // Live deployment domain — makes relative og:image URLs resolve to a
-  // working address so WhatsApp/social link previews render. Update when a
-  // custom domain goes live.
-  metadataBase: new URL("https://conectage.netlify.app"),
+  // Live deployment origin — makes relative og:image URLs resolve to a working
+  // address so WhatsApp/social link previews render. Driven by SITE_URL
+  // (NEXT_PUBLIC_SITE_URL, else BRAND.url).
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "GEMarket — Compra y vende en Guinea Ecuatorial",
-    template: "%s · GEMarket",
+    default: SITE_TITLE,
+    template: `%s · ${BRAND.name}`,
   },
   description:
     "El mercado de anuncios clasificados de Guinea Ecuatorial. Publica gratis y contacta directamente por WhatsApp. Vehículos, inmobiliaria, empleo, electrónica y mucho más en Malabo y Bata.",
@@ -42,8 +46,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_GQ",
-    siteName: "GEMarket",
-    title: "GEMarket — Compra y vende en Guinea Ecuatorial",
+    siteName: BRAND.name,
+    title: SITE_TITLE,
     description:
       "Publica tu anuncio gratis y contacta por WhatsApp. El mercado de Guinea Ecuatorial.",
   },
@@ -58,7 +62,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "GEMarket",
+    title: BRAND.name,
   },
 };
 

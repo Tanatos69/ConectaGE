@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — per-category notification preferences
+-- GEMarket — per-category notification preferences
 -- Run manually in Supabase Studio → SQL Editor, after 0004_social.sql.
 --
 -- Purely additive: ADD COLUMN with a DEFAULT on live tables with existing

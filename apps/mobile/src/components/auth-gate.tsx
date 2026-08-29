@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { BRAND } from "@gemarket/shared";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { useThemeColors } from "@/theme";
@@ -11,7 +12,7 @@ interface AuthGateProps {
 
 /** Signed-out placeholder for gated screens (favorites, dashboard, etc.). */
 export function AuthGate({
-  title = "Inicia sesión en GEMarket",
+  title = `Inicia sesión en ${BRAND.name}`,
   subtitle = "Contacta vendedores, guarda favoritos y publica tus anuncios.",
 }: AuthGateProps) {
   const router = useRouter();

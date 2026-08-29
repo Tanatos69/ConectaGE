@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { Logo } from "@/components/brand/logo";
 import { signUpAction, signInWithOAuthAction } from "@/lib/actions/auth";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -275,7 +276,7 @@ export default function RegistroPage() {
                   className={inputClass}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Debes tener al menos 16 años para usar GEMarket. Tu edad nunca se muestra a
+                  Debes tener al menos 16 años para usar {BRAND.name}. Tu edad nunca se muestra a
                   otros usuarios.
                 </p>
               </div>

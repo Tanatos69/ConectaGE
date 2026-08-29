@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Cookie, Settings2 } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import {
   readConsent,
   writeConsent,
   CONSENT_ALL,
   CONSENT_NONE,
+  CONSENT_CLEARED_EVENT,
   type Consent,
 } from "@/lib/consent";
 import { cn } from "@/lib/utils";
@@ -76,8 +78,8 @@ export function CookieConsent() {
       setVisible(readConsent() === null);
     }
     check();
-    window.addEventListener("gemarket-consent-cleared", check);
-    return () => window.removeEventListener("gemarket-consent-cleared", check);
+    window.addEventListener(CONSENT_CLEARED_EVENT, check);
+    return () => window.removeEventListener(CONSENT_CLEARED_EVENT, check);
   }, []);
 
   if (!visible) return null;
@@ -102,7 +104,7 @@ export function CookieConsent() {
               Cookies y datos de uso
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Usamos cookies necesarias para que GEMarket funcione y, solo si lo aceptas,
+              Usamos cookies necesarias para que {BRAND.name} funcione y, solo si lo aceptas,
               datos de uso anónimos (búsquedas y visitas) para mejorar la plataforma y
               personalizar tu experiencia. No vendemos tus datos a terceros.{" "}
               <Link href="/cookies" className="font-medium text-primary hover:underline">

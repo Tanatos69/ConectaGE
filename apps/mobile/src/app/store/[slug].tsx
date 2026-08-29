@@ -12,6 +12,7 @@ import {
   useFavorites,
   useCreateReview,
 } from "@/lib/hooks";
+import { BRAND } from "@gemarket/shared";
 import { qk } from "@/lib/query-client";
 import { useAuth } from "@/lib/auth-context";
 import { useTranslation } from "@/i18n/context";
@@ -128,7 +129,7 @@ export default function StoreDetailScreen() {
                     phoneNumber={store.whatsapp}
                     listingTitle={store.name}
                     tiendaSlug={store.slug}
-                    message={`Hola, vi tu tienda ${store.name} en GEMarket`}
+                    message={`Hola, vi tu tienda ${store.name} en ${BRAND.name}`}
                     label={t("listing.contact")}
                   />
                 </View>

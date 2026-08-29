@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Plus, Menu, X, ChevronDown, User, Heart, LogOut, Store, LayoutGrid } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BRAND } from "@gemarket/shared";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { languages } from "@/lib/languages";
@@ -110,7 +111,7 @@ function LanguageSwitcher() {
 
 export function SiteHeader({
   categories,
-  siteName = "GEMarket",
+  siteName = BRAND.name,
   logoUrl = "",
 }: {
   categories: CategoryNode[];

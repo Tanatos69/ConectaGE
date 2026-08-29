@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — web push subscriptions + wiring saved_searches.alerts (0016)
+-- GEMarket — web push subscriptions + wiring saved_searches.alerts (0016)
 --             into a real match trigger (it's been a no-op column until now).
 -- Run manually in Supabase Studio → SQL Editor, after 0017_admin_view_state.sql.
 -- ============================================================================

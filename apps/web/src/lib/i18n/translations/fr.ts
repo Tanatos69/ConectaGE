@@ -1,3 +1,4 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const fr: Translations = {
@@ -33,7 +34,7 @@ export const fr: Translations = {
     cookies: "Politique des cookies",
     popular: "Populaires",
     location: "Malabo · Bata, Guinée Équatoriale",
-    copyright: "GEMarket. Tous droits réservés.",
+    copyright: `${BRAND.name}. Tous droits réservés.`,
     designedBy: "Conçu par",
     stores: "Boutiques",
     payments: "Paiements et livraison",
@@ -147,7 +148,7 @@ export const fr: Translations = {
   whatsappFloat: {
     help: "Besoin d'aide ?",
     contactLabel: "Contacter le support par WhatsApp",
-    message: "Bonjour, je souhaite obtenir plus d'informations sur GEMarket.",
+    message: `Bonjour, je souhaite obtenir plus d'informations sur ${BRAND.name}.`,
   },
   whatsappCta: {
     contact: "Contacter par WhatsApp",

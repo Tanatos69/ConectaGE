@@ -3,6 +3,7 @@
 import { defaultCache } from "@serwist/turbopack/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { NetworkOnly, Serwist } from "serwist";
+import { BRAND } from "@gemarket/shared";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -49,7 +50,7 @@ self.addEventListener("push", (event) => {
     url?: string;
   };
   event.waitUntil(
-    self.registration.showNotification(data.title ?? "GEMarket", {
+    self.registration.showNotification(data.title ?? BRAND.name, {
       body: data.message ?? "",
       icon: "/icon-192.png",
       data: { url: data.url ?? "/mi-cuenta/notificaciones" },

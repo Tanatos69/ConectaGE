@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BRAND } from "@gemarket/shared";
 import { getPublishedListings, getCategoryTree, logEvent } from "@/lib/supabase/queries";
 import { iconByName } from "@/lib/categories";
 import { filterListings, type SearchCriteria } from "@/lib/search";
@@ -18,7 +19,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: q ? `Resultados para "${q}"` : "Buscar anuncios",
     description: q
-      ? `${q} — anuncios en GEMarket, Guinea Ecuatorial.`
+      ? `${q} — anuncios en ${BRAND.name}, Guinea Ecuatorial.`
       : "Busca anuncios de vehículos, inmobiliaria, electrónica y más en Guinea Ecuatorial.",
   };
 }

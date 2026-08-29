@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowUpSquare, SquarePlus, X } from "lucide-react";
+import { BRAND, brandStorageKey, legacyStorageKey } from "@gemarket/shared";
 import { isIOSSafari, isStandalone } from "@/lib/pwa/standalone";
 import { readConsent } from "@/lib/consent";
 
-const DISMISSED_KEY = "gemarket-ios-install-dismissed";
+const DISMISSED_KEY = brandStorageKey("ios-install-dismissed");
+const LEGACY_DISMISSED_KEY = legacyStorageKey("ios-install-dismissed");
 
 /**
  * iOS has no `beforeinstallprompt` event — Safari never fires one — so
@@ -20,7 +22,9 @@ export function IosInstallBanner() {
   useEffect(() => {
     // Both this banner and CookieConsent are fixed bottom sheets — wait for
     // the cookie decision first so they never stack on top of each other.
-    const dismissed = window.localStorage.getItem(DISMISSED_KEY) === "1";
+    const dismissed =
+      window.localStorage.getItem(DISMISSED_KEY) === "1" ||
+      window.localStorage.getItem(LEGACY_DISMISSED_KEY) === "1";
     setVisible(isIOSSafari() && !isStandalone() && !dismissed && readConsent() !== null);
   }, []);
 
@@ -43,7 +47,7 @@ export function IosInstallBanner() {
             className="size-12 shrink-0 rounded-[22%] shadow-sm"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">GEMarket</p>
+            <p className="truncate text-sm font-semibold text-foreground">{BRAND.name}</p>
             <p className="truncate text-xs text-muted-foreground">
               Añade la app a tu pantalla de inicio
             </p>

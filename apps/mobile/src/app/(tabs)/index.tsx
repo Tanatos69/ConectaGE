@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import type { ListingRow } from "@gemarket/shared";
-import { categories, DEFAULT_CITY, isListingFeatured } from "@gemarket/shared";
+import { BRAND, categories, DEFAULT_CITY, isListingFeatured } from "@gemarket/shared";
 import { useListings, useFavorites } from "@/lib/hooks";
 import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -47,7 +47,7 @@ export default function HomeScreen() {
   if (!isSupabaseConfigured) {
     return (
       <Screen>
-        <EmptyState icon="cloud-offline-outline" title="GEMarket" subtitle={t("browse.notConfigured")} />
+        <EmptyState icon="cloud-offline-outline" title={BRAND.name} subtitle={t("browse.notConfigured")} />
       </Screen>
     );
   }

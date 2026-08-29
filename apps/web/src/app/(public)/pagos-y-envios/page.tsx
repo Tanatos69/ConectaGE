@@ -6,11 +6,11 @@ import {
   deliveryZones,
   logisticsServices,
 } from "@/lib/payments-logistics";
+import { BRAND } from "@gemarket/shared";
 
 export const metadata: Metadata = {
   title: "Pagos y envíos",
-  description:
-    "Métodos de pago (Muni Dinero, Rosa Money, BGF Mobile, transferencia) y logística de última milla en Malabo, Bata y todo Guinea Ecuatorial en GEMarket.",
+  description: `Métodos de pago (Muni Dinero, Rosa Money, BGF Mobile, transferencia) y logística de última milla en Malabo, Bata y todo Guinea Ecuatorial en ${BRAND.name}.`,
 };
 
 export default function PagosYEnviosPage() {

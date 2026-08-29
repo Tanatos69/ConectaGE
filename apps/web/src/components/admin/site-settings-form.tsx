@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Save, CheckCircle, AlertTriangle, Upload, X, Loader2 } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import {
   DEFAULT_SETTINGS,
   type SiteSettings,
@@ -28,7 +29,7 @@ const settingDefs: SettingDefinition[] = [
   {
     key: "primary_color",
     label: "Color principal",
-    description: "Color de marca de botones y enlaces. Déjalo vacío para usar el azul GEMarket.",
+    description: `Color de marca de botones y enlaces. Déjalo vacío para usar el azul ${BRAND.name}.`,
     type: "color",
     group: "Identidad y apariencia",
   },

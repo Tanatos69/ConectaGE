@@ -29,14 +29,14 @@ Todas con la contraseña **`Demo1234!`**
 
 | Email | Rol | Ciudad | Tienda |
 |---|---|---|---|
-| miguel.obiang@demo.conectage.com | Vendedor | Malabo | Electrónica Malabo Center (verificada) |
-| carmen.ondo@demo.conectage.com | Vendedor | Bata | AutoGuinea Bata (verificada) |
-| teresa.nchama@demo.conectage.com | Vendedor | Malabo | Moda Nzalang |
-| pedro.esono@demo.conectage.com | Comprador | Bata | — |
-| maria.bindang@demo.conectage.com | Comprador | Malabo | — |
-| jose.mba@demo.conectage.com | Comprador | Ebebiyín | — |
-| rosa.avomo@demo.conectage.com | Comprador | Mongomo | — |
-| francisco.nve@demo.conectage.com | Comprador (solicitud de vendedor pendiente) | Luba | — |
+| miguel.obiang@demo.gemarket.com | Vendedor | Malabo | Electrónica Malabo Center (verificada) |
+| carmen.ondo@demo.gemarket.com | Vendedor | Bata | AutoGuinea Bata (verificada) |
+| teresa.nchama@demo.gemarket.com | Vendedor | Malabo | Moda Nzalang |
+| pedro.esono@demo.gemarket.com | Comprador | Bata | — |
+| maria.bindang@demo.gemarket.com | Comprador | Malabo | — |
+| jose.mba@demo.gemarket.com | Comprador | Ebebiyín | — |
+| rosa.avomo@demo.gemarket.com | Comprador | Mongomo | — |
+| francisco.nve@demo.gemarket.com | Comprador (solicitud de vendedor pendiente) | Luba | — |
 
 Tu cuenta de administrador no se toca: sigue siendo la que promoviste a mano
 en Supabase Studio.
@@ -68,7 +68,7 @@ pertenece, gracias a los `on delete cascade`):
 
 ```sql
 delete from auth.users
-where email like '%@demo.conectage.com';
+where email like '%@demo.gemarket.com';
 ```
 
 Las imágenes subidas quedan en Storage; puedes borrarlas en

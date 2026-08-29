@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — quantity available on listings
+-- GEMarket — quantity available on listings
 -- Run manually in Supabase Studio → SQL Editor, after 0009.
 --
 -- Purely additive: ADD COLUMN with a DEFAULT of null on a live table with

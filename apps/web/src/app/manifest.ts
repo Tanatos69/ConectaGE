@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND } from "@gemarket/shared";
 
 // Manifest strings are hardcoded Spanish, matching the SSR default
 // (`<html lang="es">` in layout.tsx) and the admin-is-Spanish-only
@@ -7,8 +8,8 @@ import type { MetadataRoute } from "next";
 // client-side i18n language choice even if we wanted to.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GEMarket — Compra y vende en Guinea Ecuatorial",
-    short_name: "GEMarket",
+    name: `${BRAND.name} — Compra y vende en Guinea Ecuatorial`,
+    short_name: BRAND.name,
     description: "El mercado de anuncios clasificados de Guinea Ecuatorial.",
     start_url: "/",
     display: "standalone",

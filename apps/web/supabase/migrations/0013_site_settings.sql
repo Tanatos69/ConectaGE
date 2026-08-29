@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — real site settings + site-assets storage bucket.
+-- GEMarket — real site settings + site-assets storage bucket.
 -- Run manually in Supabase Studio → SQL Editor, after 0012.
 --
 -- Key-value settings table (the classifieds-platform standard: LaraClassifier,
@@ -33,7 +33,7 @@ create policy "site_settings_public_select" on public.site_settings
 -- an admin already changed.
 
 insert into public.site_settings (key, value) values
-  ('site_name',                          '"ConectaGE"'),
+  ('site_name',                          '"GEMarket"'),
   ('logo_url',                           '""'),
   ('primary_color',                      '""'),
   ('site_whatsapp',                      '"+240 222 000 000"'),
@@ -54,7 +54,7 @@ insert into public.site_settings (key, value) values
   ('featured_price_7d',                  '5000'),
   ('featured_price_15d',                 '8000'),
   ('featured_price_30d',                 '12000'),
-  ('payment_instructions',               '"Paga por transferencia bancaria (BANGE, cuenta 001-234567-89, titular ConectaGE) o Muni Dinero al +240 222 000 000. Envía el comprobante por WhatsApp al mismo número indicando el título de tu anuncio."'),
+  ('payment_instructions',               '"Paga por transferencia bancaria (BANGE, cuenta 001-234567-89, titular GEMarket) o Muni Dinero al +240 222 000 000. Envía el comprobante por WhatsApp al mismo número indicando el título de tu anuncio."'),
   ('keyword_blacklist',                  '"estafa fraude dinero rápido inversión garantizada"'),
   ('max_reports_before_auto_remove',     '5'),
   ('min_account_age_days_to_skip_queue', '7'),

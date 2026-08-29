@@ -3,6 +3,9 @@ import { withSerwist } from "@serwist/turbopack";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Workspace package published as raw TypeScript (packages/shared) — Next has
+  // to transpile it rather than expect pre-built JS.
+  transpilePackages: ["@gemarket/shared"],
   images: {
     // Real listing photos & avatars live in Supabase Storage. Cloudinary /
     // Unsplash remain for legacy demo imagery.

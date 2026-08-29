@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — buyer/seller onboarding intent
+-- GEMarket — buyer/seller onboarding intent
 -- Run manually in Supabase Studio → SQL Editor, after 0007.
 --
 -- Purely additive: ADD COLUMN with a DEFAULT of null on a live table with

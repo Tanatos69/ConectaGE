@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { BRAND } from "@gemarket/shared";
 import { signUp } from "@/lib/auth";
 import { TextField } from "@/components/ui/text-field";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ export default function RegistroScreen() {
       <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} keyboardShouldPersistTaps="handled">
         <View className="gap-1 pb-2">
           <Text className="font-display text-2xl text-neutral-900">Crea tu cuenta</Text>
-          <Text className="font-sans text-sm text-neutral-500">Únete a GEMarket en un minuto.</Text>
+          <Text className="font-sans text-sm text-neutral-500">Únete a {BRAND.name} en un minuto.</Text>
         </View>
 
         <TextField label="Nombre completo" icon="person-outline" value={fullName} onChangeText={setFullName} placeholder="Tu nombre" />

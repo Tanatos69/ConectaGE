@@ -11,8 +11,15 @@
  *                            enabling future personalized features.
  */
 
-export const CONSENT_COOKIE = "gemarket-consent";
+import { brandStorageKey, legacyStorageKey } from "@gemarket/shared";
+
+export const CONSENT_COOKIE = brandStorageKey("consent");
+/** Pre-rename cookie name — readConsent() migrates it once, then drops it. */
+const LEGACY_CONSENT_COOKIE = legacyStorageKey("consent");
 export const CONSENT_MAX_AGE = 60 * 60 * 24 * 365; // 12 months
+
+/** Window event fired when /cookies clears the decision, so the banner re-shows. */
+export const CONSENT_CLEARED_EVENT = brandStorageKey("consent-cleared");
 
 export interface Consent {
   v: 1;
@@ -45,10 +52,20 @@ export function parseConsent(raw: string | undefined | null): Consent | null {
 
 export function readConsent(): Consent | null {
   if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${CONSENT_COOKIE}=([^;]+)`),
-  );
-  return parseConsent(match ? match[1] : null);
+  const readCookie = (name: string) => {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]+)`));
+    return match ? match[1] : null;
+  };
+  const current = parseConsent(readCookie(CONSENT_COOKIE));
+  if (current) return current;
+  // One-time migration from the pre-rename cookie name (conectage-consent).
+  const legacy = parseConsent(readCookie(LEGACY_CONSENT_COOKIE));
+  if (legacy) {
+    writeConsent(legacy);
+    document.cookie = `${LEGACY_CONSENT_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    return legacy;
+  }
+  return null;
 }
 
 export function writeConsent(consent: Consent): void {
