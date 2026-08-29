@@ -16,7 +16,7 @@ export function AdminBanner({
         <ShieldAlert className="size-3.5 shrink-0" />
         <span className="truncate">
           <strong>Área restringida.</strong>{" "}
-          <span className="hidden sm:inline">Acceso limitado a administradores de ConectaGE.</span>
+          <span className="hidden sm:inline">Acceso limitado a administradores de GEMarket.</span>
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-2">

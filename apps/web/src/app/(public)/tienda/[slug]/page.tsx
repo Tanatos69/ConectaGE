@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!store) return {};
   return {
     title: store.name,
-    description: `${store.tagline}. Tienda en ${store.city}, Guinea Ecuatorial — ${store.listingSlugs.length} anuncios en ConectaGE.`,
+    description: `${store.tagline}. Tienda en ${store.city}, Guinea Ecuatorial — ${store.listingSlugs.length} anuncios en GEMarket.`,
   };
 }
 

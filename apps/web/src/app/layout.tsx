@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   // custom domain goes live.
   metadataBase: new URL("https://conectge.netlify.app"),
   title: {
-    default: "ConectaGE — Compra y vende en Guinea Ecuatorial",
-    template: "%s · ConectaGE",
+    default: "GEMarket — Compra y vende en Guinea Ecuatorial",
+    template: "%s · GEMarket",
   },
   description:
     "El mercado de anuncios clasificados de Guinea Ecuatorial. Publica gratis y contacta directamente por WhatsApp. Vehículos, inmobiliaria, empleo, electrónica y mucho más en Malabo y Bata.",
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_GQ",
-    siteName: "ConectaGE",
-    title: "ConectaGE — Compra y vende en Guinea Ecuatorial",
+    siteName: "GEMarket",
+    title: "GEMarket — Compra y vende en Guinea Ecuatorial",
     description:
       "Publica tu anuncio gratis y contacta por WhatsApp. El mercado de Guinea Ecuatorial.",
   },
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ConectaGE",
+    title: "GEMarket",
   },
 };
 

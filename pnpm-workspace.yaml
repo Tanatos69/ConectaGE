@@ -1,5 +1,19 @@
 packages:
   - 'apps/*'
+  - 'packages/*'
+
+# @expo/metro@54.2.0 pins metro-config to 0.83.3, whose config loader does a
+# raw `import(absolutePath)` on Windows -- Node's ESM loader then misreads
+# the drive letter ("D:\...") as a URL scheme and throws
+# ERR_UNSUPPORTED_ESM_URL_SCHEME. metro-config@0.83.7 fixes this (wraps the
+# path in pathToFileURL first). Deliberately narrow: only metro-config is
+# overridden, since a broader override of "metro"/"metro-file-map" pulls in
+# an @expo/cli@54.0.26-incompatible metro-file-map whose changed "change"
+# event shape crashes the dev server ("events is not iterable") -- the live
+# bundler/file-watcher stays on the original @expo/metro-matched 0.83.3
+# chain, only the one-shot config-loading path gets patched.
+overrides:
+  metro-config: 0.83.7
 
 # pnpm 11 build-script approvals (true = run native build, false = skip).
 # unrs-resolver ships a JS fallback, so skipping its build is safe and keeps

@@ -32,7 +32,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
 
   useEffect(() => {
-    const saved = localStorage.getItem("conectage-lang");
+    const saved = localStorage.getItem("gemarket-lang");
     if (saved) {
       const lang = languages.find((l) => l.code === saved);
       if (lang) {
@@ -45,7 +45,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function setLanguage(lang: Language) {
     setLanguageState(lang);
-    localStorage.setItem("conectage-lang", lang.code);
+    localStorage.setItem("gemarket-lang", lang.code);
     document.documentElement.dir = lang.dir;
     document.documentElement.lang = lang.code;
   }

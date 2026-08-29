@@ -133,7 +133,7 @@ export function StoreView({
               phoneNumber={store.whatsapp}
               listingTitle={store.name}
               tiendaSlug={store.slug}
-              message={`Hola, me interesa tu tienda ${store.name} en ConectaGE.`}
+              message={`Hola, me interesa tu tienda ${store.name} en GEMarket.`}
               label={t("stores.contact")}
             />
           </div>

@@ -49,7 +49,7 @@ self.addEventListener("push", (event) => {
     url?: string;
   };
   event.waitUntil(
-    self.registration.showNotification(data.title ?? "ConectaGE", {
+    self.registration.showNotification(data.title ?? "GEMarket", {
       body: data.message ?? "",
       icon: "/icon-192.png",
       data: { url: data.url ?? "/mi-cuenta/notificaciones" },

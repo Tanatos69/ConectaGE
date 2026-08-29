@@ -28,7 +28,7 @@ const settingDefs: SettingDefinition[] = [
   {
     key: "primary_color",
     label: "Color principal",
-    description: "Color de marca de botones y enlaces. Déjalo vacío para usar el azul ConectaGE.",
+    description: "Color de marca de botones y enlaces. Déjalo vacío para usar el azul GEMarket.",
     type: "color",
     group: "Identidad y apariencia",
   },

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Semantic color tokens as RGB channels so Tailwind's `<alpha-value>` works
+ * (e.g. bg-card/60). Light values in :root, dark values swapped by the OS
+ * color scheme — NativeWind maps prefers-color-scheme to Appearance, so with
+ * app.json userInterfaceStyle:"automatic" these follow the device theme.
+ * Raw color props (icons, shadows) read the mirror in theme.ts via useThemeColors().
+ */
+@layer base {
+  :root {
+    --color-bg: 250 250 250;
+    --color-card: 255 255 255;
+    --color-elevated: 255 255 255;
+    --color-ink: 23 23 23;
+    --color-body: 64 64 64;
+    --color-muted: 115 115 115;
+    --color-faint: 163 163 163;
+    --color-line: 229 229 229;
+    --color-hairline: 244 244 245;
+    --color-fill: 244 244 245;
+    --color-primary: 21 108 213;
+    --color-primary-soft: 233 242 253;
+    --color-whatsapp: 37 211 102;
+    --color-featured: 227 57 28;
+    --color-star: 245 158 11;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: 11 11 13;
+      --color-card: 24 24 27;
+      --color-elevated: 32 32 36;
+      --color-ink: 250 250 250;
+      --color-body: 212 212 216;
+      --color-muted: 161 161 170;
+      --color-faint: 113 113 122;
+      --color-line: 39 39 42;
+      --color-hairline: 32 32 35;
+      --color-fill: 39 39 42;
+      --color-primary: 71 154 245;
+      --color-primary-soft: 23 37 60;
+      --color-whatsapp: 37 211 102;
+      --color-featured: 244 96 72;
+      --color-star: 251 191 36;
+    }
+  }
+}

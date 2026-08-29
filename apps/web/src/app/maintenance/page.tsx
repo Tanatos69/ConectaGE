@@ -14,7 +14,7 @@ export default function MaintenancePage() {
       </p>
 
       <div className="mt-8 flex items-center gap-2 rounded-2xl border border-input bg-card px-6 py-4 text-sm text-muted-foreground shadow-sm">
-        <span className="font-semibold text-foreground">ConectaGE</span>
+        <span className="font-semibold text-foreground">GEMarket</span>
         <span>·</span>
         <span>Guinea Ecuatorial</span>
       </div>

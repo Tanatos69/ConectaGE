@@ -133,7 +133,7 @@ export default function ContactoPage() {
           </div>
 
           <a
-            href="https://wa.me/240222000000?text=Hola%2C+tengo+una+consulta+sobre+ConectaGE."
+            href="https://wa.me/240222000000?text=Hola%2C+tengo+una+consulta+sobre+GEMarket."
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-2xl bg-[#25D366] p-5 text-white shadow-sm transition-colors hover:bg-[#1aab4f]"

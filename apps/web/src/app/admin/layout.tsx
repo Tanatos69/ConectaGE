@@ -7,7 +7,7 @@ import { getProfile } from "@/lib/supabase/queries";
 import { getAdminBadges } from "./data";
 
 export const metadata: Metadata = {
-  title: { default: "Admin — ConectaGE", template: "%s | Admin ConectaGE" },
+  title: { default: "Admin — GEMarket", template: "%s | Admin GEMarket" },
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-white">
                 Admin
               </span>
-              <span className="text-sm font-semibold text-foreground">ConectaGE</span>
+              <span className="text-sm font-semibold text-foreground">GEMarket</span>
             </div>
             <AdminNav badges={badges} />
             <AdminSidebarFooter />

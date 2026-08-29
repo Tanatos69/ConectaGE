@@ -5,7 +5,7 @@ import { getSiteSettings } from "@/lib/supabase/settings";
 export const metadata: Metadata = {
   title: "Planes y visibilidad",
   description:
-    "Destaca tu anuncio en ConectaGE. Planes de 7, 15 y 30 días con pago por dinero móvil o transferencia bancaria en Guinea Ecuatorial.",
+    "Destaca tu anuncio en GEMarket. Planes de 7, 15 y 30 días con pago por dinero móvil o transferencia bancaria en Guinea Ecuatorial.",
 };
 
 export default async function PlanesPage() {

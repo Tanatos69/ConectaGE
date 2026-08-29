@@ -33,7 +33,7 @@ export const ar: Translations = {
     cookies: "سياسة ملفات تعريف الارتباط",
     popular: "الأكثر شعبية",
     location: "مالابو · باتا، غينيا الاستوائية",
-    copyright: "ConectaGE. جميع الحقوق محفوظة.",
+    copyright: "GEMarket. جميع الحقوق محفوظة.",
     designedBy: "تصميم",
     stores: "المتاجر",
     payments: "الدفع والتوصيل",
@@ -147,7 +147,7 @@ export const ar: Translations = {
   whatsappFloat: {
     help: "هل تحتاج مساعدة؟",
     contactLabel: "التواصل مع الدعم عبر واتساب",
-    message: "مرحباً، أودّ الحصول على مزيد من المعلومات حول ConectaGE.",
+    message: "مرحباً، أودّ الحصول على مزيد من المعلومات حول GEMarket.",
   },
   whatsappCta: {
     contact: "التواصل عبر واتساب",

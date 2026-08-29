@@ -275,7 +275,7 @@ export default function RegistroPage() {
                   className={inputClass}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Debes tener al menos 16 años para usar ConectaGE. Tu edad nunca se muestra a
+                  Debes tener al menos 16 años para usar GEMarket. Tu edad nunca se muestra a
                   otros usuarios.
                 </p>
               </div>

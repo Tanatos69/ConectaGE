@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: "Pagos y envíos",
   description:
-    "Métodos de pago (Muni Dinero, Rosa Money, BGF Mobile, transferencia) y logística de última milla en Malabo, Bata y todo Guinea Ecuatorial en ConectaGE.",
+    "Métodos de pago (Muni Dinero, Rosa Money, BGF Mobile, transferencia) y logística de última milla en Malabo, Bata y todo Guinea Ecuatorial en GEMarket.",
 };
 
 export default function PagosYEnviosPage() {

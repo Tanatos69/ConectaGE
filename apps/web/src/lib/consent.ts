@@ -11,7 +11,7 @@
  *                            enabling future personalized features.
  */
 
-export const CONSENT_COOKIE = "conectage-consent";
+export const CONSENT_COOKIE = "gemarket-consent";
 export const CONSENT_MAX_AGE = 60 * 60 * 24 * 365; // 12 months
 
 export interface Consent {
