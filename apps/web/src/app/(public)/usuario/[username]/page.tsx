@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (real) {
     return {
       title: real.profile.full_name || "Perfil de usuario",
-      description: `Perfil de ${real.profile.full_name} en ConectaGE. ${real.listings.length} anuncios activos${real.profile.city ? ` en ${real.profile.city}` : ""}, Guinea Ecuatorial.`,
+      description: `Perfil de ${real.profile.full_name} en GEMarket. ${real.listings.length} anuncios activos${real.profile.city ? ` en ${real.profile.city}` : ""}, Guinea Ecuatorial.`,
     };
   }
   return {};

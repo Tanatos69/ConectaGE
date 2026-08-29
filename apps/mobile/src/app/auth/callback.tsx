@@ -8,7 +8,7 @@ import { colors } from "@/theme";
 
 /**
  * Lands here after either an OAuth redirect or an email-confirmation link
- * deep-links back into the app (conectage://auth/callback?code=...).
+ * deep-links back into the app (gemarket://auth/callback?code=...).
  * Mirrors apps/web/src/app/auth/callback/route.ts's exchangeCodeForSession +
  * profile-completeness check.
  */

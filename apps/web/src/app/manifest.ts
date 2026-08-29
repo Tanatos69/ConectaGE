@@ -7,8 +7,8 @@ import type { MetadataRoute } from "next";
 // client-side i18n language choice even if we wanted to.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ConectaGE — Compra y vende en Guinea Ecuatorial",
-    short_name: "ConectaGE",
+    name: "GEMarket — Compra y vende en Guinea Ecuatorial",
+    short_name: "GEMarket",
     description: "El mercado de anuncios clasificados de Guinea Ecuatorial.",
     start_url: "/",
     display: "standalone",

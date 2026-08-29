@@ -1,6 +1,6 @@
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createSupabaseClient } from "@conectage/shared";
+import { createSupabaseClient } from "@gemarket/shared";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./config";
 
 /**

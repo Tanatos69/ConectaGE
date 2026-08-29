@@ -326,7 +326,7 @@ export function StoreSettingsForm({ store }: { store: StoreSettings }) {
             <div>
               <p className="text-sm font-semibold text-amber-700">Verificación en proceso</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Hemos recibido tu solicitud. El equipo de ConectaGE la revisará en 2–5 días hábiles.
+                Hemos recibido tu solicitud. El equipo de GEMarket la revisará en 2–5 días hábiles.
               </p>
             </div>
           </div>

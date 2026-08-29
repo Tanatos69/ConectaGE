@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const notificationPayload = JSON.stringify({
-    title: record.title ?? "ConectaGE",
+    title: record.title ?? "GEMarket",
     message: record.message ?? "",
     url: "/mi-cuenta/notificaciones",
   });

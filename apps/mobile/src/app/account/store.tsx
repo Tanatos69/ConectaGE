@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import { categories, isValidWhatsApp, GE_CITIES } from "@conectage/shared";
+import { categories, isValidWhatsApp, GE_CITIES } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useOwnTienda, useCreateTienda, useUpdateTienda } from "@/lib/hooks";
 import type { TiendaInput } from "@/lib/listing-actions";

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Ayuda y preguntas frecuentes",
-  description: "Encuentra respuestas a las preguntas más frecuentes sobre ConectaGE.",
+  description: "Encuentra respuestas a las preguntas más frecuentes sobre GEMarket.",
 };
 
 const sections = [
@@ -12,7 +12,7 @@ const sections = [
     items: [
       {
         q: "¿Es gratis publicar un anuncio?",
-        a: "Sí, publicar anuncios en ConectaGE es completamente gratuito. Sin límite de anuncios activos para usuarios registrados. Los anuncios destacados (mayor visibilidad) tienen un coste opcional; consulta nuestros planes.",
+        a: "Sí, publicar anuncios en GEMarket es completamente gratuito. Sin límite de anuncios activos para usuarios registrados. Los anuncios destacados (mayor visibilidad) tienen un coste opcional; consulta nuestros planes.",
       },
       {
         q: "¿Cuánto tiempo tarda en publicarse mi anuncio?",
@@ -37,7 +37,7 @@ const sections = [
     items: [
       {
         q: "¿Cómo contacto al vendedor de un anuncio?",
-        a: 'Haciendo clic en el botón verde "Contactar por WhatsApp" en la página del anuncio. Se abrirá WhatsApp (web o app) con un mensaje pre-rellenado al número del vendedor. No hay mensajería interna en ConectaGE; todo el contacto es por WhatsApp.',
+        a: 'Haciendo clic en el botón verde "Contactar por WhatsApp" en la página del anuncio. Se abrirá WhatsApp (web o app) con un mensaje pre-rellenado al número del vendedor. No hay mensajería interna en GEMarket; todo el contacto es por WhatsApp.',
       },
       {
         q: "El vendedor no responde, ¿qué hago?",

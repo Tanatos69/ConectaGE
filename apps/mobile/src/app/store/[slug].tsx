@@ -128,7 +128,7 @@ export default function StoreDetailScreen() {
                     phoneNumber={store.whatsapp}
                     listingTitle={store.name}
                     tiendaSlug={store.slug}
-                    message={`Hola, vi tu tienda ${store.name} en ConectaGE`}
+                    message={`Hola, vi tu tienda ${store.name} en GEMarket`}
                     label={t("listing.contact")}
                   />
                 </View>

@@ -7,7 +7,7 @@ import { clearConsent } from "@/lib/consent";
 export function ConsentPreferencesButton() {
   function handleClick() {
     clearConsent();
-    window.dispatchEvent(new Event("conectage-consent-cleared"));
+    window.dispatchEvent(new Event("gemarket-consent-cleared"));
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }
 

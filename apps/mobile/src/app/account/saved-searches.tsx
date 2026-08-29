@@ -1,6 +1,6 @@
 import { Alert, FlatList, Pressable, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { describeCriteria } from "@conectage/shared";
+import { describeCriteria } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useSavedSearches, useDeleteSavedSearch, useSetSavedSearchAlerts } from "@/lib/hooks";
 import { Screen } from "@/components/ui/screen";

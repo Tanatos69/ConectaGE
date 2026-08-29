@@ -4,7 +4,7 @@
  * website (display-only monetization on mobile, avoiding the store 30% cut).
  * Override with EXPO_PUBLIC_WEB_URL for staging/prod domains.
  */
-export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "https://conectage.com").replace(/\/$/, "");
+export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? "https://conectage.netlify.app").replace(/\/$/, "");
 
 export const webPath = (path: string) => `${WEB_URL}${path.startsWith("/") ? path : `/${path}`}`;
 

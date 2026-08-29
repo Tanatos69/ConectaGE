@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, ScrollView, Text, useWindowDime
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { isListingFeatured } from "@conectage/shared";
+import { isListingFeatured } from "@gemarket/shared";
 import { useListing, useFavorites, useReviewsForListing, useCreateReview } from "@/lib/hooks";
 import { qk } from "@/lib/query-client";
 import { incrementListingViews } from "@/lib/queries";

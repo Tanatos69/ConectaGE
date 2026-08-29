@@ -4,7 +4,7 @@ import { DestacadosView } from "@/components/home/destacados-view";
 import { getCategoryTree, getFeaturedListings } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
-  title: "Anuncios destacados — ConectaGE",
+  title: "Anuncios destacados — GEMarket",
   description: "Los anuncios con mayor visibilidad en Guinea Ecuatorial. Explora las mejores ofertas destacadas.",
 };
 

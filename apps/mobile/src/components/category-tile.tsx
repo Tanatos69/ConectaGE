@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import type { Category } from "@conectage/shared";
+import type { Category } from "@gemarket/shared";
 import { useToneColors } from "@/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];

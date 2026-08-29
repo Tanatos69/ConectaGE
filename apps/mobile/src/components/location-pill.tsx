@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text } from "react-native";
-import { GE_CITIES } from "@conectage/shared";
+import { GE_CITIES } from "@gemarket/shared";
 import { Icon } from "@/components/ui/icon";
 import { Sheet } from "@/components/ui/sheet";
 import { useThemeColors } from "@/theme";

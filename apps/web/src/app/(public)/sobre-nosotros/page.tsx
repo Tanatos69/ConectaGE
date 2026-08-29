@@ -6,13 +6,13 @@ import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
 export const metadata: Metadata = {
   title: "Sobre nosotros",
   description:
-    "Conoce ConectaGE: el marketplace de anuncios clasificados para Guinea Ecuatorial y la diáspora africana.",
+    "Conoce GEMarket: el marketplace de anuncios clasificados para Guinea Ecuatorial y la diáspora africana.",
 };
 
 export default function SobreNosotrosPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-extrabold text-foreground">Sobre ConectaGE</h1>
+      <h1 className="text-3xl font-extrabold text-foreground">Sobre GEMarket</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         El mercado de anuncios clasificados de Guinea Ecuatorial.
       </p>
@@ -22,13 +22,13 @@ export default function SobreNosotrosPage() {
         <h2 className="text-xl font-bold text-foreground mb-3">Nuestra misión</h2>
         <div className="prose-sm text-muted-foreground space-y-3 leading-relaxed">
           <p>
-            ConectaGE nació con un objetivo claro: ofrecer a los ciudadanos de Guinea Ecuatorial y
+            GEMarket nació con un objetivo claro: ofrecer a los ciudadanos de Guinea Ecuatorial y
             la diáspora africana una plataforma moderna, gratuita y confiable para comprar y vender
             cualquier tipo de artículo o servicio.
           </p>
           <p>
             Creemos que el comercio local debe ser accesible para todos. Por eso publicar un anuncio
-            en ConectaGE es completamente gratis, sin comisiones ni pagos ocultos. El contacto entre
+            en GEMarket es completamente gratis, sin comisiones ni pagos ocultos. El contacto entre
             comprador y vendedor se hace directamente por WhatsApp, sin intermediarios.
           </p>
           <p>

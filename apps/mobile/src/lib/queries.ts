@@ -6,8 +6,8 @@ import type {
   NotificationRow,
   SearchCriteria,
   SiteSettings,
-} from "@conectage/shared";
-import { DEFAULT_SITE_SETTINGS } from "@conectage/shared";
+} from "@gemarket/shared";
+import { DEFAULT_SITE_SETTINGS } from "@gemarket/shared";
 import { getSupabaseClient } from "./supabase/client";
 
 /**

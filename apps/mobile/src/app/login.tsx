@@ -44,7 +44,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} keyboardShouldPersistTaps="handled">
           <View className="gap-1 pb-2">
             <Text className="font-display text-2xl text-ink">Bienvenido de nuevo</Text>
-            <Text className="font-sans text-sm text-subtle">Inicia sesión para continuar en ConectaGE.</Text>
+            <Text className="font-sans text-sm text-subtle">Inicia sesión para continuar en GEMarket.</Text>
           </View>
 
           <TextField

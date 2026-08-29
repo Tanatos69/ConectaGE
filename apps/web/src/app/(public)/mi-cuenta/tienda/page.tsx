@@ -64,7 +64,7 @@ export default async function MiTiendaPage() {
                 <strong className="text-foreground">
                   {(pendingRequest as { store_name: string }).store_name}
                 </strong>
-                . El equipo de ConectaGE la revisará en breve; te avisaremos cuando esté aprobada.
+                . El equipo de GEMarket la revisará en breve; te avisaremos cuando esté aprobada.
               </p>
             </div>
           </div>

@@ -86,7 +86,7 @@ export function ReportButton({ listingSlug }: { listingSlug: string }) {
                 <CheckCircle className="mx-auto mb-3 size-10 text-green-600" />
                 <p className="text-sm font-medium text-foreground">Reporte enviado</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Gracias por ayudar a mantener ConectaGE seguro. Nuestro equipo lo revisará.
+                  Gracias por ayudar a mantener GEMarket seguro. Nuestro equipo lo revisará.
                 </p>
                 <button
                   onClick={() => setOpen(false)}

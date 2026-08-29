@@ -10,7 +10,7 @@ import type { CategoryNode } from "@/lib/supabase/queries";
 
 export function SiteFooter({
   categories,
-  siteName = "ConectaGE",
+  siteName = "GEMarket",
   logoUrl = "",
   tagline = "",
   contactEmail = "",

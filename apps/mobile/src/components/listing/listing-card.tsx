@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
-import type { ListingRow } from "@conectage/shared";
-import { isListingFeatured } from "@conectage/shared";
+import type { ListingRow } from "@gemarket/shared";
+import { isListingFeatured } from "@gemarket/shared";
 import { formatPrice } from "@/lib/format";
 import { useTranslation } from "@/i18n/context";
 import { Badge } from "@/components/ui/badge";

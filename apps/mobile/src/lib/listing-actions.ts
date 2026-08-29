@@ -1,5 +1,5 @@
-import type { ListingRow, TiendaRow } from "@conectage/shared";
-import { decideInitialStatus, slugify, normalizePhone } from "@conectage/shared";
+import type { ListingRow, TiendaRow } from "@gemarket/shared";
+import { decideInitialStatus, slugify, normalizePhone } from "@gemarket/shared";
 import { getSupabaseClient } from "./supabase/client";
 import { getSiteSettings, getProfile, getTiendaByOwner } from "./queries";
 import { uploadImages } from "./storage";

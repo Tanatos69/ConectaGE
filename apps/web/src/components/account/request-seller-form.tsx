@@ -30,10 +30,10 @@ export function RequestSellerForm() {
       <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-primary/10">
         <Store className="size-6 text-primary" />
       </div>
-      <h2 className="text-lg font-bold text-foreground">Abre tu tienda en ConectaGE</h2>
+      <h2 className="text-lg font-bold text-foreground">Abre tu tienda en GEMarket</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Las tiendas tienen página propia, sello de vendedor y aparecen en el directorio.
-        Envía tu solicitud y el equipo de ConectaGE la revisará.
+        Envía tu solicitud y el equipo de GEMarket la revisará.
       </p>
 
       <form className="mt-5 space-y-4" onSubmit={handleSubmit}>

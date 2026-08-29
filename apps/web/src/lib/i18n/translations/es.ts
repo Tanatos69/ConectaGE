@@ -33,7 +33,7 @@ export const es: Translations = {
     cookies: "Política de cookies",
     popular: "Populares",
     location: "Malabo · Bata, Guinea Ecuatorial",
-    copyright: "ConectaGE. Todos los derechos reservados.",
+    copyright: "GEMarket. Todos los derechos reservados.",
     designedBy: "Diseñado por",
     stores: "Tiendas",
     payments: "Pagos y envíos",
@@ -147,7 +147,7 @@ export const es: Translations = {
   whatsappFloat: {
     help: "¿Necesitas ayuda?",
     contactLabel: "Contactar con soporte por WhatsApp",
-    message: "Hola, me interesa obtener más información sobre ConectaGE.",
+    message: "Hola, me interesa obtener más información sobre GEMarket.",
   },
   whatsappCta: {
     contact: "Contactar por WhatsApp",

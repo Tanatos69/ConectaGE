@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import type { ReviewRow } from "@conectage/shared";
+import type { ReviewRow } from "@gemarket/shared";
 import { Avatar } from "@/components/ui/avatar";
 import { useThemeColors } from "@/theme";
 

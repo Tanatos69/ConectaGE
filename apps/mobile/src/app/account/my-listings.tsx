@@ -1,7 +1,7 @@
 import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import type { ListingRow } from "@conectage/shared";
+import type { ListingRow } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useOwnListings, useDeleteListing, useListingStatusMutation } from "@/lib/hooks";
 import { formatPrice } from "@/lib/format";

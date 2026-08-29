@@ -110,7 +110,7 @@ function LanguageSwitcher() {
 
 export function SiteHeader({
   categories,
-  siteName = "ConectaGE",
+  siteName = "GEMarket",
   logoUrl = "",
 }: {
   categories: CategoryNode[];

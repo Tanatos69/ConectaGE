@@ -134,7 +134,7 @@ export async function signUp(input: {
 
 /**
  * Opens the provider's login page in an in-app browser and waits for the
- * conectage:// deep link back. The app/auth/callback route does the actual
+ * gemarket:// deep link back. The app/auth/callback route does the actual
  * supabase.auth.exchangeCodeForSession(code) once the redirect lands.
  */
 export async function signInWithOAuth(provider: "google" | "facebook"): Promise<ActionResult> {

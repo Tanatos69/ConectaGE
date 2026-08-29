@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
-import type { TiendaRow } from "@conectage/shared";
+import type { TiendaRow } from "@gemarket/shared";
 import { Icon } from "@/components/ui/icon";
 import { Avatar } from "@/components/ui/avatar";
 import { useThemeColors, shadow } from "@/theme";

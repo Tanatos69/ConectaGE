@@ -6,7 +6,7 @@ import { ArrowUpSquare, SquarePlus, X } from "lucide-react";
 import { isIOSSafari, isStandalone } from "@/lib/pwa/standalone";
 import { readConsent } from "@/lib/consent";
 
-const DISMISSED_KEY = "conectage-ios-install-dismissed";
+const DISMISSED_KEY = "gemarket-ios-install-dismissed";
 
 /**
  * iOS has no `beforeinstallprompt` event — Safari never fires one — so
@@ -43,7 +43,7 @@ export function IosInstallBanner() {
             className="size-12 shrink-0 rounded-[22%] shadow-sm"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">ConectaGE</p>
+            <p className="truncate text-sm font-semibold text-foreground">GEMarket</p>
             <p className="truncate text-xs text-muted-foreground">
               Añade la app a tu pantalla de inicio
             </p>

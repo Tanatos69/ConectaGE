@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Profile, SearchCriteria } from "@conectage/shared";
-import { isListingFeatured } from "@conectage/shared";
+import type { Profile, SearchCriteria } from "@gemarket/shared";
+import { isListingFeatured } from "@gemarket/shared";
 import { qk } from "./query-client";
 import * as q from "./queries";
 import * as actions from "./listing-actions";

@@ -3,9 +3,9 @@ import type { Translations } from "../types";
 export const pt: Translations = {
   tabs: { home: "Início", search: "Buscar", favorites: "Favoritos", stores: "Lojas", account: "Conta" },
   browse: {
-    title: "ConectaGE",
+    title: "GEMarket",
     empty: "Ainda não há anúncios publicados.",
-    searchPlaceholder: "Pesquisar no ConectaGE",
+    searchPlaceholder: "Pesquisar no GEMarket",
     featured: "Destaque",
     wanted: "Procura-se",
     notConfigured: "O Supabase não está configurado (variáveis EXPO_PUBLIC_SUPABASE_* em falta).",

@@ -1,4 +1,4 @@
-import type { ListingRow } from "@conectage/shared";
+import type { ListingRow } from "@gemarket/shared";
 
 const currencyLabel: Record<ListingRow["currency"], string> = {
   XAF: "FCFA",

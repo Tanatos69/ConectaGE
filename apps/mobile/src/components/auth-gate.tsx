@@ -11,7 +11,7 @@ interface AuthGateProps {
 
 /** Signed-out placeholder for gated screens (favorites, dashboard, etc.). */
 export function AuthGate({
-  title = "Inicia sesión en ConectaGE",
+  title = "Inicia sesión en GEMarket",
   subtitle = "Contacta vendedores, guarda favoritos y publica tus anuncios.",
 }: AuthGateProps) {
   const router = useRouter();

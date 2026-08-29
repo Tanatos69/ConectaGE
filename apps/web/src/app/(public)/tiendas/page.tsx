@@ -5,7 +5,7 @@ import { getStores } from "@/lib/supabase/queries";
 export const metadata: Metadata = {
   title: "Tiendas",
   description:
-    "Descubre las tiendas verificadas de ConectaGE en Guinea Ecuatorial: electrónica, vehículos, inmobiliaria, hogar y moda. Compra directamente por WhatsApp.",
+    "Descubre las tiendas verificadas de GEMarket en Guinea Ecuatorial: electrónica, vehículos, inmobiliaria, hogar y moda. Compra directamente por WhatsApp.",
 };
 
 export default async function TiendasPage() {

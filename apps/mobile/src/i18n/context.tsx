@@ -12,7 +12,7 @@ import { zh } from "./translations/zh";
 import type { Translations } from "./types";
 
 const allTranslations: Record<string, Translations> = { es, en, fr, pt, ar, zh };
-const STORAGE_KEY = "conectage-lang";
+const STORAGE_KEY = "gemarket-lang";
 
 interface I18nContextType {
   language: Language;

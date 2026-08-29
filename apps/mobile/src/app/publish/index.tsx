@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import type { ListingRow } from "@conectage/shared";
-import { categories, getSubcategories, GE_CITIES, QUANTITY_CATEGORIES, isValidWhatsApp } from "@conectage/shared";
+import type { ListingRow } from "@gemarket/shared";
+import { categories, getSubcategories, GE_CITIES, QUANTITY_CATEGORIES, isValidWhatsApp } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useCreateListing, useProfile } from "@/lib/hooks";
 import { Screen } from "@/components/ui/screen";
@@ -117,7 +117,7 @@ export default function PublishScreen() {
             pending ? "Anuncio en revisión" : "¡Anuncio publicado!",
             pending
               ? "Lo revisaremos y aparecerá públicamente en breve."
-              : "Tu anuncio ya está visible en ConectaGE.",
+              : "Tu anuncio ya está visible en GEMarket.",
             [{ text: "Ver anuncio", onPress: () => router.replace(`/listing/${slug}`) }],
           );
         },

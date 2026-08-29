@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "ConectaGE",
-    "slug": "conectage",
+    "name": "GEMarket",
+    "slug": "gemarket",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "conectage",
+    "scheme": "gemarket",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.conectage.app",
+      "bundleIdentifier": "com.gemarket.app",
       "supportsTablet": true,
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "com.conectage.app",
+      "package": "com.gemarket.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -50,8 +50,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ConectaGE necesita acceso a tus fotos para añadir imágenes a tus anuncios.",
-          "cameraPermission": "ConectaGE necesita acceso a la cámara para tomar fotos de tus anuncios."
+          "photosPermission": "GEMarket necesita acceso a tus fotos para añadir imágenes a tus anuncios.",
+          "cameraPermission": "GEMarket necesita acceso a la cámara para tomar fotos de tus anuncios."
         }
       ],
       [

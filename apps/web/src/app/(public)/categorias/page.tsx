@@ -9,7 +9,7 @@ import { formatNumber } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Todas las categorías",
   description:
-    "Explora todas las categorías de anuncios en ConectaGE. Vehículos, inmobiliaria, electrónica, empleo y mucho más en Guinea Ecuatorial.",
+    "Explora todas las categorías de anuncios en GEMarket. Vehículos, inmobiliaria, electrónica, empleo y mucho más en Guinea Ecuatorial.",
 };
 
 export default async function CategoriasPage() {

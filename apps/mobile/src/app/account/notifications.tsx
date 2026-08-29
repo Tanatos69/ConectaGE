@@ -1,5 +1,5 @@
 import { FlatList, Pressable, Text, View } from "react-native";
-import type { NotificationKind } from "@conectage/shared";
+import type { NotificationKind } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useNotifications, useMarkAllNotificationsRead } from "@/lib/hooks";
 import { markNotificationRead } from "@/lib/queries";

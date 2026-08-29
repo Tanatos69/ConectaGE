@@ -8,7 +8,7 @@
  * backwards-compat with screens not yet migrated.
  */
 import { useColorScheme } from "nativewind";
-import { toneColors, toneColorsDark, type CategoryTone } from "@conectage/shared";
+import { toneColors, toneColorsDark, type CategoryTone } from "@gemarket/shared";
 
 export interface ThemeColors {
   primary: string;

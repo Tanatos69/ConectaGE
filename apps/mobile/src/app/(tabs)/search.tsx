@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { Alert, FlatList, Pressable, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import type { ListingRow, SearchCriteria } from "@conectage/shared";
-import { filterListings, activeFilterCount, hasActiveFilters, describeCriteria } from "@conectage/shared";
+import type { ListingRow, SearchCriteria } from "@gemarket/shared";
+import { filterListings, activeFilterCount, hasActiveFilters, describeCriteria } from "@gemarket/shared";
 import { useListings, useFavorites, useCreateSavedSearch } from "@/lib/hooks";
 import { useAuth } from "@/lib/auth-context";
 import { isSupabaseConfigured } from "@/lib/supabase/config";

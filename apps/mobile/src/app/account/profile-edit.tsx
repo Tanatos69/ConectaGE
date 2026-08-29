@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import type { Gender } from "@conectage/shared";
-import { GE_CITIES } from "@conectage/shared";
+import type { Gender } from "@gemarket/shared";
+import { GE_CITIES } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth-context";
 import { useProfile, useUpdateProfile } from "@/lib/hooks";
 import { uploadImage } from "@/lib/storage";

@@ -76,8 +76,8 @@ export function CookieConsent() {
       setVisible(readConsent() === null);
     }
     check();
-    window.addEventListener("conectage-consent-cleared", check);
-    return () => window.removeEventListener("conectage-consent-cleared", check);
+    window.addEventListener("gemarket-consent-cleared", check);
+    return () => window.removeEventListener("gemarket-consent-cleared", check);
   }, []);
 
   if (!visible) return null;
@@ -102,7 +102,7 @@ export function CookieConsent() {
               Cookies y datos de uso
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Usamos cookies necesarias para que ConectaGE funcione y, solo si lo aceptas,
+              Usamos cookies necesarias para que GEMarket funcione y, solo si lo aceptas,
               datos de uso anónimos (búsquedas y visitas) para mejorar la plataforma y
               personalizar tu experiencia. No vendemos tus datos a terceros.{" "}
               <Link href="/cookies" className="font-medium text-primary hover:underline">

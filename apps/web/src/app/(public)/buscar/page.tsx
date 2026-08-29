@@ -18,7 +18,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: q ? `Resultados para "${q}"` : "Buscar anuncios",
     description: q
-      ? `${q} — anuncios en ConectaGE, Guinea Ecuatorial.`
+      ? `${q} — anuncios en GEMarket, Guinea Ecuatorial.`
       : "Busca anuncios de vehículos, inmobiliaria, electrónica y más en Guinea Ecuatorial.",
   };
 }

@@ -2,18 +2,18 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * ConectaGE wordmark + mark.
+ * GEMarket wordmark + mark.
  * The mark is a rounded "chat/connection" tile in brand blue — ties the
- * "Conecta" (connect) idea to the WhatsApp-first contact model.
+ * marketplace idea to the WhatsApp-first contact model.
  *
  * Admin-configurable via site settings: `logoUrl` replaces the whole mark
  * with an uploaded image; `siteName` replaces the wordmark text. The default
- * "ConectaGE" keeps its two-tone treatment; a custom name renders plain.
+ * "GEMarket" keeps its two-tone treatment; a custom name renders plain.
  */
 export function Logo({
   className,
   showText = true,
-  siteName = "ConectaGE",
+  siteName = "GEMarket",
   logoUrl = "",
 }: {
   className?: string;
@@ -53,9 +53,9 @@ export function Logo({
       )}
       {showText && (
         <span className="text-lg font-extrabold tracking-tight text-foreground">
-          {siteName === "ConectaGE" ? (
+          {siteName === "GEMarket" ? (
             <>
-              Conecta<span className="text-primary">GE</span>
+              <span className="text-primary">GE</span>Market
             </>
           ) : (
             siteName

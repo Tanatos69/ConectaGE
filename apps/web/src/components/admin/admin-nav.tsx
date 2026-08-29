@@ -190,7 +190,7 @@ export function AdminMobileHeader({ badges }: { badges?: AdminNavBadges }) {
                 <span className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-white">
                   Admin
                 </span>
-                <span className="text-sm font-semibold text-foreground">ConectaGE</span>
+                <span className="text-sm font-semibold text-foreground">GEMarket</span>
               </div>
               <button
                 onClick={() => setOpen(false)}

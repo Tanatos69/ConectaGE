@@ -1,6 +1,6 @@
 import { ScrollView, Text, TextInput, View } from "react-native";
-import type { SearchCriteria } from "@conectage/shared";
-import { categories, getSubcategories, GE_CITIES } from "@conectage/shared";
+import type { SearchCriteria } from "@gemarket/shared";
+import { categories, getSubcategories, GE_CITIES } from "@gemarket/shared";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Chip, ChoicePills } from "@/components/ui/chip";

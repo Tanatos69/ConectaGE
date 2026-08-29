@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones de uso",
-  description: "Términos y condiciones de uso de la plataforma ConectaGE.",
+  description: "Términos y condiciones de uso de la plataforma GEMarket.",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -21,14 +21,14 @@ export default function TerminosPage() {
       <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        Al acceder o utilizar la plataforma ConectaGE (&ldquo;el Servicio&rdquo;), aceptas
+        Al acceder o utilizar la plataforma GEMarket (&ldquo;el Servicio&rdquo;), aceptas
         quedar vinculado por los presentes Términos y Condiciones. Si no estás de acuerdo con
         alguno de estos términos, no debes utilizar el Servicio.
       </p>
 
       <Section title="1. Descripción del servicio">
         <p>
-          ConectaGE es una plataforma de anuncios clasificados que permite a usuarios particulares
+          GEMarket es una plataforma de anuncios clasificados que permite a usuarios particulares
           y empresas publicar, buscar y contactar anuncios de compraventa de productos y servicios
           en Guinea Ecuatorial. El Servicio actúa como intermediario tecnológico y no participa en
           ninguna transacción entre compradores y vendedores.
@@ -42,7 +42,7 @@ export default function TerminosPage() {
           cuenta. Debes notificarnos inmediatamente de cualquier uso no autorizado.
         </p>
         <p>
-          Debes proporcionar información veraz y actualizada. ConectaGE se reserva el derecho de
+          Debes proporcionar información veraz y actualizada. GEMarket se reserva el derecho de
           suspender o eliminar cuentas que proporcionen información falsa o incumplan estos
           términos.
         </p>
@@ -83,7 +83,7 @@ export default function TerminosPage() {
 
       <Section title="5. Responsabilidad del usuario">
         <p>
-          ConectaGE no es parte en las transacciones entre usuarios y no garantiza la calidad,
+          GEMarket no es parte en las transacciones entre usuarios y no garantiza la calidad,
           exactitud ni legalidad de los anuncios publicados. Cada usuario es el único responsable
           de las operaciones que realice a través de la plataforma.
         </p>
@@ -95,7 +95,7 @@ export default function TerminosPage() {
 
       <Section title="6. Propiedad intelectual">
         <p>
-          Al publicar contenido (textos, imágenes, etc.) en ConectaGE, nos concedes una licencia
+          Al publicar contenido (textos, imágenes, etc.) en GEMarket, nos concedes una licencia
           no exclusiva, mundial y libre de regalías para mostrar, reproducir y distribuir dicho
           contenido dentro del Servicio.
         </p>
@@ -107,7 +107,7 @@ export default function TerminosPage() {
 
       <Section title="7. Tratamiento de datos y analítica">
         <p>
-          Con el fin de operar, proteger y mejorar el Servicio, ConectaGE recopila datos de uso de
+          Con el fin de operar, proteger y mejorar el Servicio, GEMarket recopila datos de uso de
           primera parte (<em>first-party</em>) alojados en su propia infraestructura: consultas de
           búsqueda, visualizaciones de anuncios y clics en los botones de contacto de WhatsApp,
           junto con metadatos técnicos básicos (tipo de dispositivo y fecha del evento). La
@@ -126,7 +126,7 @@ export default function TerminosPage() {
           experiencia del usuario, cuando este haya activado dicha categoría de consentimiento; y
           (c) la mejora de las funcionalidades de la plataforma.{" "}
           <strong className="text-foreground">
-            ConectaGE no cede, comparte ni vende datos personales ni datos de uso a terceros.
+            GEMarket no cede, comparte ni vende datos personales ni datos de uso a terceros.
           </strong>{" "}
           El detalle completo del tratamiento se recoge en la{" "}
           <a href="/privacidad" className="text-primary hover:underline">
@@ -138,7 +138,7 @@ export default function TerminosPage() {
 
       <Section title="8. Limitación de responsabilidad">
         <p>
-          ConectaGE no será responsable por daños directos, indirectos, incidentales o
+          GEMarket no será responsable por daños directos, indirectos, incidentales o
           consecuentes derivados del uso o la imposibilidad de uso del Servicio, incluyendo
           pérdidas económicas derivadas de transacciones entre usuarios.
         </p>

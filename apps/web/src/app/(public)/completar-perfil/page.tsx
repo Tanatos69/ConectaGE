@@ -113,7 +113,7 @@ function CompletarPerfilForm() {
                 className={inputClass}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Debes tener al menos 16 años para usar ConectaGE.
+                Debes tener al menos 16 años para usar GEMarket.
               </p>
             </div>
 

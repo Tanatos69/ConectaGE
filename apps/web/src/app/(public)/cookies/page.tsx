@@ -4,7 +4,7 @@ import { ConsentPreferencesButton } from "@/components/layout/consent-preference
 
 export const metadata: Metadata = {
   title: "Política de cookies",
-  description: "Cómo ConectaGE utiliza cookies y tecnologías similares.",
+  description: "Cómo GEMarket utiliza cookies y tecnologías similares.",
 };
 
 const cookieTypes = [
@@ -12,7 +12,7 @@ const cookieTypes = [
     name: "Cookies estrictamente necesarias",
     required: true,
     examples:
-      "Cookies de sesión y autenticación (Supabase Auth), preferencia de idioma, registro de tu elección de consentimiento (conectage-consent)",
+      "Cookies de sesión y autenticación (Supabase Auth), preferencia de idioma, registro de tu elección de consentimiento (gemarket-consent)",
     purpose:
       "Imprescindibles para el funcionamiento básico de la plataforma: mantener tu sesión iniciada, protegerla frente a accesos no autorizados y recordar tu decisión sobre esta misma política. No pueden desactivarse.",
   },
@@ -40,7 +40,7 @@ export default function CookiesPage() {
       <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        ConectaGE utiliza cookies y tecnologías similares para garantizar el funcionamiento de la
+        GEMarket utiliza cookies y tecnologías similares para garantizar el funcionamiento de la
         plataforma, y — únicamente con tu consentimiento — para analizar su uso y personalizar tu
         experiencia. Esta página explica qué son las cookies, qué categorías usamos y cómo puedes
         controlarlas en cualquier momento.
@@ -92,7 +92,7 @@ export default function CookiesPage() {
             eliges una opción, no se registra ningún dato de uso.
           </p>
           <p>
-            Tu elección se guarda durante 12 meses en la cookie <code className="rounded bg-muted px-1">conectage-consent</code>{" "}
+            Tu elección se guarda durante 12 meses en la cookie <code className="rounded bg-muted px-1">gemarket-consent</code>{" "}
             y puedes modificarla en cualquier momento desde aquí:
           </p>
           <ConsentPreferencesButton />

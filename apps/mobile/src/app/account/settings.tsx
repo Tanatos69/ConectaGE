@@ -114,7 +114,7 @@ export default function SettingsScreen() {
         <View className="mt-6 flex-row items-center justify-center gap-1.5">
           <Icon name="pricetags" size={14} color={theme.faint} />
           <Text className="font-sans text-xs text-subtle">
-            ConectaGE v{Constants.expoConfig?.version ?? "1.0.0"}
+            GEMarket v{Constants.expoConfig?.version ?? "1.0.0"}
           </Text>
         </View>
       </ScrollView>
