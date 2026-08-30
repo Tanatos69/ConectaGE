@@ -1,3 +1,4 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const zh: Translations = {
@@ -33,7 +34,7 @@ export const zh: Translations = {
     cookies: "Cookie政策",
     popular: "热门",
     location: "马拉博 · 巴塔，赤道几内亚",
-    copyright: "GEMarket. 版权所有。",
+    copyright: `${BRAND.name}. 版权所有。`,
     designedBy: "设计者",
     stores: "店铺",
     payments: "支付与配送",
@@ -147,7 +148,7 @@ export const zh: Translations = {
   whatsappFloat: {
     help: "需要帮助？",
     contactLabel: "通过WhatsApp联系支持",
-    message: "您好，我想了解更多关于GEMarket的信息。",
+    message: `您好，我想了解更多关于${BRAND.name}的信息。`,
   },
   whatsappCta: {
     contact: "通过WhatsApp联系",

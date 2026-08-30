@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import webPush from "web-push";
+import { BRAND } from "@gemarket/shared";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Called by a Supabase Database Webhook (Studio → Database → Webhooks,
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "payload inválido" }, { status: 400 });
   }
 
-  webPush.setVapidDetails("mailto:info@conectage.com", vapidPublicKey, vapidPrivateKey);
+  webPush.setVapidDetails(`mailto:${BRAND.emails.info}`, vapidPublicKey, vapidPrivateKey);
 
   // No user session exists on a webhook request — RLS would block
   // everything, so this genuinely needs the service-role client, not just
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
   }
 
   const notificationPayload = JSON.stringify({
-    title: record.title ?? "GEMarket",
+    title: record.title ?? BRAND.name,
     message: record.message ?? "",
     url: "/mi-cuenta/notificaciones",
   });

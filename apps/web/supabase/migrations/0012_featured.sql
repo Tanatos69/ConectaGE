@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — real featured listings (admin/destacados de-fake)
+-- GEMarket — real featured listings (admin/destacados de-fake)
 -- Run manually in Supabase Studio → SQL Editor, after 0011.
 --
 -- Additive only: is_featured/featured_until on listings default to

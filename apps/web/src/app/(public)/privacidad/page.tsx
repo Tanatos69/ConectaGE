@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { BRAND } from "@gemarket/shared";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
-  description: "Política de privacidad y tratamiento de datos personales de GEMarket.",
+  description: `Política de privacidad y tratamiento de datos personales de ${BRAND.name}.`,
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -21,15 +22,15 @@ export default function PrivacidadPage() {
       <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        En GEMarket nos tomamos muy en serio la privacidad de nuestros usuarios. Esta política
+        En {BRAND.name} nos tomamos muy en serio la privacidad de nuestros usuarios. Esta política
         describe qué datos personales recopilamos, cómo los utilizamos y cuáles son tus derechos.
       </p>
 
       <Section title="1. Responsable del tratamiento">
         <p>
-          GEMarket, con sede en Malabo, Guinea Ecuatorial. Correo de contacto:{" "}
-          <a href="mailto:privacidad@conectage.com" className="text-primary hover:underline">
-            privacidad@conectage.com
+          {BRAND.legalName}, con sede en {BRAND.legalCity}, Guinea Ecuatorial. Correo de contacto:{" "}
+          <a href={`mailto:${BRAND.emails.privacy}`} className="text-primary hover:underline">
+            {BRAND.emails.privacy}
           </a>
         </p>
       </Section>
@@ -84,7 +85,7 @@ export default function PrivacidadPage() {
             No cedemos, compartimos ni vendemos tus datos personales ni tus datos de uso a
             terceros.
           </strong>{" "}
-          La analítica de GEMarket es de primera parte: los datos permanecen en nuestra propia
+          La analítica de {BRAND.name} es de primera parte: los datos permanecen en nuestra propia
           infraestructura y se emplean exclusivamente para los fines descritos en esta política.
         </p>
       </Section>
@@ -93,13 +94,13 @@ export default function PrivacidadPage() {
         <p>
           El tratamiento de tus datos se realiza en base a: (a) la ejecución del contrato de
           servicio (Términos de uso); (b) tu consentimiento explícito para comunicaciones
-          opcionales; (c) el interés legítimo de GEMarket en mejorar y proteger la plataforma.
+          opcionales; (c) el interés legítimo de {BRAND.name} en mejorar y proteger la plataforma.
         </p>
       </Section>
 
       <Section title="5. Conservación de los datos">
         <p>
-          Conservamos tus datos mientras mantengas una cuenta activa en GEMarket. Tras la
+          Conservamos tus datos mientras mantengas una cuenta activa en {BRAND.name}. Tras la
           eliminación de tu cuenta, los datos se anonomizan o eliminan en un plazo máximo de 30
           días, salvo obligación legal de conservación.
         </p>
@@ -130,8 +131,8 @@ export default function PrivacidadPage() {
         </ul>
         <p>
           Para ejercer estos derechos, escríbenos a{" "}
-          <a href="mailto:privacidad@conectage.com" className="text-primary hover:underline">
-            privacidad@conectage.com
+          <a href={`mailto:${BRAND.emails.privacy}`} className="text-primary hover:underline">
+            {BRAND.emails.privacy}
           </a>
           .
         </p>

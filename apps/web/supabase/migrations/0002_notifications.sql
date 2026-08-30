@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — notifications
+-- GEMarket — notifications
 -- Run manually in Supabase Studio → SQL Editor, after 0001_init.sql.
 -- ============================================================================
 

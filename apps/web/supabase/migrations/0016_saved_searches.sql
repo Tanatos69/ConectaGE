@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — saved searches move from localStorage into a real table.
+-- GEMarket — saved searches move from localStorage into a real table.
 -- Run manually in Supabase Studio → SQL Editor, after 0015.
 --
 -- User-managed data → full own-row RLS (unlike the admin-managed tables,

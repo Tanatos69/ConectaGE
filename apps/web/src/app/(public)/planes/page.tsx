@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { BRAND } from "@gemarket/shared";
 import { PlanesView } from "@/components/promote/planes-view";
 import { getSiteSettings } from "@/lib/supabase/settings";
 
 export const metadata: Metadata = {
   title: "Planes y visibilidad",
-  description:
-    "Destaca tu anuncio en GEMarket. Planes de 7, 15 y 30 días con pago por dinero móvil o transferencia bancaria en Guinea Ecuatorial.",
+  description: `Destaca tu anuncio en ${BRAND.name}. Planes de 7, 15 y 30 días con pago por dinero móvil o transferencia bancaria en Guinea Ecuatorial.`,
 };
 
 export default async function PlanesPage() {

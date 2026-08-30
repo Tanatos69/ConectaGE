@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { WhatsAppIcon } from "@/components/brand/whatsapp-icon";
 
 export const metadata: Metadata = {
   title: "Sobre nosotros",
-  description:
-    "Conoce GEMarket: el marketplace de anuncios clasificados para Guinea Ecuatorial y la diáspora africana.",
+  description: `Conoce ${BRAND.name}: el marketplace de anuncios clasificados para Guinea Ecuatorial y la diáspora africana.`,
 };
 
 export default function SobreNosotrosPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-extrabold text-foreground">Sobre GEMarket</h1>
+      <h1 className="text-3xl font-extrabold text-foreground">Sobre {BRAND.name}</h1>
       <p className="mt-3 text-lg text-muted-foreground">
         El mercado de anuncios clasificados de Guinea Ecuatorial.
       </p>
@@ -22,13 +22,13 @@ export default function SobreNosotrosPage() {
         <h2 className="text-xl font-bold text-foreground mb-3">Nuestra misión</h2>
         <div className="prose-sm text-muted-foreground space-y-3 leading-relaxed">
           <p>
-            GEMarket nació con un objetivo claro: ofrecer a los ciudadanos de Guinea Ecuatorial y
+            {BRAND.name} nació con un objetivo claro: ofrecer a los ciudadanos de Guinea Ecuatorial y
             la diáspora africana una plataforma moderna, gratuita y confiable para comprar y vender
             cualquier tipo de artículo o servicio.
           </p>
           <p>
             Creemos que el comercio local debe ser accesible para todos. Por eso publicar un anuncio
-            en GEMarket es completamente gratis, sin comisiones ni pagos ocultos. El contacto entre
+            en {BRAND.name} es completamente gratis, sin comisiones ni pagos ocultos. El contacto entre
             comprador y vendedor se hace directamente por WhatsApp, sin intermediarios.
           </p>
           <p>
@@ -75,8 +75,8 @@ export default function SobreNosotrosPage() {
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
             <Mail className="size-4 shrink-0 text-primary" />
-            <a href="mailto:info@conectage.com" className="hover:text-foreground hover:underline">
-              info@conectage.com
+            <a href={`mailto:${BRAND.emails.info}`} className="hover:text-foreground hover:underline">
+              {BRAND.emails.info}
             </a>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">

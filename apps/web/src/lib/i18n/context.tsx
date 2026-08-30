@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { brandStorageKey, legacyStorageKey } from "@gemarket/shared";
 import { languages, defaultLanguage, type Language } from "@/lib/languages";
 import { es } from "./translations/es";
 import { en } from "./translations/en";
@@ -11,6 +12,22 @@ import { zh } from "./translations/zh";
 import type { Translations } from "./types";
 
 const allTranslations: Record<string, Translations> = { es, en, fr, pt, ar, zh };
+
+const LANG_KEY = brandStorageKey("lang");
+const LEGACY_LANG_KEY = legacyStorageKey("lang");
+
+/** Read the saved language code, migrating the pre-rename key once. */
+function readSavedLang(): string | null {
+  const current = localStorage.getItem(LANG_KEY);
+  if (current) return current;
+  const legacy = localStorage.getItem(LEGACY_LANG_KEY);
+  if (legacy) {
+    localStorage.setItem(LANG_KEY, legacy);
+    localStorage.removeItem(LEGACY_LANG_KEY);
+    return legacy;
+  }
+  return null;
+}
 
 interface I18nContextType {
   language: Language;
@@ -32,7 +49,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
 
   useEffect(() => {
-    const saved = localStorage.getItem("gemarket-lang");
+    const saved = readSavedLang();
     if (saved) {
       const lang = languages.find((l) => l.code === saved);
       if (lang) {
@@ -45,7 +62,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function setLanguage(lang: Language) {
     setLanguageState(lang);
-    localStorage.setItem("gemarket-lang", lang.code);
+    localStorage.setItem(LANG_KEY, lang.code);
     document.documentElement.dir = lang.dir;
     document.documentElement.lang = lang.code;
   }

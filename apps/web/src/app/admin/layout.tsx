@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BRAND } from "@gemarket/shared";
 import { AdminNav, AdminMobileHeader, AdminSidebarFooter } from "@/components/admin/admin-nav";
 import { AdminBanner } from "@/components/admin/admin-banner";
 import { getUser } from "@/lib/supabase/server";
@@ -7,7 +8,7 @@ import { getProfile } from "@/lib/supabase/queries";
 import { getAdminBadges } from "./data";
 
 export const metadata: Metadata = {
-  title: { default: "Admin — GEMarket", template: "%s | Admin GEMarket" },
+  title: { default: `Admin — ${BRAND.name}`, template: `%s | Admin ${BRAND.name}` },
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-white">
                 Admin
               </span>
-              <span className="text-sm font-semibold text-foreground">GEMarket</span>
+              <span className="text-sm font-semibold text-foreground">{BRAND.name}</span>
             </div>
             <AdminNav badges={badges} />
             <AdminSidebarFooter />

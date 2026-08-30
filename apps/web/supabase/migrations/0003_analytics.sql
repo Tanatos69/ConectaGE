@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — optional demographics + consent-gated first-party analytics
+-- GEMarket — optional demographics + consent-gated first-party analytics
 -- Run manually in Supabase Studio → SQL Editor, after 0002_notifications.sql.
 -- ============================================================================
 

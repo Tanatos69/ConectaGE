@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { BRAND } from "@gemarket/shared";
 import { signIn, signInWithOAuth } from "@/lib/auth";
 import { isOAuthProviderEnabled } from "@/lib/oauth-providers";
 import { Screen } from "@/components/ui/screen";
@@ -44,7 +45,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} keyboardShouldPersistTaps="handled">
           <View className="gap-1 pb-2">
             <Text className="font-display text-2xl text-ink">Bienvenido de nuevo</Text>
-            <Text className="font-sans text-sm text-subtle">Inicia sesión para continuar en GEMarket.</Text>
+            <Text className="font-sans text-sm text-subtle">Inicia sesión para continuar en {BRAND.name}.</Text>
           </View>
 
           <TextField

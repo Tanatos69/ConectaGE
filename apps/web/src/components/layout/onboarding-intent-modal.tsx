@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ShoppingBag, Store, X } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { useAuth } from "@/lib/auth/context";
 import { setOnboardingIntentAction } from "@/lib/actions/auth";
 
@@ -65,7 +66,7 @@ export function OnboardingIntentModal() {
           <X className="size-4" />
         </button>
 
-        <h2 className="mt-2 text-lg font-bold text-foreground">¡Bienvenido a GEMarket! 🎉</h2>
+        <h2 className="mt-2 text-lg font-bold text-foreground">¡Bienvenido a {BRAND.name}! 🎉</h2>
         <p className="mt-1 text-sm text-muted-foreground">¿Qué quieres hacer?</p>
 
         <div className="mt-5 space-y-3">
@@ -95,7 +96,7 @@ export function OnboardingIntentModal() {
             </span>
             <span>
               <span className="block text-sm font-semibold text-foreground">Quiero vender</span>
-              <span className="block text-xs text-muted-foreground">Abre tu tienda en GEMarket</span>
+              <span className="block text-xs text-muted-foreground">Abre tu tienda en {BRAND.name}</span>
             </span>
           </button>
         </div>

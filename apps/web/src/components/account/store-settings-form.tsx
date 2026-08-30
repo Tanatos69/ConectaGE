@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import { CheckCircle, Save, Store, AlertTriangle, Trash2, Clock, MapPin, AtSign, Share2, ShieldCheck } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { updateTiendaAction } from "@/lib/actions/seller";
 import { useAuth } from "@/lib/auth/context";
@@ -326,7 +327,7 @@ export function StoreSettingsForm({ store }: { store: StoreSettings }) {
             <div>
               <p className="text-sm font-semibold text-amber-700">Verificación en proceso</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Hemos recibido tu solicitud. El equipo de GEMarket la revisará en 2–5 días hábiles.
+                Hemos recibido tu solicitud. El equipo de {BRAND.name} la revisará en 2–5 días hábiles.
               </p>
             </div>
           </div>

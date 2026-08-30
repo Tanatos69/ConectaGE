@@ -1,11 +1,12 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const zh: Translations = {
   tabs: { home: "首页", search: "搜索", favorites: "收藏", stores: "店铺", account: "账户" },
   browse: {
-    title: "GEMarket",
+    title: BRAND.name,
     empty: "暂无发布的列表。",
-    searchPlaceholder: "在 GEMarket 中搜索",
+    searchPlaceholder: `在 ${BRAND.name} 中搜索`,
     featured: "精选",
     wanted: "求购",
     notConfigured: "Supabase 未配置（缺少 EXPO_PUBLIC_SUPABASE_* 变量）。",

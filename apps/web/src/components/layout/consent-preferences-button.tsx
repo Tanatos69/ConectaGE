@@ -1,13 +1,13 @@
 "use client";
 
 import { Settings2 } from "lucide-react";
-import { clearConsent } from "@/lib/consent";
+import { clearConsent, CONSENT_CLEARED_EVENT } from "@/lib/consent";
 
 /** Clears the stored consent choice and re-opens the banner. */
 export function ConsentPreferencesButton() {
   function handleClick() {
     clearConsent();
-    window.dispatchEvent(new Event("gemarket-consent-cleared"));
+    window.dispatchEvent(new Event(CONSENT_CLEARED_EVENT));
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }
 

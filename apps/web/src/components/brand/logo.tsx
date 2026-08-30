@@ -1,19 +1,20 @@
 import Link from "next/link";
+import { BRAND } from "@gemarket/shared";
 import { cn } from "@/lib/utils";
 
 /**
- * GEMarket wordmark + mark.
+ * Brand wordmark + mark (name comes from BRAND, packages/shared/src/brand.ts).
  * The mark is a rounded "chat/connection" tile in brand blue — ties the
  * marketplace idea to the WhatsApp-first contact model.
  *
  * Admin-configurable via site settings: `logoUrl` replaces the whole mark
  * with an uploaded image; `siteName` replaces the wordmark text. The default
- * "GEMarket" keeps its two-tone treatment; a custom name renders plain.
+ * name keeps its two-tone treatment (BRAND.wordmark); a custom name renders plain.
  */
 export function Logo({
   className,
   showText = true,
-  siteName = "GEMarket",
+  siteName = BRAND.name,
   logoUrl = "",
 }: {
   className?: string;
@@ -53,9 +54,10 @@ export function Logo({
       )}
       {showText && (
         <span className="text-lg font-extrabold tracking-tight text-foreground">
-          {siteName === "GEMarket" ? (
+          {siteName === BRAND.name && BRAND.wordmark.accent ? (
             <>
-              <span className="text-primary">GE</span>Market
+              <span className="text-primary">{BRAND.wordmark.accent}</span>
+              {BRAND.wordmark.rest}
             </>
           ) : (
             siteName

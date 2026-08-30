@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — initial schema: real accounts + real listings
+-- GEMarket — initial schema: real accounts + real listings
 -- Run manually in Supabase Studio → SQL Editor (no CLI wiring this pass).
 --
 -- Bootstrapping the first admin: sign up normally through /registro, then in

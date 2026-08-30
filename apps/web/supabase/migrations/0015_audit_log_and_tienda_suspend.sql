@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — admin audit trail + tienda suspension + admin notes on users.
+-- GEMarket — admin audit trail + tienda suspension + admin notes on users.
 -- Run manually in Supabase Studio → SQL Editor, after 0014.
 -- ============================================================================
 

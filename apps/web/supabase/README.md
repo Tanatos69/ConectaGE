@@ -1,4 +1,4 @@
-# Supabase setup — ConectaGE
+# Supabase setup — GEMarket
 
 The app runs in **demo mode** (static demo listings, auth disabled) until these
 env vars exist. One-time setup, ~20 minutes, everything on the free tier.

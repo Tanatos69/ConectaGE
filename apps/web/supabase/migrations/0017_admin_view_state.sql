@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — "seen" tracking for admin-panel activity badges.
+-- GEMarket — "seen" tracking for admin-panel activity badges.
 -- Run manually in Supabase Studio → SQL Editor, after 0016.
 --
 -- Pending seller requests and pending reports already self-clear (their

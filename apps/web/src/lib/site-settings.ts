@@ -12,14 +12,17 @@
  * The table is world-readable by design (the public layout needs maintenance
  * mode, colors and the banner) — never add secrets.
  */
+import { BRAND } from "@gemarket/shared";
+
 export const DEFAULT_SETTINGS = {
-  site_name: "GEMarket",
+  // `as string` keeps the field types wide — DB rows override these at runtime.
+  site_name: BRAND.name as string,
   /** Public URL of an uploaded logo; empty = the built-in SVG wordmark. */
   logo_url: "",
   /** Hex color overriding --primary site-wide; empty = brand default. */
   primary_color: "",
-  site_whatsapp: "+240 222 000 000",
-  contact_email: "info@conectage.com",
+  site_whatsapp: BRAND.whatsapp as string,
+  contact_email: BRAND.emails.info as string,
   footer_tagline: "El mercado de anuncios clasificados de Guinea Ecuatorial.",
   announcement_enabled: false,
   announcement_text: "",
@@ -37,7 +40,7 @@ export const DEFAULT_SETTINGS = {
   featured_price_15d: 8000,
   featured_price_30d: 12000,
   payment_instructions:
-    "Paga por transferencia bancaria (BANGE, cuenta 001-234567-89, titular GEMarket) o Muni Dinero al +240 222 000 000. Envía el comprobante por WhatsApp al mismo número indicando el título de tu anuncio.",
+    `Paga por transferencia bancaria (BANGE, cuenta 001-234567-89, titular ${BRAND.name}) o Muni Dinero al +240 222 000 000. Envía el comprobante por WhatsApp al mismo número indicando el título de tu anuncio.`,
   keyword_blacklist: "estafa fraude dinero rápido inversión garantizada",
   max_reports_before_auto_remove: 5,
   min_account_age_days_to_skip_queue: 7,

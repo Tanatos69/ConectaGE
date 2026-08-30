@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { BRAND } from "@gemarket/shared";
 import { DestacadosView } from "@/components/home/destacados-view";
 import { getCategoryTree, getFeaturedListings } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
-  title: "Anuncios destacados — GEMarket",
+  title: `Anuncios destacados — ${BRAND.name}`,
   description: "Los anuncios con mayor visibilidad en Guinea Ecuatorial. Explora las mejores ofertas destacadas.",
 };
 

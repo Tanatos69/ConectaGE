@@ -3,13 +3,13 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { iconByName, toneStyles, toneBySlug, DEFAULT_TONE } from "@/lib/categories";
+import { BRAND } from "@gemarket/shared";
 import { getCategoryTree, getCategoryListingCounts } from "@/lib/supabase/queries";
 import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Todas las categorías",
-  description:
-    "Explora todas las categorías de anuncios en GEMarket. Vehículos, inmobiliaria, electrónica, empleo y mucho más en Guinea Ecuatorial.",
+  description: `Explora todas las categorías de anuncios en ${BRAND.name}. Vehículos, inmobiliaria, electrónica, empleo y mucho más en Guinea Ecuatorial.`,
 };
 
 export default async function CategoriasPage() {

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BRAND } from "@gemarket/shared";
 import { ConsentPreferencesButton } from "@/components/layout/consent-preferences-button";
+import { CONSENT_COOKIE } from "@/lib/consent";
 
 export const metadata: Metadata = {
   title: "Política de cookies",
-  description: "Cómo GEMarket utiliza cookies y tecnologías similares.",
+  description: `Cómo ${BRAND.name} utiliza cookies y tecnologías similares.`,
 };
 
 const cookieTypes = [
@@ -12,7 +14,7 @@ const cookieTypes = [
     name: "Cookies estrictamente necesarias",
     required: true,
     examples:
-      "Cookies de sesión y autenticación (Supabase Auth), preferencia de idioma, registro de tu elección de consentimiento (gemarket-consent)",
+      `Cookies de sesión y autenticación (Supabase Auth), preferencia de idioma, registro de tu elección de consentimiento (${CONSENT_COOKIE})`,
     purpose:
       "Imprescindibles para el funcionamiento básico de la plataforma: mantener tu sesión iniciada, protegerla frente a accesos no autorizados y recordar tu decisión sobre esta misma política. No pueden desactivarse.",
   },
@@ -40,7 +42,7 @@ export default function CookiesPage() {
       <p className="mt-2 text-sm text-muted-foreground">Última actualización: julio de 2026</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        GEMarket utiliza cookies y tecnologías similares para garantizar el funcionamiento de la
+        {BRAND.name} utiliza cookies y tecnologías similares para garantizar el funcionamiento de la
         plataforma, y — únicamente con tu consentimiento — para analizar su uso y personalizar tu
         experiencia. Esta página explica qué son las cookies, qué categorías usamos y cómo puedes
         controlarlas en cualquier momento.
@@ -92,7 +94,7 @@ export default function CookiesPage() {
             eliges una opción, no se registra ningún dato de uso.
           </p>
           <p>
-            Tu elección se guarda durante 12 meses en la cookie <code className="rounded bg-muted px-1">gemarket-consent</code>{" "}
+            Tu elección se guarda durante 12 meses en la cookie <code className="rounded bg-muted px-1">{CONSENT_COOKIE}</code>{" "}
             y puedes modificarla en cualquier momento desde aquí:
           </p>
           <ConsentPreferencesButton />
@@ -124,8 +126,8 @@ export default function CookiesPage() {
             Política de privacidad
           </Link>
           . Para cualquier consulta, escríbenos a{" "}
-          <a href="mailto:privacidad@conectage.com" className="text-primary hover:underline">
-            privacidad@conectage.com
+          <a href={`mailto:${BRAND.emails.privacy}`} className="text-primary hover:underline">
+            {BRAND.emails.privacy}
           </a>
           .
         </p>

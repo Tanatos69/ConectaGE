@@ -1,11 +1,12 @@
+import { BRAND } from "@gemarket/shared";
 import type { Translations } from "../types";
 
 export const fr: Translations = {
   tabs: { home: "Accueil", search: "Rechercher", favorites: "Favoris", stores: "Boutiques", account: "Compte" },
   browse: {
-    title: "GEMarket",
+    title: BRAND.name,
     empty: "Aucune annonce publiée pour le moment.",
-    searchPlaceholder: "Rechercher sur GEMarket",
+    searchPlaceholder: `Rechercher sur ${BRAND.name}`,
     featured: "En vedette",
     wanted: "Recherché",
     notConfigured: "Supabase n'est pas configuré (variables EXPO_PUBLIC_SUPABASE_* manquantes).",

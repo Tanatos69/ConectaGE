@@ -23,6 +23,7 @@ import {
   LogOut,
   MapPin,
 } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/context";
 import { signOutAction } from "@/lib/actions/auth";
@@ -190,7 +191,7 @@ export function AdminMobileHeader({ badges }: { badges?: AdminNavBadges }) {
                 <span className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-white">
                   Admin
                 </span>
-                <span className="text-sm font-semibold text-foreground">GEMarket</span>
+                <span className="text-sm font-semibold text-foreground">{BRAND.name}</span>
               </div>
               <button
                 onClick={() => setOpen(false)}

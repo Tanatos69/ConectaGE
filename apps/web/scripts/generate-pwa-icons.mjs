@@ -1,7 +1,7 @@
 // One-off codegen: derives the PWA icon set from the brand emblem in
-// src/app/icon.png (a full lockup with "conectaGE" wordmark + tagline text
-// baked in below the graphic mark — too small to read at icon size, so this
-// crops that text off before generating anything). Re-run manually
+// src/app/icon.png (a full lockup with the wordmark + tagline text baked in
+// below the graphic mark — too small to read at icon size, so this crops that
+// text off before generating anything). Re-run manually
 // (`node scripts/generate-pwa-icons.mjs`) only if the source logo changes.
 import sharp from "sharp";
 import { fileURLToPath } from "node:url";

@@ -1,6 +1,7 @@
 "use client";
 
 import { ShieldAlert, UserRound } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { LogoutButton } from "@/components/admin/admin-nav";
 
 export function AdminBanner({
@@ -16,7 +17,7 @@ export function AdminBanner({
         <ShieldAlert className="size-3.5 shrink-0" />
         <span className="truncate">
           <strong>Área restringida.</strong>{" "}
-          <span className="hidden sm:inline">Acceso limitado a administradores de GEMarket.</span>
+          <span className="hidden sm:inline">Acceso limitado a administradores de {BRAND.name}.</span>
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-2">

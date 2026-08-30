@@ -8,6 +8,7 @@ import {
   hasContacted,
 } from "@/lib/supabase/queries";
 import { getUser } from "@/lib/supabase/server";
+import { BRAND } from "@gemarket/shared";
 import { postedLabel } from "@/lib/time";
 import { StoreView } from "@/components/store/store-view";
 
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!store) return {};
   return {
     title: store.name,
-    description: `${store.tagline}. Tienda en ${store.city}, Guinea Ecuatorial — ${store.listingSlugs.length} anuncios en GEMarket.`,
+    description: `${store.tagline}. Tienda en ${store.city}, Guinea Ecuatorial — ${store.listingSlugs.length} anuncios en ${BRAND.name}.`,
   };
 }
 

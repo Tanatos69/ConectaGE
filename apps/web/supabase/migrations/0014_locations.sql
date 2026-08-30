@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — locations move from hardcoded TypeScript into a real table.
+-- GEMarket — locations move from hardcoded TypeScript into a real table.
 -- Run manually in Supabase Studio → SQL Editor, after 0013.
 --
 -- Self-referencing tree, same shape and RLS idiom as categories (0011):

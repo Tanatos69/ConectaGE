@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ShieldAlert } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { getUser } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/supabase/queries";
 import { signOutAction } from "@/lib/actions/auth";
@@ -22,7 +23,7 @@ export default async function CuentaBloqueadaPage() {
 
       <h1 className="text-3xl font-bold text-foreground">Cuenta bloqueada</h1>
       <p className="mt-3 max-w-md text-muted-foreground">
-        Un administrador ha bloqueado tu cuenta y no puedes usar GEMarket mientras tanto.
+        Un administrador ha bloqueado tu cuenta y no puedes usar {BRAND.name} mientras tanto.
       </p>
 
       {profile.blocked_reason && (

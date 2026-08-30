@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — account blocking, real listing takedowns, and the notification
+-- GEMarket — account blocking, real listing takedowns, and the notification
 --             that goes with them.
 -- Run manually in Supabase Studio → SQL Editor, after 0008_onboarding_intent.sql.
 -- ============================================================================

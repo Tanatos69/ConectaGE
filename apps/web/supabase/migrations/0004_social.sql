@@ -1,5 +1,5 @@
 -- ============================================================================
--- ConectaGE — reviews, store follows, listing favorites, follow-notifications
+-- GEMarket — reviews, store follows, listing favorites, follow-notifications
 -- Run manually in Supabase Studio → SQL Editor, after 0003_analytics.sql.
 --
 -- store_follows/listing_favorites key off `slug` (not the uuid id) so the

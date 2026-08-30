@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BRAND } from "@gemarket/shared";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAnalytics, parseFilters } from "../data";
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
   const parts: string[] = [
     section(
-      "Informe de analíticas GEMarket",
+      `Informe de analíticas ${BRAND.name}`,
       ["Desde", "Hasta", "Categoría", "Ciudad", "Evento"],
       [[fmt(filters.from), fmt(filters.to), filters.category ?? "Todas", filters.city ?? "Todas", filters.eventType ?? "Todos"]],
     ),
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
 
   // UTF-8 BOM so Excel opens accents correctly.
   const csv = "﻿" + parts.join("\r\n");
-  const filename = `gemarket-analiticas_${fmt(filters.from)}_${fmt(filters.to)}.csv`;
+  const filename = `${BRAND.slug}-analiticas_${fmt(filters.from)}_${fmt(filters.to)}.csv`;
 
   return new NextResponse(csv, {
     headers: {

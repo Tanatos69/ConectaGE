@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Star, CheckCircle, MapPin, Calendar } from "lucide-react";
+import { BRAND } from "@gemarket/shared";
 import { getPublicUserProfile } from "@/lib/supabase/queries";
 import { monthYearLabel } from "@/lib/time";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (real) {
     return {
       title: real.profile.full_name || "Perfil de usuario",
-      description: `Perfil de ${real.profile.full_name} en GEMarket. ${real.listings.length} anuncios activos${real.profile.city ? ` en ${real.profile.city}` : ""}, Guinea Ecuatorial.`,
+      description: `Perfil de ${real.profile.full_name} en ${BRAND.name}. ${real.listings.length} anuncios activos${real.profile.city ? ` en ${real.profile.city}` : ""}, Guinea Ecuatorial.`,
     };
   }
   return {};
